@@ -1,5 +1,5 @@
-# Academix
-Academix is a web-based School Management System developed Java and Spring-boot. However the java version is 17 or 21 , so check for comptability issues due to varying java versions. 
+# Peculiar-School-Management-System
+Peculiar School Management System is a web-based School Management System developed Java and Spring-boot. However the java version is 17 or 21 , so check for comptability issues due to varying java versions. 
 
 ## Quick Docs
 
