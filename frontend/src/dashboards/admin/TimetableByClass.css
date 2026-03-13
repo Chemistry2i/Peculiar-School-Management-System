@@ -1,0 +1,155 @@
+.timetable-page {
+  padding: 32px;
+  width: calc(100vw - 30vh);
+  background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+  min-height: 100vh;
+}
+
+.timetable-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.timetable-header h1 {
+  margin: 0 0 8px;
+  font-size: 34px;
+  color: #0f172a;
+}
+
+.timetable-header p {
+  margin: 0;
+  color: #475569;
+  max-width: 620px;
+}
+
+.timetable-filter-box {
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.timetable-filter-box label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.timetable-filter-box select {
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 15px;
+  color: #0f172a;
+  outline: none;
+}
+
+.timetable-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.timetable-summary-card {
+  border-radius: 18px;
+  padding: 22px;
+  color: #ffffff;
+  box-shadow: 0 14px 35px rgba(30, 64, 175, 0.16);
+}
+
+.timetable-summary-card span {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.timetable-summary-card h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.timetable-summary-card.primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.timetable-summary-card.accent {
+  background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+}
+
+.timetable-summary-card.muted {
+  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+}
+
+.timetable-table-panel {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.timetable-table-wrapper {
+  overflow-x: auto;
+}
+
+.timetable-table-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 920px;
+}
+
+.timetable-table-wrapper th,
+.timetable-table-wrapper td {
+  padding: 16px 14px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.timetable-table-wrapper th {
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.timetable-table-wrapper td {
+  color: #1f2937;
+  font-size: 15px;
+}
+
+.break-row td {
+  background: #fff7ed;
+  color: #c2410c;
+  font-weight: 600;
+}
+
+.lunch-row td {
+  background: #f0fdf4;
+  color: #15803d;
+  font-weight: 600;
+}
+
+@media (max-width: 1100px) {
+  .timetable-page {
+    width: 100%;
+    padding: 24px;
+  }
+
+  .timetable-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .timetable-summary {
+    grid-template-columns: 1fr;
+  }
+}

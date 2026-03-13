@@ -1,0 +1,79 @@
+
+
+/* TEACHER OVERVIEW */
+  .teacher-container h1{
+    font-size: 50px;
+  }
+  .teacher-container h2{
+    font-size: 25px;
+  }
+  .teacher-container{
+    margin-left: 30px;
+  }
+
+
+  .teacher-overview{
+    width: 300px;
+    height: 150px;
+    /* background-color: whitesmoke; */
+    /* border: 1px solid black; */
+    color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    border-radius: 10px;
+    box-shadow: 0 0 5px gray;
+
+  }
+  .fa-calendar,
+  .fa-book-open,
+  .fa-users,
+  .fa-marker{
+    color: black;
+    font-size: 15px;
+  }
+  .teacher-overview h1{
+    font-size: 15px;
+  }
+  .teacher-overview p{
+    font-size: 20px;
+    font-weight: bold;
+  }
+  #teacher-icon-card01{
+    width: 30px;
+    height: 30px;
+    border: 1px solid green;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: green;
+  
+  }
+  #teacher-icon-card02{
+    width: 30px;
+    height: 30px;
+    border: 1px solid #2c4ebb;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: #2c4ebb;
+  }
+  #teacher-icon-card03{
+    width: 30px;
+    height: 30px;
+    border: 1px solid orange;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: orange;
+  }
+  #teacher-icon-card04{
+    width: 30px;
+    height: 30px;
+    border: 1px solid green;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: green;
+  }

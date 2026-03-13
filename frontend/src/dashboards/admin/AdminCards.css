@@ -1,0 +1,89 @@
+
+
+#admin-icon-student{
+    color: green;
+    font-size: 15px;
+    border: 1px solid green;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+  #admin-icons-teachers{
+    color: #1E40AF;
+    font-size: 15px;
+    border: 1px solid #1E40AF;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+  #admin-icons-classes{
+    color: rgb(240, 164, 22);
+    font-size: 15px;
+    border: 1px solid rgb(240, 164, 22);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+  #admin-icons-rate{
+    color: green;
+    font-size: 15px;
+    border: 1px solid green;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+  .admin-container{
+    width: 80vw;
+    height: auto;
+    margin-left: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .admin-container h1{
+    font-size: 40px;
+  }
+  .admin-container h2{
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+
+  .admin-overview{
+    display: flex;
+  }
+  .admin-view{
+    width: 240px;
+    height: 150px;
+    /* background-color: whitesmoke; */
+    /* border: 1px solid black; */
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    /* color: #1E40AF; */
+    border-radius: 5px;
+    box-shadow: 0 0 5px gray;
+  }
+  
+  .admin-view h1{
+    font-size: 15px;
+    /* color: #1E40AF; */
+    color: black;
+  }
+  .admin-view p{
+    font-size: 15px;
+    font-weight: bold;
+  }
+  .fa-book-open,
+  .fa-graduation-cap,
+  .fa-users{
+    color: black;
+  }
