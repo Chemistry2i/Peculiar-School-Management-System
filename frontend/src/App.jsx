@@ -16,6 +16,7 @@ import Attendance from "./dashboards/admin/Attendance";
 
 
 
+
 function App() {
 
   return (
@@ -34,6 +35,8 @@ function App() {
           <Route path="/search" element={<StudentSearch/>}/>
           <Route path="/teachersearch" element={<TeacherSearch/>}/>
           <Route path="/attendance" element={<Attendance/>}/>
+          {/* <Route path="/pascal" element={<TeacherStudents/>}/> */}
+
       </Routes>
   </BrowserRouter>
 

@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./Grading.css";
+import StudentSearch from "../admin/StudentSearch";
+import TeacherStudents from "./TeacherStudents";
 
 const classOptions = ["All", "S1", "S2", "S3", "S4"];
 const subjectOptions = ["All", "Math", "Chemistry", "Computer", "History"];
@@ -125,7 +127,33 @@ function Grading() {
           <h2>Student Grading</h2>
           <p>Search and Grade Your student.</p>
         </div>
-        <button type="button" className="add-student-btn">Add Grade</button>
+        {/* <button type="button" className="add-student-btn">Add Grade</button> */}
+
+        <div>
+              <button className="btn btn-primary btn-custom mb-3 rounded-4" data-bs-toggle="modal" data-bs-target="#studentModal" >Add Marks</button>
+            </div>
+
+            <div className="modal fade" id="studentModal" tabIndex="-1">
+              <div className="modal-dialog modal-xl">
+
+                <div className="modal-content">
+
+                  <div className="modal-header">
+                    <h3 className="modal-title">Add student's Marks</h3>
+                    <button className="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+
+                  <div className="modal-body">
+                    <TeacherStudents/>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button className="btn btn-secondary" data-bs-dismiss="modal">close</button>
+                  </div>
+
+                </div>
+              </div>
+            </div>
       </div>
 
       <div className="grading-filters-grid">
