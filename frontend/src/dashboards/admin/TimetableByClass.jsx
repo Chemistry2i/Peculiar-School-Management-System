@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import "./TimetableByclass.css";
+import "./TimetableByClass.css";
 
 const timetableData = {
   "S.1": [

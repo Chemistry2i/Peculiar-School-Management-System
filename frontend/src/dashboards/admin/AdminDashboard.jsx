@@ -11,7 +11,7 @@ import OverviewDashboard from "./OverviewDashboard";
 import TeacherSearch from "./TeacherSearch";
 import Attendance from "./Attendance";
 import Grades from "./Grades";
-import TimetableByclass from "./TimetableByclass";
+import TimetableByclass from "./TimetableByClass";
 
 function AdminDashboard (){
     return(
