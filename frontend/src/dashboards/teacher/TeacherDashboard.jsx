@@ -1,8 +1,21 @@
 import React from "react";
+import { Route, Routes } from "react-router-dom";
 import Header from "./Header";
 import SideBar from "./SideBar";
 import TeacherCards from "./TeacherCards";
 import Body from "./Body";
+import Grading from "./Grading";
+
+function DashboardHome() {
+    return (
+        <>
+            <TeacherCards/>
+            <div>
+                <Body/>
+            </div>
+        </>
+    );
+}
 
 
 function TeacherDashboard (){
@@ -13,10 +26,10 @@ function TeacherDashboard (){
             <div style={{display:"flex"}}>
               <SideBar/>
               <div>
-                    <TeacherCards/>
-                    <div>
-                        <Body/>
-                    </div>
+                    <Routes>
+                        <Route index element={<DashboardHome/>} />
+                        <Route path="grading" element={<Grading/>} />
+                    </Routes>
               </div>
             </div>
         </div>

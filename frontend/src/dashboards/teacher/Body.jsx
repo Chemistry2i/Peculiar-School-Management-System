@@ -1,34 +1,36 @@
 import React from "react";
+import './Body.css';
 
 function Body(){
     return(
             <div className="body-content">
                 <div className="body-activities">
                     <h1>Recent Activities</h1>
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"30px"}}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"10px"}}>
                         <h2>New student enrolled</h2>
                         <p>2 hours ago</p>
                     </div>
                     <hr />
 
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"30px"}}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"10px"}}>
                         <h2>Grades submitted for Math 101</h2>
                         <p>5 hours ago</p>
                     </div>
                     <hr />
 
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"30px"}}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"10"}}>
                         <h2>Attendance Marked for today</h2>
                         <p>1 day ago</p>
                     </div>
                     <hr />
 
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"30px"}}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"10px"}}>
                         <h2>New annoucement posted</h2>
                         <p>2 days ago</p>
                     </div>
                     <hr />
                 </div>
+                
                 <div className="body-actions">
                     <h1>Quick Actions</h1>
                     <div className="teacher-buttons01">
