@@ -1,4 +1,5 @@
 import React from "react";
+import { NavLink } from "react-router-dom";
 import kyuLogo from '/src/assets/images-removebg-preview.png';
 import './SideBar.css';
 
@@ -13,28 +14,28 @@ function SideBar (){
             <hr />
 
             <div className="Teachersidebar-content">
-                <i class="fa-solid fa-house-user" id="teacher-icon-sidebar"></i>
-                <a href="">Dashboard</a>
+                <i className="fa-solid fa-house-user" id="teacher-icon-sidebar"></i>
+                <NavLink to="/teacher" end>Dashboard</NavLink>
             </div>
 
             <div className="Teachersidebar-content">
-                <i class="fa-solid fa-users" id="teacher-icon-sidebar"></i>
-                <a href="">Students</a>
+                <i className="fa-solid fa-users" id="teacher-icon-sidebar"></i>
+                <button type="button" className="teacher-sidebar-static-btn">Students</button>
             </div>
 
             <div className="Teachersidebar-content">
-                <i class="fa-solid fa-calendar" id="teacher-icon-sidebar"></i>
-                <a href="">Time table</a>
+                <i className="fa-solid fa-marker" id="teacher-icon-sidebar"></i>
+                <NavLink to="/teacher/grading">Grading</NavLink>
             </div>
 
             <div className="Teachersidebar-content">
-                <i class="fa-solid fa-clipboard-user" id="teacher-icon-sidebar"></i>
-                <a href="">Attendance</a>
+                <i className="fa-solid fa-calendar" id="teacher-icon-sidebar"></i>
+                <button type="button" className="teacher-sidebar-static-btn">My classes</button>
             </div>
 
             <div className="Teachersidebar-content">
-                <i class="fa-solid fa-marker" id="teacher-icon-sidebar"></i>
-                <a href="">Grades</a>
+                <i className="fa-solid fa-clipboard-user" id="teacher-icon-sidebar"></i>
+                <button type="button" className="teacher-sidebar-static-btn">Timetable</button>
             </div>
             <hr />
 

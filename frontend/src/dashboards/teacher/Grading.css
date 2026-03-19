@@ -1,0 +1,181 @@
+.grading-card {
+  width: 80vw;
+  margin-top: 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 0 5px gray;
+  padding: 20px;
+  margin-left: 20px;
+}
+
+.grading-card h2 {
+  margin: 0;
+}
+
+.grading-card p {
+  margin-top: 8px;
+}
+
+.grading-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.add-student-btn {
+  border: none;
+  border-radius: 8px;
+  background-color: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  padding: 10px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.add-student-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.grading-filters-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.grading-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.grading-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.grading-field label {
+  font-weight: 600;
+}
+
+.grading-field input,
+.grading-field select {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 9px 10px;
+}
+
+.student-table-section {
+  margin-top: 18px;
+}
+
+.table-label {
+  display: inline-block;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.student-table-wrap {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.student-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.student-table th,
+.student-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table-row-selected {
+  background-color: #e5e7eb;
+}
+
+.choose-student-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  background-color: #2563eb;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.choose-student-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.student-action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.unselect-student-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  background-color: #9ca3af;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.unselect-student-btn:hover {
+  background-color: #6b7280;
+}
+
+.selected-student-box {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 9px 10px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.grade-pill {
+  width: 60px;
+  text-align: center;
+  border-radius: 999px;
+  background-color: #f3f4f6;
+  padding: 8px 10px;
+  font-weight: 700;
+}
+
+.grading-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 12px;
+}
+
+.grading-actions button {
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.save-btn {
+  background-color: #2563eb;
+}
+
+.submit-btn {
+  background-color: #059669;
+}
+
+.grading-message {
+  margin-top: 14px;
+  font-weight: 600;
+}

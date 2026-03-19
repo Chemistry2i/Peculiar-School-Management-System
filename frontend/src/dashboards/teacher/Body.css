@@ -2,6 +2,8 @@
 
 /* TEACHER-BODY-CONTENT */
     .body-content{
+        width:100%;
+        min-height: 100%;
         display: flex;
         gap: 30px;
         margin-left: 30px;
@@ -10,7 +12,7 @@
   .body-activities{
     width: 630px;
     min-height: 400px;
-    /* background-color: whitesmoke; */
+    /* background-color: aqua; */
     /* border: 1px solid black; */
     border-radius: 5px;
     padding: 30px;
@@ -19,7 +21,9 @@
   .body-activities h1{
     font-size: 30px;
     font-weight: bold;
-
+  }
+  .body-activities h2{
+    font-size: 15px;
   }
   .body-activities hr{
     border: 0.2px solid gray;
