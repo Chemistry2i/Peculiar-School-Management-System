@@ -8,7 +8,7 @@ function TeacherCards (){
             <h1>Dashboard</h1>
             <h2>Welcome back! Here's your overview.</h2>
 
-            <div style={{display:"flex",gap:"30px"}}>
+            <div style={{display:"flex",gap:"30px",}}>
                 <div className="teacher-overview"> 
                     <div style={{ display:"flex",alignItems:"center,",justifyContent:"center",gap:"40px"}}>
                         <h1>My Classes</h1>
