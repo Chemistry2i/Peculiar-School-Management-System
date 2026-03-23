@@ -1,273 +1,202 @@
-import React from "react";
-// import { Link } from "react-router-dom";
-import './StudentRegistration.css'
+import React, { useState } from 'react';
+import axios from 'axios';
 
-function StudentRegistration(){
-    return(
-        <div className="Student-reg">
-            <form action="Post" className="student-reg-content">
-                <fieldset>
-                    <legend>Bio-Data</legend>
+const StudentRegistration = () => {
+    // 1. Initial State covering every field from your HTML
+    const initialFormState = {
+        firstName: '', lastName: '', otherNames: '', email: '',
+        phoneNumber: '', gender: '', dateOfBirth: '', nationality: 'Ugandan',
+        nin: '', disabilityStatus: '', linn: '', currentClass: '',
+        stream: '', combination: '', residenceStatus: '', house: '',
+        district: '', county: '', subCounty: '', parish: '', village: '',
+        profilePictureUrl: '', birthCertificateUrl: ''
+    };
 
-                    <div className="bio-infor-container">
-                        <div className="bio-content">
-                            <div className="input-container">
-                                <label htmlFor="first-name">First Name</label>
-                                <input type="text" id="first-name" required placeholder="First Name"/>
-                                <p></p>
-                            </div>
+    const [formData, setFormData] = useState(initialFormState);
+    const [loading, setLoading] = useState(false);
+    const [result, setResult] = useState(null);
+    const [error, setError] = useState(null);
 
-                            <div className="input-container">
-                                <label htmlFor="last-name">Last Name</label>
-                                <input type="text" id="last-name" required placeholder="Last Name"/>
-                                <p></p>
-                            </div>
+    // 2. Handle Input Changes
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    // 3. Submit to Java Backend
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+        setResult(null);
+
+        // Remove empty strings to keep the payload clean
+        const payload = Object.fromEntries(
+            Object.entries(formData).filter(([_, value]) => value !== '')
+        );
+
+        try {
+            // Update this URL to match your Spring Boot mapping
+            const response = await axios.post('http://localhost:8080/api/students/register', payload);
+            setResult(response.data);
+            setFormData(initialFormState); // Reset form on success
+        } catch (err) {
+            setError(err.response?.data?.message || "Server connection failed. Is Spring Boot running?");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div style={containerStyle}>
+            <header style={{ textAlign: 'center', marginBottom: '30px' }}>
+                <h1 style={{ color: '#2c3e50' }}>🎓 Student Registration - Academix</h1>
+                <p>Register new students into the system. Fields marked with (*) are required.</p>
+            </header>
+
+            <form onSubmit={handleSubmit}>
+                {/* --- SECTION 1: PERSONAL --- */}
+                <fieldset style={fieldsetStyle}>
+                    <legend style={legendStyle}>👤 Personal Information</legend>
+                    <div style={gridStyle}>
+                        <InputField label="First Name *" name="firstName" value={formData.firstName} onChange={handleChange} required />
+                        <InputField label="Last Name *" name="lastName" value={formData.lastName} onChange={handleChange} required />
+                        <InputField label="Other Names" name="otherNames" value={formData.otherNames} onChange={handleChange} />
+                        <InputField label="Email Address *" name="email" type="email" value={formData.email} onChange={handleChange} required />
+                        
+                        <div style={infoBoxStyle}>
+                            <p><strong>🔐 Password:</strong> A secure password will be generated automatically and sent to the email provided.</p>
                         </div>
 
-                        <div className="bio-content">
-
-                            <div className="input-container">
-                                <label htmlFor="other-name">Other name</label>
-                                <input type="text" id="other-name"  placeholder="Other Name"/>
-                            </div>
-
-                            <div className="input-container">
-                                <label htmlFor="gender">Gender</label>
-                                <select name="" id="gender" required>
-                                    <option value="">--Select--</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                </select>
-                                <p></p>
-                            </div>
-
-                        </div>
-
-                        <div className="bio-content">
-                            <div className="input-container">
-                                <label htmlFor="DOB">Date of Birth</label>
-                                <input type="date" id="DOB" required />
-                                <p></p>
-                            </div>
-
-                            <div className="input-container">
-                                <label htmlFor="nin">National Id No. (NIN)</label>
-                                <input type="text" id="nin" placeholder="National ID No." minLength={14} maxLength={14}/>
-                            </div>
-                        </div>
-
-                        <div className="bio-content">
-                            <div className="input-container">
-                                <label htmlFor="reli">Religion</label>
-                                <input type="text" id="reli" required placeholder="Religion"/>
-                                <p></p>
-                            </div>
-
-                            <div className="input-container">
-                                <label htmlFor="nin">Disability (If any)</label>
-                                <input type="text" id="nin" placeholder="National ID No." minLength={14} maxLength={14}/>
-                            </div>
-                        </div>
-
+                        <InputField label="Phone Number" name="phoneNumber" type="tel" placeholder="+256700000000" value={formData.phoneNumber} onChange={handleChange} />
+                        <SelectField label="Gender *" name="gender" value={formData.gender} onChange={handleChange} required 
+                            options={[{v:'MALE', t:'Male'}, {v:'FEMALE', t:'Female'}, {v:'OTHER', t:'Other'}]} />
+                        <InputField label="Date of Birth *" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} required />
+                        <InputField label="Nationality *" name="nationality" value={formData.nationality} onChange={handleChange} required />
+                        <InputField label="NIN (National ID)" name="nin" placeholder="CF123456789ABC" value={formData.nin} onChange={handleChange} maxLength="14" />
+                        <InputField label="Disability Status" name="disabilityStatus" value={formData.disabilityStatus} onChange={handleChange} />
                     </div>
                 </fieldset>
 
-                <fieldset>
-                    <legend>Contact-Information</legend>
-
-                    <div className="bio-infor-container">
-                        <div className="bio-content">
-                            <div className="input-container">
-                                <label htmlFor="home">Home Address</label>
-                                <input type="text" id="home" required placeholder="Home Address"/>
-                                <p></p>
-                            </div>
-
-                            <div className="input-container">
-                                <label htmlFor="district">District</label>
-                                <input type="text" id="district" required placeholder="District"/>
-                                <p></p>
-                            </div>
+                {/* --- SECTION 2: ACADEMIC --- */}
+                <fieldset style={fieldsetStyle}>
+                    <legend style={legendStyle}>🎓 Academic Information</legend>
+                    <div style={gridStyle}>
+                        <InputField label="LINN (Learner ID)" name="linn" placeholder="L123456789" value={formData.linn} onChange={handleChange} />
+                        <SelectField label="Current Class/Grade *" name="currentClass" value={formData.currentClass} onChange={handleChange} required
+                            options={['Senior 1', 'Senior 2', 'Senior 3', 'Senior 4', 'Senior 5', 'Senior 6'].map(s => ({v:s, t:s}))} />
+                        <SelectField label="Stream/Section" name="stream" value={formData.stream} onChange={handleChange}
+                            options={['Blue', 'Red', 'Green', 'Yellow', 'Science', 'Arts', 'Commerce', 'Technical'].map(s => ({v:s, t:s}))} />
+                        
+                        <div style={{ gridColumn: 'span 2' }}>
+                            <label style={labelStyle}>Subject Combination (Required for S5/S6)</label>
+                            <input 
+                                name="combination" 
+                                value={formData.combination} 
+                                onChange={handleChange} 
+                                placeholder="e.g., BCM/Sub-Math"
+                                style={{
+                                    ...inputStyle, 
+                                    backgroundColor: (formData.currentClass.includes('5') || formData.currentClass.includes('6')) ? '#e8f4fd' : 'white',
+                                    border: (formData.currentClass.includes('5') || formData.currentClass.includes('6')) ? '1px solid #2196F3' : '1px solid #ccc'
+                                }} 
+                            />
                         </div>
 
-                        <div className="bio-content">
-
-                            <div className="input-container">
-                                <label htmlFor="county">County</label>
-                                <input type="text" id="county" required placeholder="County"/>
-                                <p></p>
-                            </div>
-
-                            <div className="input-container">
-                                <label htmlFor="sub-county">Sub-County</label>
-                                <input type="text" id="sub-county" required placeholder="Sub-County"/>
-                                <p></p>
-                            </div>
-
-                        </div>
-
-                        <div className="bio-content">
-                            <div className="input-container">
-                                <label htmlFor="parish">Parish</label>
-                                <input type="text" id="parish" required placeholder="Parish"/>
-                                <p></p>
-                            </div>
-
-                            <div className="input-container">
-                                <label htmlFor="village">Village</label>
-                                <input type="text" id="county" required placeholder="Village"/>
-                                <p></p>
-                            </div>
-                        </div>
-
-                        <div className="bio-content">
-                            <div className="input-container">
-                                <label htmlFor="phone">Phone No.</label>
-                                <input type="text" id="reli" required placeholder="Phone No."/>
-                                <p></p>
-                            </div>
-
-                            <div className="input-container">
-                                <label htmlFor="stdemail">Email (If any)</label>
-                                <input type="email" id="stdemail" placeholder="Email" required/>
-                                <p></p>
-                            </div>
-                        </div>
-
+                        <SelectField label="Residence Status" name="residenceStatus" value={formData.residenceStatus} onChange={handleChange}
+                            options={[{v:'DAY', t:'Day Scholar'}, {v:'BOARDING', t:'Boarding'}]} />
+                        
+                        <InputField 
+                            label="House (for Boarders)" 
+                            name="house" 
+                            value={formData.house} 
+                            onChange={handleChange} 
+                            style={{ backgroundColor: formData.residenceStatus === 'BOARDING' ? '#e8f4fd' : 'white' }} 
+                        />
                     </div>
                 </fieldset>
 
-
-                <fieldset>
-                    <legend>Parent/Gardian Information</legend>
-
-                    <div className="bio-infor-container">
-                        <div className="bio-content">
-                            <div className="input-container">
-                                <label htmlFor="parent-name">Parent's Name</label>
-                                <input type="text" id="parent-name" required placeholder="First Name"/>
-                                <p></p>
-                            </div>
-
-                            <div className="input-container">
-                                <label htmlFor="relationship">Relationship</label>
-                                <select name="" id="gender" required>
-                                    <option value="">--Select--</option>
-                                    <option value="father">Father</option>
-                                    <option value="mother">Mother</option>
-                                    <option value="gardian">Gardian</option>
-                                </select>
-                                <p></p>
-                            </div>
-                        </div>
-
-                        <div className="bio-content">
-
-                            <div className="input-container">
-                                <label htmlFor="other-name">Phone No.</label>
-                                <input type="text" id="other-name" required placeholder="Phone No."/>
-                                <p></p>
-                            </div>
-
-                            <div className="input-container">
-                                <label htmlFor="parentemail">Email</label>
-                                <input type="email" id="parentemail"  placeholder="Email"/>
-                            </div>
-
-                        </div>
-
-                        <div className="bio-content">
-                            <div className="input-container">
-                                <label htmlFor="occupation">Occupation</label>
-                                <input type="text" id="occupation" required placeholder="Occupation"/>
-                                <p></p>
-                            </div>
-
-                            <div className="input-container">
-                                <label htmlFor="address">Address</label>
-                                <input type="text" id="address" required placeholder="Address" />
-                                <p></p>
-                            </div>
-                        </div>
-
+                {/* --- SECTION 3: ADDRESS --- */}
+                <fieldset style={fieldsetStyle}>
+                    <legend style={legendStyle}>🏠 Address Information</legend>
+                    <div style={gridStyle}>
+                        <InputField label="District *" name="district" value={formData.district} onChange={handleChange} required />
+                        <InputField label="County *" name="county" value={formData.county} onChange={handleChange} required />
+                        <InputField label="Sub-County *" name="subCounty" value={formData.subCounty} onChange={handleChange} required />
+                        <InputField label="Parish *" name="parish" value={formData.parish} onChange={handleChange} required />
+                        <InputField label="Village *" name="village" value={formData.village} onChange={handleChange} required />
                     </div>
                 </fieldset>
 
-                <fieldset>
-                    <legend>Academic Iinformation</legend>
-
-                    <div className="bio-infor-container">
-                        <div className="bio-content">
-                            <div className="input-container">
-                                <label htmlFor="ad-date">Admission Date</label>
-                                <input type="date" id="ad-date" required />
-                                <p></p>
-                            </div>
-
-                            <div className="input-container">
-                                <label htmlFor="class">Class</label>
-                                <select name="" id="class" required>
-                                    <option value="">--Select--</option>
-                                    <option value="s.1">Senior one</option>
-                                    <option value="s.2">Senior two</option>
-                                    <option value="s.3">Senior three</option>
-                                    <option value="s.4">Senior four</option>
-                                </select>
-                                <p></p>
-                            </div>
-                        </div>
-
-                        <div className="bio-content">
-
-                            <div className="input-container">
-                                <label htmlFor="Stream">Stream</label>
-                                <input type="text" id="Stream" required placeholder="Stream"/>
-                                <p></p>
-                            </div>
-
-                            <div className="input-container">
-                                <label htmlFor="category">Student Category</label>
-                                <select name="" id="categorys" required>
-                                    <option value="">--Select--</option>
-                                    <option value="day">Day</option>
-                                    <option value="boarding">Boarding</option>
-                                </select>
-                                <p></p>
-                            </div>
-
-                        </div>
-
-                        <div className="bio-content">
-                            <div className="input-container">
-                                <label htmlFor="previous-school">Previous School</label>
-                                <input type="text" id="previous-school" required placeholder="Previous School"/>
-                                <p></p>
-                            </div>
-
-                            <div className="input-container">
-                                <label htmlFor="house">House</label>
-                                <input type="text" id="house" required placeholder="House" />
-                                <p></p>
-                            </div>
-                        </div>
-
+                {/* --- SECTION 4: DOCUMENTS --- */}
+                <fieldset style={fieldsetStyle}>
+                    <legend style={legendStyle}>📎 Documents (Optional URLs)</legend>
+                    <div style={gridStyle}>
+                        <InputField label="Profile Picture URL" name="profilePictureUrl" type="url" value={formData.profilePictureUrl} onChange={handleChange} />
+                        <InputField label="Birth Certificate URL" name="birthCertificateUrl" type="url" value={formData.birthCertificateUrl} onChange={handleChange} />
                     </div>
                 </fieldset>
 
-                <div className="register-student" >
-                    <div></div>
-                    <div className="register-student-btn">
-                        <div className="register-student-btn01">
-                            <button>Clear Form</button>
-                        </div>
-                        <div className="register-student-btn02">
-                            <button>Register Student</button>
-                        </div>
-                    </div>
+                {/* --- ACTIONS --- */}
+                <div style={{ display: 'flex', gap: '15px', marginTop: '30px', justifyContent: 'center' }}>
+                    <button type="submit" disabled={loading} style={submitBtnStyle}>
+                        {loading ? '⏳ Processing...' : '📝 Register Student'}
+                    </button>
+                    <button type="button" onClick={() => setFormData(initialFormState)} style={resetBtnStyle}>
+                        🔄 Reset Form
+                    </button>
                 </div>
             </form>
+
+            {/* --- FEEDBACK MESSAGES --- */}
+            {result && (
+                <div style={successBoxStyle}>
+                    <h3 style={{ margin: '0 0 10px 0' }}>✅ Registration Successful!</h3>
+                    <p><strong>Student ID:</strong> <span style={{ color: '#2196F3', fontSize: '1.2rem' }}>{result.studentId || result.student?.studentId}</span></p>
+                    <p><strong>Name:</strong> {result.fullName || result.student?.fullName}</p>
+                    <p>Login instructions sent to: <strong>{result.email || result.student?.email}</strong></p>
+                </div>
+            )}
+
+            {error && (
+                <div style={errorBoxStyle}>
+                    <h3 style={{ margin: '0 0 10px 0' }}>❌ Registration Failed</h3>
+                    <p>{error}</p>
+                </div>
+            )}
         </div>
     );
-}
+};
 
-export default  StudentRegistration
+// --- Reusable Input Components ---
+const InputField = ({ label, style, ...props }) => (
+    <div style={{ marginBottom: '15px' }}>
+        <label style={labelStyle}>{label}</label>
+        <input {...props} style={{ ...inputStyle, ...style }} />
+    </div>
+);
+
+const SelectField = ({ label, options, ...props }) => (
+    <div style={{ marginBottom: '15px' }}>
+        <label style={labelStyle}>{label}</label>
+        <select {...props} style={inputStyle}>
+            <option value="">Select...</option>
+            {options.map(opt => <option key={opt.v} value={opt.v}>{opt.t}</option>)}
+        </select>
+    </div>
+);
+
+// --- CSS-in-JS Styles ---
+const containerStyle = { maxWidth: '1000px', margin: '40px auto', padding: '30px', backgroundColor: '#fdfdfd', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' };
+const fieldsetStyle = { marginBottom: '30px', padding: '25px', border: '1px solid #e0e0e0', borderRadius: '8px', backgroundColor: '#fff' };
+const legendStyle = { padding: '0 10px', fontWeight: 'bold', color: '#34495e', fontSize: '1.1rem' };
+const gridStyle = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' };
+const labelStyle = { display: 'block', marginBottom: '8px', fontWeight: '600', color: '#555', fontSize: '0.9rem' };
+const inputStyle = { width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box', transition: 'border 0.3s' };
+const infoBoxStyle = { gridColumn: '1 / -1', backgroundColor: '#e8f4fd', padding: '15px', borderLeft: '5px solid #2196F3', borderRadius: '4px', margin: '10px 0' };
+const submitBtnStyle = { padding: '15px 40px', backgroundColor: '#2ecc71', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem', transition: 'background 0.3s' };
+const resetBtnStyle = { padding: '15px 40px', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' };
+const successBoxStyle = { marginTop: '30px', padding: '25px', backgroundColor: '#e8f5e9', border: '1px solid #2ecc71', borderRadius: '8px', textAlign: 'center' };
+const errorBoxStyle = { marginTop: '30px', padding: '25px', backgroundColor: '#ffebee', border: '1px solid #e74c3c', borderRadius: '8px', textAlign: 'center' };
+
+export default StudentRegistration;
