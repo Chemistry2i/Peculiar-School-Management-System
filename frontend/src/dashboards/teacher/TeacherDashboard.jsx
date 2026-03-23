@@ -6,6 +6,9 @@ import TeacherCards from "./TeacherCards";
 import Body from "./Body";
 import Grading from "./Grading";
 import TeacherStudents from "./TeacherStudents";
+import MyClasses from "./MyClasses";
+
+
 function DashboardHome() {
     return (
         <>
@@ -30,6 +33,7 @@ function TeacherDashboard (){
                         <Route index element={<DashboardHome/>} />
                         <Route path="grading" element={<Grading/>} />
                         <Route path="students" element={<TeacherStudents/>} />
+                        <Route path="my-classes" element={<MyClasses/>} />
                     </Routes>
               </div>
             </div>

@@ -53,7 +53,6 @@ function TeacherStudents() {
 	const [error, setError] = useState("");
 	const [selectedClass, setSelectedClass] = useState("All Classes");
 	const [attendance, setAttendance] = useState({});
-	const [marks, setMarks] = useState({});
 
 	useEffect(() => {
 		let mounted = true;
@@ -120,30 +119,11 @@ function TeacherStudents() {
 		}));
 	};
 
-	const handleMarkChange = (studentId, value) => {
-		const numeric = Number(value);
-		if (value === "") {
-			setMarks((prev) => ({
-				...prev,
-				[studentId]: ""
-			}));
-			return;
-		}
-
-		if (!Number.isNaN(numeric)) {
-			const bounded = Math.max(0, Math.min(100, numeric));
-			setMarks((prev) => ({
-				...prev,
-				[studentId]: bounded
-			}));
-		}
-	};
-
 	return (
 		<section className="teacher-students-page">
 			<div className="teacher-students-header">
 				<h2>Student Attendance</h2>
-				<p>Search and assign marks for student.</p>
+				<p>View students and track attendance.</p>
 			</div>
 
 			<div className="teacher-students-filter-row">
@@ -173,7 +153,6 @@ function TeacherStudents() {
 								<th>Student</th>
 								<th>Class</th>
 								<th>Subject</th>
-								<th>Marks</th>
 								<th>Attendance</th>
 							</tr>
 						</thead>
@@ -184,17 +163,6 @@ function TeacherStudents() {
 										<td>{student.name}</td>
 										<td>{student.className}</td>
 										<td>{student.subject || "No subject"}</td>
-										<td>
-											<input
-												type="number"
-												min="0"
-												max="100"
-												className="teacher-marks-input"
-												placeholder="0-100"
-												value={marks[student.id] ?? ""}
-												onChange={(event) => handleMarkChange(student.id, event.target.value)}
-											/>
-										</td>
 										<td>
 											<div className="attendance-buttons">
 												<button
@@ -217,7 +185,7 @@ function TeacherStudents() {
 								))
 							) : (
 								<tr>
-									<td colSpan="5" className="teacher-students-empty">
+									<td colSpan="4" className="teacher-students-empty">
 										No students found for this class.
 									</td>
 								</tr>

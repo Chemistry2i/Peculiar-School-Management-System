@@ -1,5 +1,8 @@
 import React from "react";
 import './Body.css';
+import TeacherStudents from "./TeacherStudents";
+import AddStudentMarks from "../../auth/AddStudentMarks";
+import MyClasses from "./MyClasses";
 
 function Body(){
     return(
@@ -33,15 +36,101 @@ function Body(){
                 
                 <div className="body-actions">
                     <h1>Quick Actions</h1>
-                    <div className="teacher-buttons01">
+
+                    {/* <div className="teacher-buttons01">
                         <button>Mark Attendance</button>
-                    </div>
-                    <div className="teacher-buttons">
+                    </div> */}
+            <div>
+              <button className="btn btn-secondary btn-custom rounded-4 mb-3" data-bs-toggle="modal" data-bs-target="#markAttendanceModal">Mark Attendance</button>
+            </div>
+
+            <div className="modal fade" id="markAttendanceModal" tabIndex="-1">
+              <div className="modal-dialog modal-xl">
+
+                <div className="modal-content">
+
+                  <div className="modal-header">  
+                      <h3 className="modal-title">Mark Attendance</h3>
+                      <button className="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+
+                  <div className="modal-body">
+                    <TeacherStudents/>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button className="btn btn-secondary" data-bs-dismiss="modal">close</button>
+                  </div>
+
+                </div>
+                
+              </div>
+            </div>
+
+                    {/* <div className="teacher-buttons">
                         <button>Enter Grades</button>
-                    </div>
-                    <div className="teacher-buttons03">
+                    </div> */}
+
+            <div>
+              <button className="btn btn-primary btn-custom rounded-4 mb-3" data-bs-toggle="modal" data-bs-target="#AddStudentMarksModal">Add Student Marks</button>
+            </div>
+
+            <div className="modal fade" id="AddStudentMarksModal" tabIndex="-1">
+              <div className="modal-dialog modal-xl">
+
+                <div className="modal-content">
+
+                  <div className="modal-header">  
+                      <h3 className="modal-title">Add student marks</h3>
+                      <button className="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+
+                  <div className="modal-body">
+                    <AddStudentMarks/>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button className="btn btn-secondary" data-bs-dismiss="modal">close</button>
+                  </div>
+
+                </div>
+                
+              </div>
+            </div>
+
+
+                    {/* <div className="teacher-buttons03">
                         <button>View Timetable</button>
-                    </div>
+                    </div> */}
+
+                    <div>
+              <button className="btn btn-secondary btn-custom rounded-4" data-bs-toggle="modal" data-bs-target="#MyclasssesModal">View Your Timetable</button>
+            </div>
+
+            <div className="modal fade" id="MyclasssesModal" tabIndex="-1">
+              <div className="modal-dialog modal-xl">
+
+                <div className="modal-content">
+
+                  <div className="modal-header">  
+                      <h3 className="modal-title">View Your Timetable</h3>
+                      <button className="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+
+                  <div className="modal-body">
+                    <MyClasses/>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button className="btn btn-secondary" data-bs-dismiss="modal">close</button>
+                  </div>
+
+                </div>
+                
+              </div>
+            </div>
+
+
                 </div>
             </div>
     )

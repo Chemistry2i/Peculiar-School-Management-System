@@ -1,5 +1,6 @@
 .teacher-students-page {
-	width:85vw;
+	width:80vw;
+	height: 85vh;
 	margin: 20px;
 	padding: 20px;
 	background: #ffffff;
@@ -91,21 +92,6 @@
 	border-color: #ef4444;
 	background: #fee2e2;
 	color: #991b1b;
-}
-
-.teacher-marks-input {
-	width: 90px;
-	border: 1px solid #d1d5db;
-	border-radius: 8px;
-	padding: 6px 8px;
-	font-size: 13px;
-	color: #1f2937;
-}
-
-.teacher-marks-input:focus {
-	outline: none;
-	border-color: #2563eb;
-	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
 
 .teacher-students-empty {

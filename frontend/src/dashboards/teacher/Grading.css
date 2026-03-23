@@ -23,6 +23,12 @@
   gap: 12px;
 }
 
+.grading-add-student-row {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .add-student-btn {
   border: none;
   border-radius: 8px;
@@ -79,77 +85,49 @@
   margin-bottom: 8px;
 }
 
-.student-table-wrap {
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  max-height: 260px;
-  overflow: auto;
+.teacher-students-table-wrap {
+  overflow-x: auto;
 }
 
-.student-table {
+.teacher-students-table {
   width: 100%;
   border-collapse: collapse;
+  background: #fff;
 }
 
-.student-table th,
-.student-table td {
-  text-align: left;
-  padding: 8px 10px;
+.teacher-students-table th,
+.teacher-students-table td {
+  padding: 12px;
   border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  vertical-align: top;
 }
 
-.table-row-selected {
-  background-color: #e5e7eb;
+.teacher-students-table th {
+  background: #f3f4f6;
+  color: #111827;
+  font-size: 14px;
 }
 
-.choose-student-btn {
-  border: none;
-  border-radius: 6px;
-  padding: 6px 10px;
-  background-color: #2563eb;
-  color: #ffffff;
-  cursor: pointer;
-}
-
-.choose-student-btn:hover {
-  background-color: #1d4ed8;
-}
-
-.student-action-buttons {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.unselect-student-btn {
-  border: none;
-  border-radius: 6px;
-  padding: 6px 10px;
-  background-color: #9ca3af;
-  color: #ffffff;
-  cursor: pointer;
-}
-
-.unselect-student-btn:hover {
-  background-color: #6b7280;
-}
-
-.selected-student-box {
+.grading-marks-input {
+  width: 90px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
-  padding: 9px 10px;
-  min-height: 40px;
-  display: flex;
-  align-items: center;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: #1f2937;
 }
 
-.grade-pill {
-  width: 60px;
+.grading-marks-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.teacher-students-empty {
   text-align: center;
-  border-radius: 999px;
-  background-color: #f3f4f6;
-  padding: 8px 10px;
-  font-weight: 700;
+  color: #6b7280;
+  padding: 20px;
 }
 
 .grading-actions {
