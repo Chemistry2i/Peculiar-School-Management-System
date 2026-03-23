@@ -1,4 +1,6 @@
-
+.modal-content{
+  overflow: hidden;
+}
 
 /* TEACHER-BODY-CONTENT */
     .body-content{

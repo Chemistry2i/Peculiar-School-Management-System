@@ -12,6 +12,8 @@ import ResetPassword from "./auth/ResetPassword";
 import StudentSearch from "./dashboards/admin/StudentSearch";
 import TeacherSearch from "./dashboards/admin/TeacherSearch";
 import Attendance from "./dashboards/admin/Attendance";
+import AddStudentMarks from "./auth/AddStudentMarks";
+
 
 
 
@@ -34,6 +36,8 @@ function App() {
           <Route path="/search" element={<StudentSearch/>}/>
           <Route path="/teachersearch" element={<TeacherSearch/>}/>
           <Route path="/attendance" element={<Attendance/>}/>
+          <Route path="/addstudentmarks" element={<AddStudentMarks/>}/>
+
       </Routes>
   </BrowserRouter>
 

@@ -1,20 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./Grading.css";
+import AddStudentMarks from "../../auth/AddStudentMarks";
 
 const classOptions = ["All", "S1", "S2", "S3", "S4"];
-const subjectOptions = ["All", "Math", "Chemistry", "Computer", "History"];
 
 const students = [
-  { id: 1, name: "Amina N.", className: "S1", scores: { Math: 76, Chemistry: 71, Computer: 84, History: 67 } },
-  { id: 2, name: "Brian K.", className: "S1", scores: { Math: 89, Chemistry: 62, Computer: 78, History: 73 } },
-  { id: 3, name: "Carla M.", className: "S2", scores: { Math: 58, Chemistry: 65, Computer: 69, History: 80 } },
-  { id: 4, name: "Denis O.", className: "S2", scores: { Math: 92, Chemistry: 87, Computer: 90, History: 88 } },
-  { id: 5, name: "Esther P.", className: "S3", scores: { Math: 47, Chemistry: 52, Computer: 64, History: 59 } },
-  { id: 6, name: "Farouk T.", className: "S3", scores: { Math: 70, Chemistry: 74, Computer: 72, History: 69 } },
-  { id: 7, name: "Gloria S.", className: "S4", scores: { Math: 81, Chemistry: 79, Computer: 92, History: 85 } },
-  { id: 8, name: "Hassan R.", className: "S4", scores: { Math: 66, Chemistry: 61, Computer: 75, History: 63 } },
-  { id: 9, name: "Isaac B.", className: "S2", scores: { Math: 54, Chemistry: 58, Computer: 57, History: 62 } },
-  { id: 10, name: "Janet L.", className: "S1", scores: { Math: 95, Chemistry: 91, Computer: 88, History: 90 } },
+  { id: 1, name: "Amina N.", className: "S1" },
+  { id: 2, name: "Brian K.", className: "S1" },
+  { id: 3, name: "Carla M.", className: "S2" },
+  { id: 4, name: "Denis O.", className: "S2" },
+  { id: 5, name: "Esther P.", className: "S3" }
 ];
 
 function getGrade(mark) {
@@ -25,37 +20,11 @@ function getGrade(mark) {
   return "F";
 }
 
-function getAverageScore(scores) {
-  const values = Object.values(scores);
-  if (!values.length) {
-    return 0;
-  }
-
-  const total = values.reduce((sum, value) => sum + value, 0);
-  return Math.round(total / values.length);
-}
-
 function Grading() {
   const [searchText, setSearchText] = useState("");
   const [classFilter, setClassFilter] = useState("All");
-  const [subjectFilter, setSubjectFilter] = useState("All");
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [mark, setMark] = useState("");
   const [enteredMarks, setEnteredMarks] = useState({});
   const [message, setMessage] = useState("");
-
-  const getStudentMark = (student, subject) => {
-    const key = `${student.id}-${subject}`;
-    if (Object.prototype.hasOwnProperty.call(enteredMarks, key)) {
-      return Number(enteredMarks[key]);
-    }
-
-    if (subject === "All") {
-      return getAverageScore(student.scores);
-    }
-
-    return student.scores[subject];
-  };
 
   const filteredStudents = useMemo(() => {
     const query = searchText.trim().toLowerCase();
@@ -69,64 +38,136 @@ function Grading() {
   }, [searchText, classFilter]);
 
   useEffect(() => {
-    if (!selectedStudent) {
+    setMessage("");
+  }, [searchText, classFilter]);
+
+  const getAutoGrade = (studentId) => {
+    const rawMark = enteredMarks[studentId];
+    if (rawMark === undefined || rawMark === "") {
+      return "-";
+    }
+
+    return getGrade(Number(rawMark));
+  };
+
+  const handleMarkChange = (studentId, value) => {
+    if (value === "") {
+      setEnteredMarks((prev) => ({
+        ...prev,
+        [studentId]: ""
+      }));
+      setMessage("");
       return;
     }
 
-    setMark(String(getStudentMark(selectedStudent, subjectFilter)));
-  }, [subjectFilter]);
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) {
+      return;
+    }
 
-  const autoGrade = mark === "" ? "-" : getGrade(Number(mark));
+    const bounded = Math.max(0, Math.min(100, numeric));
+    setEnteredMarks((prev) => ({
+      ...prev,
+      [studentId]: bounded
+    }));
+    setMessage("");
+  };
 
   const handleSave = () => {
-    if (!selectedStudent || mark === "") {
-      setMessage("Select a student and enter marks before saving.");
+    const entries = filteredStudents
+      .filter((student) => enteredMarks[student.id] !== undefined && enteredMarks[student.id] !== "")
+      .map((student) => ({
+        studentId: student.id,
+        studentName: student.name,
+        className: student.className,
+        subject: "Chemistry",
+        mark: Number(enteredMarks[student.id]),
+        grade: getAutoGrade(student.id)
+      }));
+
+    if (entries.length === 0) {
+      setMessage("Enter at least one student mark before saving.");
       return;
     }
 
     const payload = {
-      student: selectedStudent,
-      className: selectedStudent.className,
-      subject: subjectFilter,
-      mark: Number(mark),
-      grade: autoGrade,
+      subject: "Chemistry",
+      entries,
       status: "draft",
-      savedAt: new Date().toISOString(),
+      savedAt: new Date().toISOString()
     };
 
-    localStorage.setItem("teacher-grade-draft", JSON.stringify(payload));
-    setMessage("Draft saved successfully.");
+    localStorage.setItem("teacher-chemistry-grade-draft", JSON.stringify(payload));
+    setMessage("Chemistry draft saved successfully.");
   };
 
   const handleSubmit = () => {
-    if (!selectedStudent || mark === "") {
-      setMessage("Select a student and enter marks before submitting.");
+    const entries = filteredStudents
+      .filter((student) => enteredMarks[student.id] !== undefined && enteredMarks[student.id] !== "")
+      .map((student) => ({
+        studentId: student.id,
+        studentName: student.name,
+        className: student.className,
+        subject: "Chemistry",
+        mark: Number(enteredMarks[student.id]),
+        grade: getAutoGrade(student.id)
+      }));
+
+    if (entries.length === 0) {
+      setMessage("Enter at least one student mark before submitting.");
       return;
     }
 
     const payload = {
-      student: selectedStudent,
-      className: selectedStudent.className,
-      subject: subjectFilter,
-      mark: Number(mark),
-      grade: autoGrade,
+      subject: "Chemistry",
+      entries,
       status: "submitted",
-      submittedAt: new Date().toISOString(),
+      submittedAt: new Date().toISOString()
     };
 
-    localStorage.setItem("teacher-grade-submitted", JSON.stringify(payload));
-    setMessage("Grades submitted successfully.");
+    localStorage.setItem("teacher-chemistry-grade-submitted", JSON.stringify(payload));
+    setMessage("Chemistry grades submitted successfully.");
   };
 
   return (
     <div className="grading-card">
       <div className="grading-header-row">
         <div>
-          <h2>Student Grading</h2>
-          <p>Search and Grade Your student.</p>
+          <h2>Grading Student</h2>
+          <p>Enter student marks and review the grades.</p>
         </div>
-        <button type="button" className="add-student-btn">Add Grade</button>
       </div>
+{/* 
+      <div className="grading-add-student-row">
+        <button type="button" className="add-student-btn">Add Student</button>
+      </div> */}
+
+            <div>
+              <button className="btn btn-primary btn-l rounded-4" data-bs-toggle="modal" data-bs-target="#addstudentModal">Add New Student</button>
+            </div>
+
+            <div className="modal fade" id="addstudentModal" tabIndex="-1">
+              <div className="modal-dialog modal-xl">
+
+                <div className="modal-content">
+
+                  <div className="modal-header">  
+                      <h3 className="modal-title">Students Details</h3>
+                      <button className="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+
+                  <div className="modal-body">
+                    <AddStudentMarks/>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button className="btn btn-secondary" data-bs-dismiss="modal">close</button>
+                  </div>
+
+                </div>
+                
+              </div>
+            </div>
 
       <div className="grading-filters-grid">
         <div className="grading-field">
@@ -161,130 +202,57 @@ function Grading() {
           </select>
         </div>
 
-        <div className="grading-field">
-          <label htmlFor="subject-filter">Subject Filter</label>
-          <select
-            id="subject-filter"
-            value={subjectFilter}
-            onChange={(event) => {
-              setSubjectFilter(event.target.value);
-              setMessage("");
-            }}
-          >
-            {subjectOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-
       </div>
 
       <div className="student-table-section">
         <label className="table-label">Students Table</label>
-        <div className="student-table-wrap">
-          <table className="student-table">
+        <div className="teacher-students-table-wrap">
+          <table className="teacher-students-table">
             <thead>
               <tr>
-                <th>Name</th>
+                <th>Student</th>
                 <th>Class</th>
-                <th>{subjectFilter} Mark</th>
-                <th>Grade</th>
-                <th>Action</th>
+                <th>Subject</th>
+                <th>Marks</th>
+                <th>Auto Grade</th>
               </tr>
             </thead>
             <tbody>
-              {filteredStudents.map((student) => {
-                const subjectMark = getStudentMark(student, subjectFilter);
-
-                return (
-                  <tr key={student.id} className={selectedStudent?.id === student.id ? "table-row-selected" : ""}>
+              {filteredStudents.length > 0 ? (
+                filteredStudents.map((student) => (
+                  <tr key={student.id}>
                     <td>{student.name}</td>
                     <td>{student.className}</td>
-                    <td>{subjectMark}</td>
-                    <td>{getGrade(subjectMark)}</td>
+                    <td>Chemistry</td>
                     <td>
-                      <div className="student-action-buttons">
-                        <button
-                          type="button"
-                          className="choose-student-btn"
-                          onClick={() => {
-                            setSelectedStudent(student);
-                            setMark(String(subjectMark));
-                            setMessage("");
-                          }}
-                        >
-                          Select
-                        </button>
-                        {selectedStudent?.id === student.id && (
-                          <button
-                            type="button"
-                            className="unselect-student-btn"
-                            onClick={() => {
-                              setSelectedStudent(null);
-                              setMark("");
-                              setMessage("");
-                            }}
-                          >
-                            Unselect
-                          </button>
-                        )}
-                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        className="grading-marks-input"
+                        placeholder="0-100"
+                        value={enteredMarks[student.id] ?? ""}
+                        onChange={(event) => handleMarkChange(student.id, event.target.value)}
+                      />
                     </td>
+                    <td>{getAutoGrade(student.id)}</td>
                   </tr>
-                );
-              })}
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="teacher-students-empty">
+                    No students found for this class.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-      </div>
 
-      <div className="grading-grid">
-        <div className="grading-field">
-          <label>Selected Student</label>
-          <div className="selected-student-box">
-            {selectedStudent ? `${selectedStudent.name} (${selectedStudent.className})` : "Select one student from table"}
-          </div>
+        <div className="grading-actions">
+          <button className="save-btn" onClick={handleSave}>Save</button>
+          <button className="submit-btn" onClick={handleSubmit}>Submit</button>
         </div>
-
-        <div className="grading-field">
-          <label htmlFor="marks-input">Marks</label>
-          <input
-            id="marks-input"
-            type="number"
-            min="0"
-            max="100"
-            value={mark}
-            onChange={(event) => {
-              const rawValue = event.target.value;
-              if (rawValue === "") {
-                setMark("");
-                setMessage("");
-                return;
-              }
-
-              const numeric = Math.max(0, Math.min(100, Number(rawValue)));
-              setMark(String(numeric));
-              if (selectedStudent) {
-                const key = `${selectedStudent.id}-${subjectFilter}`;
-                setEnteredMarks((prev) => ({ ...prev, [key]: numeric }));
-              }
-              setMessage("");
-            }}
-            placeholder="0 - 100"
-          />
-        </div>
-
-        <div className="grading-field">
-          <label>Auto Grade</label>
-          <div className="grade-pill">{autoGrade}</div>
-        </div>
-      </div>
-
-      <div className="grading-actions">
-        <button className="save-btn" onClick={handleSave}>Save</button>
-        <button className="submit-btn" onClick={handleSubmit}>Submit</button>
       </div>
 
       {message && <p className="grading-message">{message}</p>}
