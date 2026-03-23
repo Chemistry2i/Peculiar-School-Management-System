@@ -1,105 +1,85 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import axios from 'axios';
 import './StudentSearch.css';
 
 const StudentSearch = () => {
+  const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Sample student data
-  const [students] = useState([
-    {
-      id: 'STU001',
-      name: 'John Makumbi',
-      class: '10A',
-      parentName: 'Jane Makumbi',
-      parentContact: '+254712345678',
-      status: 'active',
-    },
-    {
+  // 1. Fetch Students with Authorization Header
+  const fetchStudents = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('academix_token'); // Ensure this matches your login storage key
 
-      id: 'STU002',
-      name: 'Sarah Ocan',
-      class: '10B',
-      parentName: 'Mr. Ofwono',
-      parentContact: '+254787654321',
-      status: 'active',
-    },
-    {
-      id: 'STU003',
-      name: 'Michael Otto',
-      class: '9A',
-      parentName: 'Mrs. JOhnson',
-      parentContact: '+254722334455',
-      status: 'inactive',
-    },
-    {
-      id: 'STU004',
-      name: 'Emily Watera',
-      class: '11A',
-      parentName: 'Mr Lukoma Williams',
-      parentContact: '+254799887766',
-      status: 'active',
-    },
-    {
-      id: 'STU005',
-      name: 'David kijjambu',
-      class: '10A',
-      parentName: 'Mrs. Kijjambu',
-      parentContact: '+254711223344',
-      status: 'suspended',
-    },
-  ]);
+      const response = await axios.get('http://localhost:8080/api/students', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-  // Filter students based on search term and status
+      // Based on your Repository, we expect an Array
+      const data = Array.isArray(response.data) ? response.data : [];
+      setStudents(data);
+      setError(null);
+    } catch (err) {
+      console.error("Fetch error:", err);
+      setError(err.response?.status === 403 
+        ? "Access Denied: Please log in again." 
+        : "Server Connection Failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  // 2. Filter logic matching your Repository fields
   const filteredStudents = useMemo(() => {
+    if (!Array.isArray(students)) return [];
+
     return students.filter((student) => {
-      const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.id.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || student.status === statusFilter;
+      const fullName = `${student.firstName || ''} ${student.lastName || ''}`.toLowerCase();
+      const sId = (student.studentId || '').toLowerCase();
+      const email = (student.email || '').toLowerCase();
+      
+      const matchesSearch = 
+        fullName.includes(searchTerm.toLowerCase()) || 
+        sId.includes(searchTerm.toLowerCase()) ||
+        email.includes(searchTerm.toLowerCase());
+      
+      // Mapping isActive boolean to the status filter
+      const matchesStatus = statusFilter === 'all' || 
+        (statusFilter === 'active' && student.isActive) ||
+        (statusFilter === 'inactive' && !student.isActive);
+      
       return matchesSearch && matchesStatus;
     });
   }, [searchTerm, statusFilter, students]);
 
-  // Handle action buttons
-  const handleView = (student) => {
-    console.log('View student:', student);
-    alert(`Viewing student: ${student.name}`);
-  };
-
-  const handleEdit = (student) => {
-    console.log('Edit student:', student);
-    alert(`Editing student: ${student.name}`);
-  };
-
-  const handleDelete = (student) => {
-    console.log('Delete student:', student);
-    alert(`Deleting student: ${student.name}`);
-  };
-
-  const getStatusBadge = (status) => {
-    const statusClasses = {
-      active: 'badge-success',
-      inactive: 'badge-danger',
-      suspended: 'badge-warning',
-    };
-    return statusClasses[status] || 'badge-secondary';
-  };
-
   return (
     <div className="student-search-container">
       <div className="search-section">
-        <h2>Student Management</h2>
+        <div className="header-actions">
+          <h2 className="section-title">Student Management</h2>
+          <button className="refresh-btn" onClick={fetchStudents}>Refresh List</button>
+        </div>
         
         <div className="search-filters">
           <div className="search-input-wrapper">
             <input
               type="text"
-              placeholder="Search by student name or ID..."
+              placeholder="Search by name, ID, or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
             />
-            <span className="search-icon"><i className="fa-solid fa-magnifying-glass"></i></span>
           </div>
 
           <select
@@ -108,63 +88,51 @@ const StudentSearch = () => {
             className="status-filter"
           >
             <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="suspended">Suspended</option>
+            <option value="active">Active Only</option>
+            <option value="inactive">Inactive Only</option>
           </select>
         </div>
       </div>
 
       <div className="table-wrapper">
-        {filteredStudents.length > 0 ? (
+        {loading ? (
+          <div className="loading-state">Fetching students from Academix API...</div>
+        ) : error ? (
+          <div className="error-state">{error}</div>
+        ) : filteredStudents.length > 0 ? (
           <table className="students-table">
             <thead>
               <tr>
-                <th>Student Name</th>
+                <th>Full Name</th>
                 <th>Student ID</th>
-                <th>Class</th>
-                <th>Parent Name</th>
-                <th>Contact</th>
+                <th>Class / Stream</th>
+                <th>Residence</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredStudents.map((student) => (
+                /* UNIQUE KEY FIX: Uses database ID */
                 <tr key={student.id}>
-                  <td>{student.name}</td>
-                  <td>{student.id}</td>
-                  <td>{student.class}</td>
-                  <td>{student.parentName}</td>
-                  <td>{student.parentContact}</td>
                   <td>
-                    <span className={`badge ${getStatusBadge(student.status)}`}>
-                      {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
+                    <div className="name-cell">
+                      <strong>{student.firstName} {student.lastName}</strong>
+                      <span className="sub-text">{student.email}</span>
+                    </div>
+                  </td>
+                  <td>{student.studentId || 'N/A'}</td>
+                  <td>{student.currentClass} {student.stream ? `- ${student.stream}` : ''}</td>
+                  <td>{student.residenceStatus || 'Unknown'}</td>
+                  <td>
+                    <span className={`badge ${student.isActive ? 'badge-success' : 'badge-danger'}`}>
+                      {student.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td>
                     <div className="action-buttons">
-                      <button
-                        className="btn btn-primary"
-                        onClick={() => handleView(student)}
-                        title="View Details"
-                      >
-                        View
-                      </button>
-                      <button
-                        className="btn btn-warning"
-                        onClick={() => handleEdit(student)}
-                        title="Edit Student"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => handleDelete(student)}
-                        title="Delete Student"
-                      >
-                        Delete
-                      </button>
+                      <button className="btn-icon view" title="View Details">👁️</button>
+                      <button className="btn-icon edit" title="Edit Student">✏️</button>
                     </div>
                   </td>
                 </tr>
@@ -173,13 +141,13 @@ const StudentSearch = () => {
           </table>
         ) : (
           <div className="no-results">
-            <p>No students found matching your search criteria.</p>
+            <p>No student records found in the database.</p>
           </div>
         )}
       </div>
 
       <div className="table-footer">
-        <p>Showing {filteredStudents.length} of {students.length} students</p>
+        <p>Showing {filteredStudents.length} of {students.length} total students</p>
       </div>
     </div>
   );
