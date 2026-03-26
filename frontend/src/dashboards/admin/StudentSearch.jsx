@@ -516,11 +516,15 @@ const StudentSearch = () => {
 
 
       <div className="table-wrapper">
-        {filteredStudents.length > 0 ? (
+        {loading ? (
+          <div className="loading-state">Fetching students from Academix API...</div>
+        ) : error ? (
+          <div className="error-state">{error}</div>
+        ) : filteredStudents.length > 0 ? (
           <table className="students-table">
             <thead>
               <tr>
-                <th>Student Name</th>
+                <th>Full Name</th>
                 <th>Student ID</th>
                 <th>Class</th>
                 <th>Contact</th>
@@ -530,6 +534,7 @@ const StudentSearch = () => {
             </thead>
             <tbody>
               {filteredStudents.map((student) => (
+                /* UNIQUE KEY FIX: Uses database ID */
                 <tr key={student.id}>
                   <td>{student.name}</td>
                   <td>{student.id}</td>
@@ -571,13 +576,13 @@ const StudentSearch = () => {
           </table>
         ) : (
           <div className="no-results">
-            <p>No students found matching your search criteria.</p>
+            <p>No student records found in the database.</p>
           </div>
         )}
       </div>
 
       <div className="table-footer">
-        <p>Showing {filteredStudents.length} of {students.length} students</p>
+        <p>Showing {filteredStudents.length} of {students.length} total students</p>
       </div>
     </div>
   );
