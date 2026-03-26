@@ -189,10 +189,21 @@
                     <input type="number" id="updateSubjectId" value="1">
                 </div>
                 <div class="input-group">
-                    <label>Request Body (JSON)</label>
-                    <textarea id="updateSubjectBody">{
-  "description": "Updated description",
-  "creditUnits": 4
+                                        <label>Request Body (JSON)</label>
+                                        <textarea id="updateSubjectBody">{
+    "code": "PHY",
+    "name": "Physics",
+    "category": "SCIENCES",
+    "level": "O_LEVEL",
+    "isCompulsory": false,
+    "isScience": true,
+    "isArts": false,
+    "paperCount": 3,
+    "maxMarksPerPaper": 100,
+    "creditUnits": 4,
+    "description": "Updated description",
+    "department": "Science Department",
+    "isActive": true
 }</textarea>
                 </div>
                 <button class="btn btn-primary" onclick="updateSubject()">Send Request</button>

@@ -51,9 +51,9 @@ public class Course {
     @Column(nullable = false, length = 200)
     private String name;
 
-    // Course type
+    // Course type (maps to 'category' column in DB)
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "category", nullable = false)
     private CourseType type;
 
     // Level

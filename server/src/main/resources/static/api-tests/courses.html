@@ -138,11 +138,19 @@
                 </div>
                 <p class="endpoint-desc">Get courses by type</p>
                 <div class="input-group">
-                    <label>Course Type</label>
+                    <label>Course Type (must match backend enum exactly)</label>
                     <select id="getByType">
-                        <option value="SCIENCES">Sciences</option>
-                        <option value="ARTS">Arts</option>
-                        <option value="BUSINESS">Business</option>
+                        <option value="SCIENCES">SCIENCES</option>
+                        <option value="ARTS">ARTS</option>
+                        <option value="BUSINESS">BUSINESS</option>
+                        <option value="TECHNICAL">TECHNICAL</option>
+                        <option value="LANGUAGES">LANGUAGES</option>
+                        <option value="HUMANITIES">HUMANITIES</option>
+                        <option value="VOCATIONAL">VOCATIONAL</option>
+                        <option value="CREATIVE_ARTS">CREATIVE_ARTS</option>
+                        <option value="PHYSICAL_EDUCATION">PHYSICAL_EDUCATION</option>
+                        <option value="RELIGIOUS_EDUCATION">RELIGIOUS_EDUCATION</option>
+                        <option value="MATHEMATICS">MATHEMATICS</option>
                     </select>
                 </div>
                 <button class="btn btn-primary" onclick="getByType()">Send Request</button>
@@ -161,9 +169,11 @@
                     <input type="number" id="updateCourseId" value="1">
                 </div>
                 <div class="input-group">
-                    <label>Request Body (JSON)</label>
-                    <textarea id="updateCourseBody">{
-  "description": "Updated description for course"
+                                        <label>Request Body (JSON)</label>
+                                        <textarea id="updateCourseBody">{
+    "code": "COURSE101",
+    "name": "Sample Course Name",
+    "description": "Updated course description"
 }</textarea>
                 </div>
                 <button class="btn btn-primary" onclick="updateCourse()">Send Request</button>
