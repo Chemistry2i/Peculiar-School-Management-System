@@ -8,13 +8,8 @@ import Body from "./Body";
 function OverviewDashboard (){
     return(
         <>
-            <div className="admin-overview">
-                <div>
-                    <AdminCards/>
-                    <Body/>
-                </div>
-            </div>
-            
+            <AdminCards/>
+            <Body/>
         </>
     )
 }

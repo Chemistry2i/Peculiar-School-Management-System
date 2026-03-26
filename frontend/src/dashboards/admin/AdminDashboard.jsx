@@ -17,28 +17,24 @@ import AddClass from "../AdminForms/AddClass";
 
 function AdminDashboard (){
     return(
-        <div>
-            <Header/>
-            <div className="admin-overview">
-                <SideBar/>
-
-                <div>
-                    {/* <AdminCards/> */}
-
-                    <div>
-                        <Routes>
-                            <Route path="/" element={<OverviewDashboard/>} />
-                            <Route path="students" element={<StudentSearch/>} />
-                            <Route path="users" element={<Users/>} />
-                            <Route path="teachers" element={<TeacherSearch/>} />
-                            <Route path="grades" element={<Grades/>} />
-                            <Route path="attendance" element={<Attendance/>} />
-                            <Route path="timetable" element={<TimetableByclass/>} />
-                            <Route path="addclass" element={<AddClass/>}/>
-                        </Routes>
-                    </div>
-                </div>
+        <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6' }}>
+            <SideBar/>
+            
+            <div style={{ marginLeft: '250px', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                <Header/>
                 
+                <div style={{ padding: '20px', flex: 1 }}>
+                    <Routes>
+                        <Route path="/" element={<OverviewDashboard/>} />
+                        <Route path="students" element={<StudentSearch/>} />
+                        <Route path="users" element={<Users/>} />
+                        <Route path="teachers" element={<TeacherSearch/>} />
+                        <Route path="grades" element={<Grades/>} />
+                        <Route path="attendance" element={<Attendance/>} />
+                        <Route path="timetable" element={<TimetableByclass/>} />
+                        <Route path="addclass" element={<AddClass/>}/>
+                    </Routes>
+                </div>
             </div>
         </div>
     )

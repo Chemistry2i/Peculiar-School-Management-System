@@ -3,44 +3,67 @@ import './AdminCards.css'
 
 
 function AdminCards (){
-    return(
-            <div className="admin-container">
-                <h1>Dashboard</h1>
-                <h2>Welcome Back!Here's your overview.</h2>
-                <div style={{display:"flex",gap:"30px"}}>
-                    <div className="admin-view">
-                        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"30px"}}>
-                            <h1>Total Students</h1>
-                            <i class="fa-solid fa-users" id="admin-icon-student"></i>
-                        </div>
+    const currentDate = new Date().toLocaleDateString('en-US', {
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+
+    return (
+        <div className="admin-container">
+            <div className="banner-container">
+                <div className="banner-content">
+                    <h1>Dashboard Overview</h1>
+                    <p>Welcome back, Admin! Here's what's happening today.</p>
+                </div>
+                <div className="banner-date">
+                    <span>{currentDate}</span>
+                </div>
+            </div>
+
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <div className="stat-icon student">
+                        <i className="fa-solid fa-users"></i>
+                    </div>
+                    <div className="stat-info">
+                        <h3>Total Students</h3>
                         <p>1,234</p>
                     </div>
+                </div>
 
-                    <div className="admin-view">
-                        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"30px"}}>
-                            <h1>Total Teachers</h1>
-                            <i class="fas fa-graduation-cap" id="admin-icons-teachers"></i>
-                        </div>
+                <div className="stat-card">
+                    <div className="stat-icon teacher">
+                        <i className="fas fa-graduation-cap"></i>
+                    </div>
+                    <div className="stat-info">
+                        <h3>Total Teachers</h3>
                         <p>80</p>
                     </div>
+                </div>
 
-                    <div className="admin-view">
-                        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"30px"}}>
-                            <h1>Classes Today</h1>
-                            <i class="fa-solid fa-book-open" id="admin-icons-classes"></i>
-                        </div>
+                <div className="stat-card">
+                    <div className="stat-icon classes">
+                        <i className="fa-solid fa-book-open"></i>
+                    </div>
+                    <div className="stat-info">
+                        <h3>Classes Today</h3>
                         <p>52</p>
                     </div>
+                </div>
 
-                    <div className="admin-view">
-                        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"30px"}}>
-                            <h1>Attendance Rate</h1>
-                            <i class="fa-solid fa-users" id="admin-icons-rate"></i>
-                        </div>
+                <div className="stat-card">
+                    <div className="stat-icon attendance">
+                        <i className="fa-solid fa-chart-pie"></i>
+                    </div>
+                    <div className="stat-info">
+                        <h3>Attendance Rate</h3>
                         <p>95.4%</p>
                     </div>
                 </div>
             </div>
+        </div>
     )
 }
 export default AdminCards;
