@@ -141,7 +141,7 @@ public class Teacher extends User {
     @Column(nullable = true, length = 1000)
     private String notes;
 
-    // ============ RELATIONSHIPS ============
+    // ============ RELATIONSHIPS AS REQUESTED BY THE PECULAIR BOARD ============
 
     // Subject assignments (proper many-to-many via join entity)
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
