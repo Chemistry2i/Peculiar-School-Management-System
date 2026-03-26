@@ -40,113 +40,56 @@ const TeacherSearch = () => {
     hireDate: '',
   });
 
-  // Sample teacher data
-  const [teachers, setTeachers] = useState([
-    {
-      id: 'TEACH001',
-      name: 'Mr. Robert Tamale',
-      subject: 'Mathematics',
-      email: 'robert.tamale@school.edu',
-      phone: '+254712345678',
-      firstName: 'Robert',
-      lastName: 'Tamale',
-      contactDetails: '+254712345678',
-      dateOfBirth: '1985-03-14',
-      gender: 'Male',
-      nationality: 'Ugandan',
-      qualification: 'Masters',
-      specialisation: 'Mathematics',
-      department: 'Science',
-      hireDate: '2021-01-10',
-    },
-    {
-      id: 'TEACH002',
-      name: 'Ms. Sarah Nantume',
-      subject: 'English Literature',
-      email: 'sarah.nantume@school.edu',
-      phone: '+254787654321',
-      firstName: 'Sarah',
-      lastName: 'Nantume',
-      contactDetails: '+254787654321',
-      dateOfBirth: '1989-07-21',
-      gender: 'Female',
-      nationality: 'Ugandan',
-      qualification: 'Bachelors',
-      specialisation: 'English Literature',
-      department: 'Languages',
-      hireDate: '2022-04-05',
-    },
-    {
-      id: 'TEACH003',
-      name: 'Mr. James Nduga',
-      subject: 'Physics',
-      email: 'james.nduga@school.edu',
-      phone: '+254722334455',
-      firstName: 'James',
-      lastName: 'Nduga',
-      contactDetails: '+254722334455',
-      dateOfBirth: '1982-11-09',
-      gender: 'Male',
-      nationality: 'Kenyan',
-      qualification: 'PhD',
-      specialisation: 'Physics',
-      department: 'Science',
-      hireDate: '2019-09-02',
-    },
-    {
-      id: 'TEACH004',
-      name: 'Ms. Emily kajoba',
-      subject: 'Chemistry',
-      email: 'emily.kajoba@school.edu',
-      phone: '+254799887766',
-      firstName: 'Emily',
-      lastName: 'Kajoba',
-      contactDetails: '+254799887766',
-      dateOfBirth: '1990-05-18',
-      gender: 'Female',
-      nationality: 'Tanzanian',
-      qualification: 'Masters',
-      specialisation: 'Chemistry',
-      department: 'Science',
-      hireDate: '2020-06-15',
-    },
-    {
-      id: 'TEACH005',
-      name: 'Mr. David Bali',
-      subject: 'History',
-      email: 'david.bali@school.edu',
-      phone: '+254711223344',
-      firstName: 'David',
-      lastName: 'Bali',
-      contactDetails: '+254711223344',
-      dateOfBirth: '1987-02-28',
-      gender: 'Male',
-      nationality: 'Rwandan',
-      qualification: 'Bachelors',
-      specialisation: 'History',
-      department: 'Humanities',
-      hireDate: '2023-01-08',
-    },
-    {
-      id: 'TEACH006',
-      name: 'Ms. Lisa Ojambo',
-      subject: 'Biology',
-      email: 'lisa.ojambo@school.edu',
-      phone: '+254755667788',
-      firstName: 'Lisa',
-      lastName: 'Ojambo',
-      contactDetails: '+254755667788',
-      dateOfBirth: '1991-10-03',
-      gender: 'Female',
-      nationality: 'South Sudanese',
-      qualification: 'Postgraduate Diploma',
-      specialisation: 'Biology',
-      department: 'Science',
-      hireDate: '2021-08-30',
-    },
-  ]);
+  const [teachers, setTeachers] = useState([]);
+
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch('http://localhost:8080/api/teachers', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // The backend returns { teachers: [...] }
+          if (data.teachers && Array.isArray(data.teachers)) {
+             const mappedTeachers = data.teachers.map(t => ({
+              id: t.teacherId || `TEACH-${t.id}`, // fallback if teacherId is null
+              name: `${t.firstName} ${t.lastName}`,
+              subject: t.primarySubject || 'N/A',
+              email: t.email,
+              phone: t.phoneNumber,
+              firstName: t.firstName,
+              lastName: t.lastName,
+              contactDetails: t.phoneNumber,
+              dateOfBirth: t.dateOfBirth,
+              gender: t.gender,
+              nationality: t.nationality,
+              qualification: t.qualifications,
+              // If specialisation is not in backend, reuse primarySubject or leave blank
+              specialisation: t.primarySubject, 
+              department: t.departmentName || 'General',
+              hireDate: t.dateJoined
+             }));
+             setTeachers(mappedTeachers);
+          }
+        } else {
+            console.error('Failed to fetch teachers:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching teachers:', error);
+      }
+    };
+
+    fetchTeachers();
+  }, []);
 
   // Filter teachers based on search term
+
   const filteredTeachers = useMemo(() => {
     return teachers.filter((teacher) => {
       const matchesSearch =

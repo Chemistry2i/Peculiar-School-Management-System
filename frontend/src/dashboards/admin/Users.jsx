@@ -1,16 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./Users.css";
 
-const sampleUsers = [
-	{ id: 1, userId: "USR001", firstName: "Amina", lastName: "Nansubuga", email: "amina.n@school.com", role: "Student", status: "Active", dateJoined: "2025-01-12" },
-	{ id: 2, userId: "USR002", firstName: "Brian", lastName: "Okello", email: "brian.o@school.com", role: "Student", status: "Active", dateJoined: "2025-01-14" },
-	{ id: 3, userId: "USR003", firstName: "Carol", lastName: "Atim", email: "carol.a@school.com", role: "Student", status: "Inactive", dateJoined: "2025-01-18" },
-	{ id: 4, userId: "USR004", firstName: "David", lastName: "Tumwesigye", email: "david.t@school.com", role: "Teacher", status: "Active", dateJoined: "2025-01-20" },
-	{ id: 5, userId: "USR005", firstName: "Evelyn", lastName: "Nakirya", email: "evelyn.n@school.com", role: "Student", status: "Active", dateJoined: "2025-01-22" }
-];
-
 function Users() {
-	const [users, setUsers] = useState(sampleUsers);
+	const [users, setUsers] = useState([]);
 	const [filterField, setFilterField] = useState("all");
 	const [searchTerm, setSearchTerm] = useState("");
 	const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -38,6 +30,77 @@ function Users() {
 		status: "Active",
 		dateJoined: "",
 	});
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const token = localStorage.getItem('authToken');
+                const headers = { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                // Fetch Students
+                const studentsResp = await fetch('http://localhost:8080/api/students', { headers });
+                let students = [];
+                if (studentsResp.ok) {
+                    const data = await studentsResp.json();
+                    if (data.students) {
+                        students = data.students.map(s => ({
+                            id: s.id, // unique key
+                            userId: String(s.id), 
+                            firstName: s.firstName,
+                            lastName: s.lastName,
+                            email: s.email,
+                            role: 'Student',
+                            status: s.status === 'ACTIVE' ? 'Active' : 'Inactive',
+                            dateJoined: s.admissionDate
+                        }));
+                    }
+                }
+
+                // Fetch Teachers
+                const teachersResp = await fetch('http://localhost:8080/api/teachers', { headers });
+                let teachers = [];
+                if (teachersResp.ok) {
+                    const data = await teachersResp.json();
+                    if (data.teachers) {
+                        teachers = data.teachers.map(t => ({
+                            id: t.id, // unique key, might clash with student ID if simply concatenated?
+                            // To avoid key clash, maybe prefix ID or use UUID if available.
+                            // However, react key needs to be unique.
+                            // For sorting/filtering, it's fine.
+                            userId: t.teacherId || `T-${t.id}`,
+                            firstName: t.firstName,
+                            lastName: t.lastName,
+                            email: t.email,
+                            role: 'Teacher',
+                            status: t.employmentStatus === 'ACTIVE' ? 'Active' : 'Inactive', // simplistic mapping
+                            dateJoined: t.dateJoined
+                        }));
+                    }
+                }
+
+                // Fetch Staff (if desired, add here later)
+                // const staffResp = await fetch('http://localhost:8080/api/staff', ...);
+
+                // Combine
+                // Note: IDs from different tables might overlap. 
+                // Better to generate a unique frontend ID or composite key.
+                const allUsers = [
+                    ...students.map(s => ({...s, id: `S-${s.id}`})), 
+                    ...teachers.map(t => ({...t, id: `T-${t.id}`}))
+                ];
+                
+                setUsers(allUsers);
+
+            } catch (error) {
+                console.error("Error fetching users:", error);
+            }
+        };
+
+        fetchUsers();
+    }, []);
 
 	const filteredUsers = useMemo(() => {
 		const normalizedTerm = searchTerm.trim().toLowerCase();
@@ -136,10 +199,10 @@ function Users() {
 		}
 
 		const newUser = {
-			id: users.length ? Math.max(...users.map((user) => user.id)) + 1 : 1,
+			id: `NEW-${Date.now()}`,
 			userId,
 			firstName,
-			lastName,
+            lastName,
 			email,
 			role,
 			status,

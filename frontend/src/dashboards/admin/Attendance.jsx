@@ -12,25 +12,6 @@ import "./Attendance.css";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
-    const weeklyData = [
-   { day: "Mon", present: 182, absent: 15, late: 11 },
-   { day: "Tue", present: 176, absent: 18, late: 14 },
-   { day: "Wed", present: 190, absent: 10, late: 9 },
-  { day: "Thu", present: 185, absent: 13, late: 12 },
-  { day: "Fri", present: 179, absent: 16, late: 13 },
-];
-
-const attendanceRecords = [
-  { id: "STU-001", student: "John Makumbi", className: "S4A", status: "present" },
-  { id: "STU-002", student: "Sarah Ocan", className: "S4B", status: "absent" },
-  { id: "STU-003", student: "Michael Otto", className: "S3A", status: "late" },
-  { id: "STU-004", student: "Emily Watera", className: "S5A", status: "present" },
-  { id: "STU-005", student: "David Kijjambu", className: "S4A", status: "unknown" },
-  // { id: "STU-006", student: "Anna Nanyonjo", className: "S3B", status: "present" },
-  // { id: "STU-007", student: "Robert Ssemanda", className: "S2C", status: "absent" },
-  // { id: "STU-008", student: "Miriam Achan", className: "S1A", status: "late" },
-];
-
 const statusLabel = {
   present: "Present",
   absent: "Absent",
@@ -42,6 +23,71 @@ const Attendance = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [classFilter, setClassFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Helper to format date as YYYY-MM-DD
+  const getTodayDate = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('authToken');
+        const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+
+        // 1. Fetch all classes first
+        const classesResp = await fetch('http://localhost:8080/api/classes', { headers });
+        if (!classesResp.ok) throw new Error('Failed to fetch classes');
+        const classesData = await classesResp.json();
+        
+        // 2. Fetch specific attendance for "today" for each class
+        // Note: Ideally, the backend should provide a bulk endpoint for this.
+        const today = getTodayDate(); 
+        const allRecords = [];
+
+        // Use Promise.all to fetch in parallel
+        await Promise.all(classesData.map(async (cls) => {
+            const className = cls.name; // Assuming 'name' is the field for class name (e.g., "S1A")
+            try {
+                const attResp = await fetch(`http://localhost:8080/api/attendance/class/${className}/date/${today}`, { headers });
+                if (attResp.ok) {
+                    const attData = await attResp.json();
+                    // attData is [ { studentName, status, ... }, ... ]
+                    attData.forEach(record => {
+                        allRecords.push({
+                            id: record.studentNumber || String(record.id), // Use student number or record ID
+                            student: record.studentName,
+                            className: record.className,
+                            status: record.status.toLowerCase() // Convert 'PRESENT' to 'present'
+                        });
+                    });
+                }
+            } catch (err) {
+                console.warn(`Failed to fetch attendance for class ${className}`, err);
+            }
+        }));
+
+        setAttendanceRecords(allRecords);
+
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const totals = useMemo(() => {
     const present = attendanceRecords.filter((row) => row.status === "present").length;
@@ -70,6 +116,14 @@ const Attendance = () => {
       return matchesSearch && matchesClass && matchesStatus;
     });
   }, [searchTerm, classFilter, statusFilter]);
+
+  const weeklyData = [
+   { day: "Mon", present: 182, absent: 15, late: 11 },
+   { day: "Tue", present: 176, absent: 18, late: 14 },
+   { day: "Wed", present: 190, absent: 10, late: 9 },
+  { day: "Thu", present: 185, absent: 13, late: 12 },
+  { day: "Fri", present: 179, absent: 16, late: 13 },
+];
 
   const chartData = {
     labels: weeklyData.map((item) => item.day),

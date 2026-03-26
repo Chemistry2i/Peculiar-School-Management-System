@@ -13,7 +13,7 @@ import Attendance from "./Attendance";
 import Grades from "./Grades";
 import TimetableByclass from "./TimetableByClass";
 import Users from "./Users";
-import AddClass from "../AdminForms/AddClass";
+
 
 function AdminDashboard (){
     return(
@@ -34,7 +34,6 @@ function AdminDashboard (){
                             <Route path="grades" element={<Grades/>} />
                             <Route path="attendance" element={<Attendance/>} />
                             <Route path="timetable" element={<TimetableByclass/>} />
-                            <Route path="addclass" element={<AddClass/>}/>
                         </Routes>
                     </div>
                 </div>

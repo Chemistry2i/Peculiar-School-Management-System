@@ -1,58 +1,67 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import './StudentSearch.css';
 
 const StudentSearch = () => {
-  // Single source of truth for all student records.
-  const [students, setStudents] = useState([
-    {
-      id: 'STU001',
-      name: 'John Makumbi',
-      studentClass: 'S.4 North',
-      contact: '+256701112233',
-      status: 'active',
-    },
-    {
-      id: 'STU002',
-      name: 'Sarah Ocan',
-      studentClass: 'S.3 East',
-      contact: '+256702223344',
-      status: 'inactive',
-    },
-    {
-      id: 'STU003',
-      name: 'Michael Otto',
-      studentClass: 'S.5 West',
-      contact: '+256703334455',
-      status: 'active',
-    },
-  ]);
+    // Single source of truth for all student records.
+    const [students, setStudents] = useState([]);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [addFormError, setAddFormError] = useState('');
-  const [recentAdmissions, setRecentAdmissions] = useState(0);
-  const [addFormData, setAddFormData] = useState({
-    firstName: '',
-    lastName: '',
-    dateOfBirth: '',
-    gender: '',
-    nationality: '',
-    currentClass: '',
-    contact: '',
-    status: 'active',
-  });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [addFormError, setAddFormError] = useState('');
+    const [recentAdmissions, setRecentAdmissions] = useState(0);
+    const [addFormData, setAddFormData] = useState({
+        firstName: '',
+        lastName: '',
+        dateOfBirth: '',
+        gender: '',
+        nationality: '',
+        currentClass: '',
+        contact: '',
+        status: 'active',
+    });
 
-  const [viewStudent, setViewStudent] = useState(null);
-  const [editStudent, setEditStudent] = useState(null);
-  const [editFormError, setEditFormError] = useState('');
-  const [editFormData, setEditFormData] = useState({
-    name: '',
-    studentClass: '',
-    contact: '',
-    status: 'active',
-  });
+    const [viewStudent, setViewStudent] = useState(null);
+    const [editStudent, setEditStudent] = useState(null);
+    const [editFormError, setEditFormError] = useState('');
+    const [editFormData, setEditFormData] = useState({
+        name: '',
+        studentClass: '',
+        contact: '',
+        status: 'active',
+    });
 
-  // Demo fee value for dashboard summary card.
+    // Fetch students from backend on mount
+    useEffect(() => {
+        const fetchStudents = async () => {
+            try {
+                const response = await fetch("/api/students");
+                if (response.ok) {
+                    const data = await response.json();
+                    // Map backend data to frontend structure if needed
+                    // Assuming backend returns object with { students: [...] } or array [...]
+                    const studentList = Array.isArray(data) ? data : (data.students || []);
+
+                    const mappedStudents = studentList.map(s => ({
+                        id: s.studentId || s.id, // Prefer studentId (e.g. STU001) if available
+                        name: s.fullName || `${s.firstName} ${s.lastName}`,
+                        studentClass: s.currentClass || 'N/A',
+                        contact: s.phoneNumber || s.email || 'N/A',
+                        status: s.isActive ? 'active' : 'inactive',
+                        // Store full object for view modal
+                        ...s
+                    }));
+
+                    setStudents(mappedStudents);
+                }
+            } catch (error) {
+                console.error("Failed to fetch students:", error);
+            }
+        };
+
+        fetchStudents();
+    }, []);
+
+    // Demo fee value for dashboard summary card.
   const totalFeesCollectedUsd = 0.00;
 
   const todaysAttendance = useMemo(() => {

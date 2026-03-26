@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   BarElement,
   CategoryScale,
@@ -19,54 +19,50 @@ const subjectOverview = [
   { subject: "Art", score: 49 },
 ];
 
-const initialGradeRows = [
-  {
-    id: "GR-101",
-    student: "John Makumbi",
-    className: "S4A",
-    average: 64,
-    subject: "Math",
-    term: "term1",
-  },
-  {
-    id: "GR-102",
-    student: "Sarah Ocan",
-    className: "S4B",
-    average: 71,
-    subject: "English",
-    term: "term1",
-  },
-  {
-    id: "GR-103",
-    student: "Michael Otto",
-    className: "S3A",
-    average: 39,
-    subject: "Science",
-    term: "term1",
-  },
-  {
-    id: "GR-104",
-    student: "Emily Watera",
-    className: "S5A",
-    average: 67,
-    subject: "Art",
-    term: "term2",
-  },
-  {
-    id: "GR-105",
-    student: "David Kijjambu",
-    className: "S4A",
-    average: 74,
-    subject: "Math",
-    term: "term3",
-  },
-];
-
 const Grades = () => {
-  const [gradeRows, setGradeRows] = useState(initialGradeRows);
+  const [gradeRows, setGradeRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [termFilter, setTermFilter] = useState("term1");
+  const [termFilter, setTermFilter] = useState("all");
   const [subjectFilter, setSubjectFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchResults = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('authToken');
+        const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+        const response = await fetch('http://localhost:8080/api/results', { headers });
+
+        if (response.ok) {
+           const data = await response.json();
+           // data needs to be mapped to the UI shape
+           // UI expected shape: { id, student, className, average, subject, term }
+           const mappedData = data.map(res => ({
+               id: String(res.id),
+               student: res.studentNumber || `Student-${res.studentId}`, // fallback
+               className: res.className || "N/A",
+               average: res.percentage || 0,
+               subject: res.subjectName || res.subjectCode,
+               term: `Term ${res.term}`, // backend sends integer term
+               grade: res.grade,
+               remarks: res.remarks
+           }));
+           setGradeRows(mappedData);
+        } else {
+            console.error("Failed to fetch results");
+        }
+      } catch (error) {
+        console.error("Error fetching results:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchResults();
+  }, []);
 
   const getGradeLabel = (average) => {
     if (average >= 70) return "A";

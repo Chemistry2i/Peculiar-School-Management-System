@@ -1,6 +1,6 @@
 import React from "react";
 import StudentDashboard from "./dashboards/student/StudentDashboard";
-import { Routes,Route,BrowserRouter } from "react-router-dom";
+import { Routes, Route, BrowserRouter } from "react-router-dom";
 import Libriarian from "./dashboards/librarian/LibrarianDashboard";
 import LoginForm from "/src/auth/Login.jsx"
 import StudentRegistration from '/src/auth/StudentRegistration.jsx'
@@ -13,48 +13,34 @@ import StudentSearch from "./dashboards/admin/StudentSearch";
 import TeacherSearch from "./dashboards/admin/TeacherSearch";
 import Attendance from "./dashboards/admin/Attendance";
 import AddStudentMarks from "./auth/AddStudentMarks";
-import AddClass from "./dashboards/AdminForms/AddClass";
-import AddCourse from "./dashboards/AdminForms/AddCourse";
-import AddExam from "./dashboards/AdminForms/AddExam";
-import AddResult from "./dashboards/AdminForms/AddResult";
-import AddStudent from "./dashboards/AdminForms/AddStudent";
-import AddSubject from "./dashboards/AdminForms/AddSubject";
-import AddTeacher from "./dashboards/AdminForms/AddTeacher";
-import AddTimetable from "./dashboards/AdminForms/AddTimetable";
-
-
-
-
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
 
   return (
     <>
-  <BrowserRouter>
-      <Routes>
-          <Route path="/student" element={<StudentDashboard />}/>
-          <Route path="/librarian" element={<Libriarian />} />
-          <Route path="/login" element={< LoginForm />} />
+      <BrowserRouter>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<LoginForm />} />
           <Route path="/student/Reg" element={<StudentRegistration />} />
           <Route path="/teachers/Reg" element={<TeacherRegistration />} />
-          <Route path="/admin/*" element={<AdminDashboard/>}/>
-          <Route path="/teacher/*" element={<TeacherDashboard/>}/>
-          <Route path="/forgotpassword" element={<ForgotPassword/>}/>
-          <Route path="/resetpassword" element={<ResetPassword/>}/>
-          <Route path="/search" element={<StudentSearch/>}/>
-          <Route path="/teachersearch" element={<TeacherSearch/>}/>
-          <Route path="/attendance" element={<Attendance/>}/>
-          <Route path="/addstudentmarks" element={<AddStudentMarks/>}/>
-          <Route path="/addclass" element={<AddClass/>}/>
-          <Route path="/addcourse" element={<AddCourse/>}/>
-          <Route path="/addexam" element={<AddExam/>}/>
-          <Route path="/addresult" element={<AddResult/>}/>
-          <Route path="/addstudent" element={<AddStudent/>}/>
-          <Route path="/addsubject" element={<AddSubject/>}/>
-          <Route path="/addteacher" element={<AddTeacher/>}/>
-          <Route path="/addtimetable" element={<AddTimetable/>}/>
-      </Routes>
-  </BrowserRouter>
+          <Route path="/forgotpassword" element={<ForgotPassword />} />
+          <Route path="/resetpassword" element={<ResetPassword />} />
+
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/student" element={<StudentDashboard />} />
+            <Route path="/librarian" element={<Libriarian />} />
+            <Route path="/admin/*" element={<AdminDashboard />} />
+            <Route path="/teacher/*" element={<TeacherDashboard />} />
+            <Route path="/search" element={<StudentSearch />} />
+            <Route path="/teachersearch" element={<TeacherSearch />} />
+            <Route path="/attendance" element={<Attendance />} />
+            <Route path="/addstudentmarks" element={<AddStudentMarks />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
 
     </>
   )
