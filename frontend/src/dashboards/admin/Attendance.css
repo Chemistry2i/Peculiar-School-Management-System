@@ -1,9 +1,10 @@
 .attendance-page {
-  width: 100%;
-  padding: 24px;
-  margin: 20px;
-  background: #f8fafc;
+  width: 80vw;
+  padding: 20px;
+  /* margin: 20px; */
+  /* background: #f8fafc; */
   border-radius: 10px;
+  /* background-color: red; */
 }
 
 .attendance-header h1 {

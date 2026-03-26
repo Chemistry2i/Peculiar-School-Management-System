@@ -19,63 +19,100 @@ const subjectOverview = [
   { subject: "Art", score: 49 },
 ];
 
-const gradeRows = [
+const initialGradeRows = [
   {
     id: "GR-101",
     student: "John Makumbi",
     className: "S4A",
-    average: "64%",
-    grade: "B",
+    average: 64,
     subject: "Math",
-    performance: "Good",
     term: "term1",
   },
   {
     id: "GR-102",
     student: "Sarah Ocan",
     className: "S4B",
-    average: "71%",
-    grade: "A",
+    average: 71,
     subject: "English",
-    performance: "Excellent",
     term: "term1",
   },
   {
     id: "GR-103",
     student: "Michael Otto",
     className: "S3A",
-    average: "39%",
-    grade: "D",
+    average: 39,
     subject: "Science",
-    performance: "Needs Support",
     term: "term1",
   },
   {
     id: "GR-104",
     student: "Emily Watera",
     className: "S5A",
-    average: "67%",
-    grade: "B",
+    average: 67,
     subject: "Art",
-    performance: "Good",
     term: "term2",
   },
   {
     id: "GR-105",
     student: "David Kijjambu",
     className: "S4A",
-    average: "74%",
-    grade: "A",
+    average: 74,
     subject: "Math",
-    performance: "Top Performer",
     term: "term3",
   },
 ];
 
 const Grades = () => {
+  const [gradeRows, setGradeRows] = useState(initialGradeRows);
   const [searchTerm, setSearchTerm] = useState("");
   const [termFilter, setTermFilter] = useState("term1");
   const [subjectFilter, setSubjectFilter] = useState("all");
+
+  const getGradeLabel = (average) => {
+    if (average >= 70) return "A";
+    if (average >= 60) return "B";
+    if (average >= 50) return "C";
+    return "D";
+  };
+
+  const getPerformanceLabel = (average) => {
+    if (average >= 75) return "Top Performer";
+    if (average >= 65) return "Excellent";
+    if (average >= 55) return "Good";
+    if (average >= 50) return "Fair";
+    return "Needs Support";
+  };
+
+  const handleAverageChange = (rowId, value) => {
+    const numericValue = Number(value);
+    if (Number.isNaN(numericValue)) {
+      return;
+    }
+
+    const boundedValue = Math.max(0, Math.min(100, numericValue));
+    setGradeRows((prev) =>
+      prev.map((row) => (row.id === rowId ? { ...row, average: boundedValue } : row))
+    );
+  };
+
+  const classAverage = useMemo(() => {
+    if (gradeRows.length === 0) return 0;
+    const sum = gradeRows.reduce((total, row) => total + row.average, 0);
+    return Math.round(sum / gradeRows.length);
+  }, [gradeRows]);
+
+  const topPerformance = useMemo(() => {
+    if (gradeRows.length === 0) return 0;
+    return Math.max(...gradeRows.map((row) => row.average));
+  }, [gradeRows]);
+
+  const subjectsAssessed = useMemo(() => {
+    return new Set(gradeRows.map((row) => row.subject)).size;
+  }, [gradeRows]);
+
+  const needSupportCount = useMemo(() => {
+    return gradeRows.filter((row) => row.average < 50).length;
+  }, [gradeRows]);
 
   const filteredRows = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -130,7 +167,7 @@ const Grades = () => {
         <div className="grades-card class-average">
           <div>
             <h3>Class Average</h3>
-            <h2>58%</h2>
+            <h2>{`${classAverage}%`}</h2>
           </div>
           <i className="fa-solid fa-chart-line grades-icon" aria-hidden="true"></i>
         </div>
@@ -138,7 +175,7 @@ const Grades = () => {
         <div className="grades-card top-performance">
           <div>
             <h3>Top Performance</h3>
-            <h2>Sarah Ocan</h2>
+            <h2>{topPerformance}</h2>
           </div>
           <i className="fa-solid fa-trophy grades-icon" aria-hidden="true"></i>
         </div>
@@ -146,7 +183,7 @@ const Grades = () => {
         <div className="grades-card subjects-assessed">
           <div>
             <h3>Subjects Assessed</h3>
-            <h2>4 Subjects</h2>
+            <h2>{subjectsAssessed}</h2>
           </div>
           <i className="fa-solid fa-book-open grades-icon" aria-hidden="true"></i>
         </div>
@@ -154,7 +191,7 @@ const Grades = () => {
         <div className="grades-card need-support">
           <div>
             <h3>Need Support</h3>
-            <h2>7 Students</h2>
+            <h2>{needSupportCount}</h2>
           </div>
           <i className="fa-solid fa-triangle-exclamation grades-icon" aria-hidden="true"></i>
         </div>
@@ -218,10 +255,19 @@ const Grades = () => {
                   <tr key={row.id}>
                     <td>{row.student}</td>
                     <td>{row.className}</td>
-                    <td>{row.average}</td>
-                    <td>{row.grade}</td>
+                    <td>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={row.average}
+                        onChange={(event) => handleAverageChange(row.id, event.target.value)}
+                        className="grade-input"
+                      />
+                    </td>
+                    <td>{getGradeLabel(row.average)}</td>
                     <td>{row.subject}</td>
-                    <td>{row.performance}</td>
+                    <td>{getPerformanceLabel(row.average)}</td>
                     <td>
                       <div className="grade-actions">
                         <button type="button" className="view-btn">

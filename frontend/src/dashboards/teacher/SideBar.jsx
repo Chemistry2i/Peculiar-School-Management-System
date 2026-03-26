@@ -30,7 +30,7 @@ function SideBar (){
 
             <div className="Teachersidebar-content">
                 <i className="fa-solid fa-calendar" id="teacher-icon-sidebar"></i>
-                <NavLink to="/teacher/my-classes">My Classes</NavLink>
+                <NavLink to="/teacher/myclasses">My Classes</NavLink>
             </div>
 
             <div className="Teachersidebar-content">

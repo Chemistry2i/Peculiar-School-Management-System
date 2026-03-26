@@ -33,7 +33,7 @@ function TeacherDashboard (){
                         <Route index element={<DashboardHome/>} />
                         <Route path="grading" element={<Grading/>} />
                         <Route path="students" element={<TeacherStudents/>} />
-                        <Route path="my-classes" element={<MyClasses/>} />
+                        <Route path="myclasses" element={<MyClasses/>} />
                     </Routes>
               </div>
             </div>

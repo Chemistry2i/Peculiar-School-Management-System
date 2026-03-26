@@ -1,6 +1,6 @@
 .timetable-page {
   padding: 32px;
-  width: calc(100vw - 30vh);
+  width: 85vw;
   background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
   min-height: 100vh;
 }

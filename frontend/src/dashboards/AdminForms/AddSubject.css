@@ -1,0 +1,159 @@
+.add-subject-wrapper {
+	width: 100%;
+	min-height: calc(100vh - 80px);
+	display: grid;
+	place-items: start center;
+	padding: 24px;
+}
+
+.add-subject-form {
+	width: min(900px, 100%);
+	background: #ffffff;
+	border: 1px solid #d8dee6;
+	border-radius: 12px;
+	padding: 24px;
+	box-shadow: 0 6px 20px rgba(18, 38, 63, 0.08);
+}
+
+.add-subject-form h2 {
+	margin: 0 0 18px;
+	font-size: 1.7rem;
+	color: #12263f;
+}
+
+.add-subject-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px 20px;
+}
+
+.form-field {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.form-field label {
+	font-size: 0.98rem;
+	font-weight: 600;
+	color: #1f2d3d;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+	border: 1px solid #c7d2e0;
+	border-radius: 8px;
+	padding: 10px 12px;
+	font-size: 0.95rem;
+	color: #1f2d3d;
+	font-family: inherit;
+	outline: none;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	background: #ffffff;
+}
+
+.form-field input,
+.form-field select {
+	height: 42px;
+}
+
+.form-field textarea {
+	resize: vertical;
+	min-height: 90px;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+	border-color: #2563eb;
+	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.checkbox-field {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	font-weight: 500;
+}
+
+.boolean-options {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	flex-wrap: wrap;
+}
+
+.boolean-fields-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.boolean-field {
+	flex: 1 1 220px;
+}
+
+.checkbox-field input[type="checkbox"] {
+	width: 18px;
+	height: 18px;
+	accent-color: #2563eb;
+}
+
+.full-width {
+	grid-column: span 2;
+}
+
+.add-subject-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 12px;
+	margin-top: 24px;
+}
+
+.add-subject-actions button {
+	min-width: 140px;
+	height: 42px;
+	border-radius: 8px;
+	border: 1px solid transparent;
+	font-size: 0.95rem;
+	cursor: pointer;
+}
+
+.secondary-btn {
+	background: #ffffff;
+	color: #1f2d3d;
+	border-color: #c7d2e0;
+}
+
+.primary-btn {
+	background: #2563eb;
+	color: #ffffff;
+}
+
+@media (max-width: 768px) {
+	.add-subject-wrapper {
+		padding: 14px;
+	}
+
+	.add-subject-form {
+		padding: 16px;
+	}
+
+	.add-subject-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.full-width {
+		grid-column: span 1;
+	}
+
+	.add-subject-actions {
+		justify-content: stretch;
+	}
+
+	.add-subject-actions button {
+		flex: 1;
+	}
+}

@@ -22,13 +22,16 @@ function SideBar (){
         
                     <div className="sidebar-content">
                         <i className="fa-solid fa-users" id="admin-icon-side"></i>
-                        {/* <a href="">students</a> */}
                         <NavLink to="/admin/students">Students</NavLink>
+                    </div>
+
+                    <div className="sidebar-content">
+                        <i className="fa-solid fa-user-gear" id="admin-icon-side"></i>
+                        <NavLink to="/admin/users">Users</NavLink>
                     </div>
         
                     <div className="sidebar-content">
                         <i className="fas fa-graduation-cap" id="admin-icon-side"></i>
-                        {/* <a href="">Teachers</a> */}
                         <NavLink to="/admin/teachers">Teachers</NavLink>
                     </div>
         
@@ -45,6 +48,11 @@ function SideBar (){
                     <div className="sidebar-content">
                         <i className="fa-solid fa-calendar" id="admin-icon-side"></i>
                         <NavLink to="/admin/timetable">Time table</NavLink>
+                    </div>
+
+                    <div className="sidebar-content">
+                        <i className="fa-solid fa-calendar" id="admin-icon-side"></i>
+                        <NavLink to="/admin/addclass">Add Class</NavLink>
                     </div>
         
                     <div className="sidebar-content">

@@ -13,6 +13,14 @@ import StudentSearch from "./dashboards/admin/StudentSearch";
 import TeacherSearch from "./dashboards/admin/TeacherSearch";
 import Attendance from "./dashboards/admin/Attendance";
 import AddStudentMarks from "./auth/AddStudentMarks";
+import AddClass from "./dashboards/AdminForms/AddClass";
+import AddCourse from "./dashboards/AdminForms/AddCourse";
+import AddExam from "./dashboards/AdminForms/AddExam";
+import AddResult from "./dashboards/AdminForms/AddResult";
+import AddStudent from "./dashboards/AdminForms/AddStudent";
+import AddSubject from "./dashboards/AdminForms/AddSubject";
+import AddTeacher from "./dashboards/AdminForms/AddTeacher";
+import AddTimetable from "./dashboards/AdminForms/AddTimetable";
 
 
 
@@ -37,7 +45,14 @@ function App() {
           <Route path="/teachersearch" element={<TeacherSearch/>}/>
           <Route path="/attendance" element={<Attendance/>}/>
           <Route path="/addstudentmarks" element={<AddStudentMarks/>}/>
-
+          <Route path="/addclass" element={<AddClass/>}/>
+          <Route path="/addcourse" element={<AddCourse/>}/>
+          <Route path="/addexam" element={<AddExam/>}/>
+          <Route path="/addresult" element={<AddResult/>}/>
+          <Route path="/addstudent" element={<AddStudent/>}/>
+          <Route path="/addsubject" element={<AddSubject/>}/>
+          <Route path="/addteacher" element={<AddTeacher/>}/>
+          <Route path="/addtimetable" element={<AddTimetable/>}/>
       </Routes>
   </BrowserRouter>
 
