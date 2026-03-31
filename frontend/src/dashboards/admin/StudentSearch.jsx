@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import './StudentSearch.css';
 
 const StudentSearch = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   // Single source of truth for all student records.
   const [students, setStudents] = useState([
     {
