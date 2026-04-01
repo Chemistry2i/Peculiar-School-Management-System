@@ -1,6 +1,6 @@
 .users-page {
-	padding: 20px;
-	width: 85vw;
+	padding: 0;
+	width: 100%;
 }
 
 .users-header {
@@ -9,6 +9,7 @@
 	align-items: center;
 	gap: 16px;
 	margin-bottom: 16px;
+	padding: 0 20px;
 }
 
 .users-header-actions {
@@ -29,6 +30,7 @@
 	gap: 14px;
 	margin-bottom: 16px;
 	box-shadow: 0 2px 4px rgba(71, 85, 105, 0.1);
+	padding: 0 20px;
 }
 
 .users-summary-card {
@@ -249,10 +251,11 @@
 	gap: 16px;
 	flex-wrap: wrap;
 	background: #ffffff;
-	padding: 14px;
+	padding: 14px 20px;
 	border: 1px solid #d8dee6;
 	border-radius: 12px;
 	margin-bottom: 16px;
+	margin: 0 20px 16px 20px;
 }
 
 .users-filter-group {
@@ -293,6 +296,7 @@
 	border: 1px solid #d8dee6;
 	border-radius: 12px;
 	overflow-x: auto;
+	margin: 0 20px;
 }
 
 .users-table {
@@ -393,12 +397,13 @@
 
 @media (max-width: 768px) {
 	.users-page {
-		padding: 12px;
+		padding: 0;
 	}
 
 	.users-header {
 		align-items: stretch;
 		flex-direction: column;
+		padding: 0 15px;
 	}
 
 	.users-header-actions {
@@ -408,11 +413,21 @@
 
 	.users-summary-cards {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
+		padding: 0 15px;
 	}
 
 	.add-user-btn,
 	.export-users-btn {
 		width: 100%;
+	}
+
+	.users-filter-bar {
+		margin: 0 15px 16px 15px;
+		padding: 14px 15px;
+	}
+
+	.users-table-wrapper {
+		margin: 0 15px;
 	}
 
 	.users-form-grid {
@@ -438,7 +453,21 @@
 }
 
 @media (max-width: 520px) {
+	.users-header {
+		padding: 0 10px;
+	}
+
 	.users-summary-cards {
 		grid-template-columns: 1fr;
+		padding: 0 10px;
+	}
+
+	.users-filter-bar {
+		margin: 0 10px 16px 10px;
+		padding: 14px 10px;
+	}
+
+	.users-table-wrapper {
+		margin: 0 10px;
 	}
 }
