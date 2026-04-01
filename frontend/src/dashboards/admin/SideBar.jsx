@@ -65,6 +65,11 @@ function SideBar() {
                     <span>Classes</span>
                 </NavLink>
 
+                <NavLink to="/admin/subjects" className={isActive("/admin/subjects")}>
+                    <i className="fa-solid fa-book"></i>
+                    <span>Subjects</span>
+                </NavLink>
+
                 {/* <a href="#" className="sidebar-link settings-link">
                     <i className="fa-solid fa-gear"></i>
                     <span>Settings</span>

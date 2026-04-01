@@ -89,3 +89,114 @@
     overflow-y: auto;
     max-height: calc(90vh - 60px); /* Adjust based on header height */
 }
+
+/* Teacher Form Styling */
+.teacher-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.teacher-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.teacher-form-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.teacher-form-field label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+}
+
+.teacher-form-field label span.text-danger {
+    color: #dc3545;
+    margin-left: 3px;
+}
+
+.form-control,
+.form-select {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    background-color: #fff;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    outline: none;
+}
+
+.form-control::placeholder {
+    color: #999;
+}
+
+.alert {
+    border-radius: 6px;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border: none;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Modal Footer */
+.modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 15px 20px;
+}
+
+.modal-footer .btn {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.modal-footer .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.modal-footer .btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.modal-footer .btn-primary {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.modal-footer .btn-primary:hover {
+    background-color: #0b5ed7;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .teacher-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .custom-modal-width {
+        max-width: 95vw !important;
+    }
+}
