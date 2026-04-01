@@ -54,6 +54,8 @@ const StudentSearch = () => {
     status: 'active',
   });
 
+  const [deleteConfirmStudent, setDeleteConfirmStudent] = useState(null);
+
   // Demo fee value for dashboard summary card.
   const totalFeesCollectedUsd = 0.00;
 
@@ -228,8 +230,17 @@ const StudentSearch = () => {
     closeEditModal();
   };
 
+  const openDeleteModal = (student) => {
+    setDeleteConfirmStudent(student);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteConfirmStudent(null);
+  };
+
   const handleDeleteStudent = (studentId) => {
     setStudents((prev) => prev.filter((student) => student.id !== studentId));
+    closeDeleteModal();
   };
 
   const getStatusBadgeClass = (status) => {
@@ -451,6 +462,48 @@ const StudentSearch = () => {
         </div>
       )}
 
+      {deleteConfirmStudent && (
+        <div className="modal-overlay" onClick={closeDeleteModal}>
+          <div className="modal-content delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header delete-header">
+              <div className="delete-icon-container">
+                <i className="fa-solid fa-triangle-exclamation"></i>
+              </div>
+              <h3>Delete Student</h3>
+              <button className="modal-close" onClick={closeDeleteModal} aria-label="Close modal">
+                x
+              </button>
+            </div>
+
+            <div className="delete-confirmation-body">
+              <p className="confirmation-message">
+                Are you sure you want to delete <strong>{deleteConfirmStudent.name}</strong>?
+              </p>
+              <p className="confirmation-details">
+                Student ID: <strong>{deleteConfirmStudent.id}</strong>
+              </p>
+              <p className="warning-text">
+                <i className="fa-solid fa-info-circle"></i>
+                This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="form-actions delete-actions">
+              <button type="button" className="btn btn-secondary" onClick={closeDeleteModal}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={() => handleDeleteStudent(deleteConfirmStudent.id)}
+              >
+                Delete Student
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {editStudent && (
         <div className="modal-overlay" onClick={closeEditModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -566,7 +619,7 @@ const StudentSearch = () => {
                       <button
                         type="button"
                         className="btn btn-danger btn-sm"
-                        onClick={() => handleDeleteStudent(student.id)}
+                        onClick={() => openDeleteModal(student)}
                       >
                         Delete
                       </button>
