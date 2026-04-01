@@ -60,9 +60,9 @@ function SideBar() {
                     <span>Timetable</span>
                 </NavLink>
 
-                <NavLink to="/admin/addclass" className={isActive("/admin/addclass")}>
+                <NavLink to="/admin/classes" className={isActive("/admin/classes")}>
                     <i className="fa-solid fa-chalkboard"></i>
-                    <span>Add Class</span>
+                    <span>Classes</span>
                 </NavLink>
 
                 {/* <a href="#" className="sidebar-link settings-link">
