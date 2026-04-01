@@ -269,13 +269,9 @@ const Grades = () => {
                     <td>{row.subject}</td>
                     <td>{getPerformanceLabel(row.average)}</td>
                     <td>
-                      <div className="grade-actions">
-                        <button type="button" className="view-btn">
-                          View Details
-                        </button>
-                        <button type="button" className="edit-btn">
-                          Edit Grades
-                        </button>
+                      <div className="action-buttons">
+                        <button type="button" className="action-btn view-btn">View Details</button>
+                        <button type="button" className="action-btn edit-btn">Edit Grades</button>
                       </div>
                     </td>
                   </tr>

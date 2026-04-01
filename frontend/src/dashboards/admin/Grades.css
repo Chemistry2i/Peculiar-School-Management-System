@@ -178,28 +178,40 @@
   box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
 }
 
-.grade-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+.action-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
 }
 
-.view-btn,
-.edit-btn {
-  border: none;
-  border-radius: 8px;
-  padding: 7px 10px;
-  color: #fff;
-  cursor: pointer;
-  font-size: 0.82rem;
+.action-btn {
+	height: 30px;
+	padding: 0 10px;
+	border: 1px solid #d1d5db;
+	border-radius: 6px;
+	background: #ffffff;
+	cursor: pointer;
+	font-size: 0.8rem;
 }
 
 .view-btn {
-  background: #1d4ed8;
+	border-color: #93c5fd;
+	color: #1e40af;
 }
 
 .edit-btn {
-  background: #0f766e;
+	border-color: #86efac;
+	color: #166534;
+}
+
+.suspend-btn {
+	border-color: #fde68a;
+	color: #92400e;
+}
+
+.delete-btn {
+	border-color: #fca5a5;
+	color: #991b1b;
 }
 
 .no-grade-results {
