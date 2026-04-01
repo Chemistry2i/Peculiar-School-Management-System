@@ -169,7 +169,7 @@ const Grades = () => {
             <h3>Class Average</h3>
             <h2>{`${classAverage}%`}</h2>
           </div>
-          <i className="fa-solid fa-chart-line grades-icon" aria-hidden="true"></i>
+          <i className="fa-solid fa-chart-line grades-icon" style={{border:"1px solid #2c4ebb", borderRadius:"50%",width:"50px", height: "50px", fontSize:"15px", display:"grid", placeItems:"center", color:"#2c4ebb",marginBottom:"5px"}} aria-hidden="true"></i>
         </div>
 
         <div className="grades-card top-performance">
@@ -177,7 +177,7 @@ const Grades = () => {
             <h3>Top Performance</h3>
             <h2>{topPerformance}</h2>
           </div>
-          <i className="fa-solid fa-trophy grades-icon" aria-hidden="true"></i>
+          <i className="fa-solid fa-trophy grades-icon" style={{border:"1px solid #f59e0b", borderRadius:"50%",width:"50px", height: "50px", fontSize:"15px", display:"grid", placeItems:"center", color:"#f59e0b",marginBottom:"5px"}} aria-hidden="true"></i>
         </div>
 
         <div className="grades-card subjects-assessed">
@@ -185,7 +185,7 @@ const Grades = () => {
             <h3>Subjects Assessed</h3>
             <h2>{subjectsAssessed}</h2>
           </div>
-          <i className="fa-solid fa-book-open grades-icon" aria-hidden="true"></i>
+          <i className="fa-solid fa-book-open grades-icon" style={{border:"1px solid green", borderRadius:"50%",width:"50px", height: "50px", fontSize:"15px", display:"grid", placeItems:"center", color:"green",marginBottom:"5px"}} aria-hidden="true"></i>
         </div>
 
         <div className="grades-card need-support">
@@ -193,7 +193,7 @@ const Grades = () => {
             <h3>Need Support</h3>
             <h2>{needSupportCount}</h2>
           </div>
-          <i className="fa-solid fa-triangle-exclamation grades-icon" aria-hidden="true"></i>
+          <i className="fa-solid fa-triangle-exclamation grades-icon" style={{border:"1px solid #ef4444", borderRadius:"50%",width:"50px", height: "50px", fontSize:"15px", display:"grid", placeItems:"center", color:"#ef4444",marginBottom:"5px"}} aria-hidden="true"></i>
         </div>
       </div>
 
