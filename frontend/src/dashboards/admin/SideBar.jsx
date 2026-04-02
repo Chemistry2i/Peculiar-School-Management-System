@@ -70,6 +70,11 @@ function SideBar() {
                     <span>Subjects</span>
                 </NavLink>
 
+                <NavLink to="/admin/exams" className={isActive("/admin/exams")}>
+                    <i className="fa-solid fa-file-pen"></i>
+                    <span>Exams</span>
+                </NavLink>
+
                 {/* <a href="#" className="sidebar-link settings-link">
                     <i className="fa-solid fa-gear"></i>
                     <span>Settings</span>

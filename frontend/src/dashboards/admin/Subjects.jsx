@@ -171,7 +171,7 @@ function Subjects() {
       <div className="row g-3 mb-4">
         <div className="col-12 col-sm-6 col-lg-3">
           <div className="subjects-card total-card h-100">
-            <i className="fa-solid fa-book subjects-icon" style={{border:"1px solid #2563eb", borderRadius:"50%",width:"50px", height: "50px", fontSize:"15px", display:"grid", placeItems:"center", color:"#2563eb",marginBottom:"5px"}} aria-hidden="true"></i>
+            <i className="fa-solid fa-book subjects-icon" aria-hidden="true"></i>
             <h3>Total Subjects</h3>
             <h2>{metrics.totalSubjects}</h2>
           </div>
@@ -179,7 +179,7 @@ function Subjects() {
 
         <div className="col-12 col-sm-6 col-lg-3">
           <div className="subjects-card active-card h-100">
-            <i className="fa-solid fa-check-circle subjects-icon" style={{border:"1px solid #16a34a", borderRadius:"50%",width:"50px", height: "50px", fontSize:"15px", display:"grid", placeItems:"center", color:"#16a34a",marginBottom:"5px"}} aria-hidden="true"></i>
+            <i className="fa-solid fa-check-circle subjects-icon" aria-hidden="true"></i>
             <h3>Active Subjects</h3>
             <h2>{metrics.activeSubjects}</h2>
           </div>
@@ -187,7 +187,7 @@ function Subjects() {
 
         <div className="col-12 col-sm-6 col-lg-3">
           <div className="subjects-card compulsory-card h-100">
-            <i className="fa-solid fa-book-open subjects-icon" style={{border:"1px solid #f59e0b", borderRadius:"50%",width:"50px", height: "50px", fontSize:"15px", display:"grid", placeItems:"center", color:"#f59e0b",marginBottom:"5px"}} aria-hidden="true"></i>
+            <i className="fa-solid fa-book-open subjects-icon" aria-hidden="true"></i>
             <h3>Compulsory</h3>
             <h2>{metrics.compulsoryCount}</h2>
           </div>
@@ -195,7 +195,7 @@ function Subjects() {
 
         <div className="col-12 col-sm-6 col-lg-3">
           <div className="subjects-card elective-card h-100">
-            <i className="fa-solid fa-graduation-cap subjects-icon" style={{border:"1px solid #8b5cf6", borderRadius:"50%",width:"50px", height: "50px", fontSize:"15px", display:"grid", placeItems:"center", color:"#8b5cf6",marginBottom:"5px"}} aria-hidden="true"></i>
+            <i className="fa-solid fa-graduation-cap subjects-icon" aria-hidden="true"></i>
             <h3>Elective</h3>
             <h2>{metrics.electiveCount}</h2>
           </div>
