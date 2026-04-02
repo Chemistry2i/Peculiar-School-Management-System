@@ -26,7 +26,7 @@
 
 /* Modal Customization - Bootstrap handles centering */
 .modal-content {
-    border-radius: 12px;
+    border-radius: 5px !important;
     overflow: hidden;
 }
 
@@ -64,14 +64,6 @@
     z-index: 1050 !important;
 }
 
-/* Width constraint - ONLY for desktop, let mobile be responsive */
-@media (min-width: 768px) {
-    .custom-modal-width {
-        width: 500px !important;
-        max-width: 90vw;
-    }
-}
-
 .badge {
     font-weight: 500;
     font-size: 0.75rem;
@@ -98,7 +90,7 @@
 /* Overriding old fixed widths if any persist */
 .Body-container, .Admin-activities, .Admin-actions {
     width: 100% !important;
-    max-width: none !important;
+    /* max-width: none !important; */
     min-height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
