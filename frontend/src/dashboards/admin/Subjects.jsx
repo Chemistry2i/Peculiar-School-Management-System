@@ -170,34 +170,50 @@ function Subjects() {
       {/* Overview Cards */}
       <div className="row g-3 mb-4">
         <div className="col-12 col-sm-6 col-lg-3">
-          <div className="subjects-card total-card h-100">
-            <i className="fa-solid fa-book subjects-icon" aria-hidden="true"></i>
-            <h3>Total Subjects</h3>
-            <h2>{metrics.totalSubjects}</h2>
+          <div className="subjects-card total-card">
+            <div className="subjects-card-icon">
+              <i className="fa-solid fa-book" aria-hidden="true"></i>
+            </div>
+            <div className="subjects-card-content">
+              <h3>Total Subjects</h3>
+              <h2>{metrics.totalSubjects}</h2>
+            </div>
           </div>
         </div>
 
         <div className="col-12 col-sm-6 col-lg-3">
-          <div className="subjects-card active-card h-100">
-            <i className="fa-solid fa-check-circle subjects-icon" aria-hidden="true"></i>
-            <h3>Active Subjects</h3>
-            <h2>{metrics.activeSubjects}</h2>
+          <div className="subjects-card active-card">
+            <div className="subjects-card-icon">
+              <i className="fa-solid fa-check-circle" aria-hidden="true"></i>
+            </div>
+            <div className="subjects-card-content">
+              <h3>Active Subjects</h3>
+              <h2>{metrics.activeSubjects}</h2>
+            </div>
           </div>
         </div>
 
         <div className="col-12 col-sm-6 col-lg-3">
-          <div className="subjects-card compulsory-card h-100">
-            <i className="fa-solid fa-book-open subjects-icon" aria-hidden="true"></i>
-            <h3>Compulsory</h3>
-            <h2>{metrics.compulsoryCount}</h2>
+          <div className="subjects-card compulsory-card">
+            <div className="subjects-card-icon">
+              <i className="fa-solid fa-book-open" aria-hidden="true"></i>
+            </div>
+            <div className="subjects-card-content">
+              <h3>Compulsory</h3>
+              <h2>{metrics.compulsoryCount}</h2>
+            </div>
           </div>
         </div>
 
         <div className="col-12 col-sm-6 col-lg-3">
-          <div className="subjects-card elective-card h-100">
-            <i className="fa-solid fa-graduation-cap subjects-icon" aria-hidden="true"></i>
-            <h3>Elective</h3>
-            <h2>{metrics.electiveCount}</h2>
+          <div className="subjects-card elective-card">
+            <div className="subjects-card-icon">
+              <i className="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+            </div>
+            <div className="subjects-card-content">
+              <h3>Elective</h3>
+              <h2>{metrics.electiveCount}</h2>
+            </div>
           </div>
         </div>
       </div>

@@ -150,90 +150,94 @@
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 14px;
   margin-bottom: 16px;
 }
 
 .summary-card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #d8dee6;
+  border-radius: 10px;
+  min-height: 128px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
   gap: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-  border-left: 4px solid #2563eb;
-  min-height: 140px;
 }
 
 .summary-card-icon {
-  font-size: 28px;
-  color: #2563eb;
-  display: flex;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  color: #ffffff;
+  font-size: 15px;
 }
 
 .summary-label {
-  font-size: 0.85rem;
-  color: #6b7280;
-  font-weight: 600;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0 0 4px 0;
+  letter-spacing: 0.03em;
+  color: #4b5563;
 }
 
 .summary-card h3 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #1f2937;
   margin: 0;
+  font-size: 1.2rem;
+  color: #111827;
 }
 
 .summary-card-active {
-  border-left-color: #0b7a3e;
-}
-
-.summary-card-recent {
-  border-left-color: #b45309;
-}
-
-.summary-card-fees {
-  border-left-color: #1d4ed8;
-}
-
-.summary-card-attendance {
-  border-left-color: #0b7a3e;
+  border: 1px solid #d8dee6;
 }
 
 .summary-card-active .summary-card-icon {
+  background-color: white;
   color: #0b7a3e;
+  border: 2px solid #0b7a3e;
+}
+
+.summary-card-recent {
+  border: 1px solid #d8dee6;
 }
 
 .summary-card-recent .summary-card-icon {
-  color: #b45309;
+  background-color: white;
+  color: #d97706;
+  border: 2px solid #d97706;
+}
+
+.summary-card-fees {
+  border: 1px solid #d8dee6;
 }
 
 .summary-card-fees .summary-card-icon {
-  color: #1d4ed8;
+  background-color: white;
+  color: #0066cc;
+  border: 2px solid #0066cc;
+}
+
+.summary-card-attendance {
+  border: 1px solid #d8dee6;
 }
 
 .summary-card-attendance .summary-card-icon {
+  background-color: white;
   color: #0b7a3e;
+  border: 2px solid #0b7a3e;
 }
 
 .summary-card-content {
   width: 100%;
-}
-
-.summary-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
 }
 
 .modal-overlay {

@@ -260,43 +260,27 @@ const StudentSearch = () => {
 
       <section className="summary-cards" aria-label="Student summaries">
         <article className="summary-card summary-card-active">
-          <div className="summary-card-icon">
-            <i className="fa-solid fa-user-graduate" aria-hidden="true"></i>
-          </div>
-          <div className="summary-card-content">
-            <p className="summary-label">Total Active Students</p>
-            <h3>{totalActiveStudents}</h3>
-          </div>
+          <i className="fa-solid fa-user-graduate summary-card-icon" aria-hidden="true"></i>
+          <p className="summary-label">Total Active Students</p>
+          <h3>{totalActiveStudents}</h3>
         </article>
 
         <article className="summary-card summary-card-recent">
-          <div className="summary-card-icon">
-            <i className="fa-solid fa-user-plus" aria-hidden="true"></i>
-          </div>
-          <div className="summary-card-content">
-            <p className="summary-label">Recent Admissions</p>
-            <h3>{recentAdmissions}</h3>
-          </div>
+          <i className="fa-solid fa-user-plus summary-card-icon" aria-hidden="true"></i>
+          <p className="summary-label">Recent Admissions</p>
+          <h3>{recentAdmissions}</h3>
         </article>
 
         <article className="summary-card summary-card-fees">
-          <div className="summary-card-icon">
-            <i className="fa-solid fa-dollar-sign" aria-hidden="true"></i>
-          </div>
-          <div className="summary-card-content">
-            <p className="summary-label">Total Fees Collected</p>
-            <h3>{`$${totalFeesCollectedUsd.toLocaleString()}`}</h3>
-          </div>
+          <i className="fa-solid fa-dollar-sign summary-card-icon" aria-hidden="true"></i>
+          <p className="summary-label">Total Fees Collected</p>
+          <h3>{`$${totalFeesCollectedUsd.toLocaleString()}`}</h3>
         </article>
 
         <article className="summary-card summary-card-attendance">
-          <div className="summary-card-icon">
-            <i className="fa-solid fa-calendar-check" aria-hidden="true"></i>
-          </div>
-          <div className="summary-card-content">
-            <p className="summary-label">Today's Attendance</p>
-            <h3>{todaysAttendance}</h3>
-          </div>
+          <i className="fa-solid fa-calendar-check summary-card-icon" aria-hidden="true"></i>
+          <p className="summary-label">Today's Attendance</p>
+          <h3>{todaysAttendance}</h3>
         </article>
       </section>
 
