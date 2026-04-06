@@ -62,6 +62,26 @@ function AdminCards (){
                         <p>95.4%</p>
                     </div>
                 </div>
+
+                <div className="stat-card">
+                    <div className="stat-icon rooms">
+                        <i className="fa-solid fa-door-open"></i>
+                    </div>
+                    <div className="stat-info">
+                        <h3>Total Rooms</h3>
+                        <p>28</p>
+                    </div>
+                </div>
+
+                <div className="stat-card">
+                    <div className="stat-icon departments">
+                        <i className="fa-solid fa-building"></i>
+                    </div>
+                    <div className="stat-info">
+                        <h3>Departments</h3>
+                        <p>5</p>
+                    </div>
+                </div>
             </div>
         </div>
     )

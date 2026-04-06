@@ -91,6 +91,16 @@
     color: #6b21a8;
 }
 
+.stat-icon.rooms {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.stat-icon.departments {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
 .stat-info h3 {
     font-size: 14px;
     color: #6b7280;

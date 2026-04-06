@@ -16,6 +16,8 @@ import Users from "./Users";
 import Class from "./Class";
 import Subjects from "./Subjects";
 import Exam from "./Exam";
+import Room from "./Room";
+import Department from "./Department";
 
 function AdminDashboard (){
     return(
@@ -37,6 +39,8 @@ function AdminDashboard (){
                         <Route path="classes" element={<Class/>} />
                         <Route path="subjects" element={<Subjects/>} />
                         <Route path="exams" element={<Exam/>} />
+                        <Route path="rooms" element={<Room/>} />
+                        <Route path="departments" element={<Department/>} />
                     </Routes>
                 </div>
             </div>

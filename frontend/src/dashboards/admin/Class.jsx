@@ -51,10 +51,15 @@ function Class() {
   const [selectedTab, setSelectedTab] = useState("overview");
 
   const [formData, setFormData] = useState({
-    name: "",
-    roomNumber: "101",
-    teacher: "",
-    year: "2025-2026",
+    name: '',
+    formLevel: 1,
+    levelType: 'O_LEVEL',
+    academicYear: '2025-2026',
+    stream: '',
+    classroom: '',
+    building: '',
+    maxCapacity: 50,
+    notes: '',
   });
 
   // Calculate metrics
@@ -100,45 +105,87 @@ function Class() {
 
   // Handle add class
   const handleAddClass = () => {
-    if (!formData.name || !formData.teacher) {
-      alert("Please fill in all required fields");
+    if (!formData.name || !formData.formLevel || !formData.levelType || !formData.academicYear) {
+      alert("Please fill in all required fields (Name, Form Level, Level Type, Academic Year)");
       return;
     }
 
     const newClass = {
       id: Math.max(...classes.map((c) => c.id), 0) + 1,
       name: formData.name,
-      roomNumber: formData.roomNumber,
-      teacher: formData.teacher,
+      roomNumber: formData.classroom, // Display field for table
+      teacher: sampleTeachers[0]?.name || 'Unassigned', // Display field
       students: 0,
-      year: formData.year,
+      year: formData.academicYear,
       attendance: 0,
       performance: 0,
+      // Backend fields
+      formLevel: parseInt(formData.formLevel),
+      levelType: formData.levelType,
+      academicYear: formData.academicYear,
+      stream: formData.stream,
+      classroom: formData.classroom,
+      building: formData.building,
+      maxCapacity: parseInt(formData.maxCapacity) || 50,
+      notes: formData.notes,
+      isActive: true,
     };
 
     setClasses([...classes, newClass]);
     setIsAddModalOpen(false);
-    setFormData({ name: "", roomNumber: "101", teacher: "", year: "2025-2026" });
+    setFormData({
+      name: '',
+      formLevel: 1,
+      levelType: 'O_LEVEL',
+      academicYear: '2025-2026',
+      stream: '',
+      classroom: '',
+      building: '',
+      maxCapacity: 50,
+      notes: '',
+    });
   };
 
   // Handle edit class
   const handleEditClass = () => {
-    if (!formData.name || !formData.teacher) {
-      alert("Please fill in all required fields");
+    if (!formData.name || !formData.formLevel || !formData.levelType || !formData.academicYear) {
+      alert("Please fill in all required fields (Name, Form Level, Level Type, Academic Year)");
       return;
     }
 
     setClasses(
       classes.map((cls) =>
         cls.id === selectedClass.id
-          ? { ...cls, name: formData.name, roomNumber: formData.roomNumber, teacher: formData.teacher, year: formData.year }
+          ? {
+              ...cls,
+              name: formData.name,
+              roomNumber: formData.classroom,
+              formLevel: parseInt(formData.formLevel),
+              levelType: formData.levelType,
+              academicYear: formData.academicYear,
+              stream: formData.stream,
+              classroom: formData.classroom,
+              building: formData.building,
+              maxCapacity: parseInt(formData.maxCapacity) || 50,
+              notes: formData.notes,
+            }
           : cls
       )
     );
 
     setIsEditModalOpen(false);
     setSelectedClass(null);
-    setFormData({ name: "", roomNumber: "101", teacher: "", year: "2025-2026" });
+    setFormData({
+      name: '',
+      formLevel: 1,
+      levelType: 'O_LEVEL',
+      academicYear: '2025-2026',
+      stream: '',
+      classroom: '',
+      building: '',
+      maxCapacity: 50,
+      notes: '',
+    });
   };
 
   // Handle delete class
@@ -161,9 +208,14 @@ function Class() {
     setSelectedClass(cls);
     setFormData({
       name: cls.name,
-      roomNumber: cls.roomNumber,
-      teacher: cls.teacher,
-      year: cls.year,
+      formLevel: cls.formLevel || 1,
+      levelType: cls.levelType || 'O_LEVEL',
+      academicYear: cls.academicYear || cls.year,
+      stream: cls.stream || '',
+      classroom: cls.classroom || cls.roomNumber || '',
+      building: cls.building || '',
+      maxCapacity: cls.maxCapacity || 50,
+      notes: cls.notes || '',
     });
     setIsEditModalOpen(true);
   };
@@ -464,49 +516,120 @@ function Class() {
             </div>
             <div className="class-modal-body">
               <form className="row g-3">
+                {/* Required Fields Section */}
+                <div className="col-12">
+                  <h6 className="fw-bold mb-3 text-muted">Required Information</h6>
+                </div>
+
                 <div className="col-md-6">
                   <label className="form-label fw-bold">Class Name *</label>
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="e.g., S.1A"
+                    placeholder="e.g., S1A"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
+
                 <div className="col-md-6">
-                  <label className="form-label fw-bold">Room Number *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="e.g., 101"
-                    value={formData.roomNumber}
-                    onChange={(e) => setFormData({ ...formData, roomNumber: e.target.value })}
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-bold">Class Teacher *</label>
+                  <label className="form-label fw-bold">Form Level *</label>
                   <select
                     className="form-select"
-                    value={formData.teacher}
-                    onChange={(e) => setFormData({ ...formData, teacher: e.target.value })}
+                    value={formData.formLevel}
+                    onChange={(e) => setFormData({ ...formData, formLevel: e.target.value })}
                   >
-                    <option value="">Select Teacher</option>
-                    {sampleTeachers.map((teacher) => (
-                      <option key={teacher.id} value={teacher.name}>
-                        {teacher.name}
-                      </option>
-                    ))}
+                    <option value="">Select Form Level</option>
+                    <option value="1">S.1 (Form 1)</option>
+                    <option value="2">S.2 (Form 2)</option>
+                    <option value="3">S.3 (Form 3)</option>
+                    <option value="4">S.4 (Form 4)</option>
+                    <option value="5">S.5 (Form 5)</option>
+                    <option value="6">S.6 (Form 6)</option>
                   </select>
                 </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-bold">Level Type *</label>
+                  <select
+                    className="form-select"
+                    value={formData.levelType}
+                    onChange={(e) => setFormData({ ...formData, levelType: e.target.value })}
+                  >
+                    <option value="O_LEVEL">O-Level (S1-S4)</option>
+                    <option value="A_LEVEL">A-Level (S5-S6)</option>
+                  </select>
+                </div>
+
                 <div className="col-md-6">
                   <label className="form-label fw-bold">Academic Year *</label>
                   <input
                     type="text"
                     className="form-control"
                     placeholder="e.g., 2025-2026"
-                    value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                    value={formData.academicYear}
+                    onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
+                  />
+                </div>
+
+                {/* Optional Fields Section */}
+                <div className="col-12 mt-3">
+                  <h6 className="fw-bold mb-3 text-muted">Additional Information</h6>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Stream</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g., A, B, East, West"
+                    value={formData.stream}
+                    onChange={(e) => setFormData({ ...formData, stream: e.target.value })}
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Classroom</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g., Room 101"
+                    value={formData.classroom}
+                    onChange={(e) => setFormData({ ...formData, classroom: e.target.value })}
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Building</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g., Main Block"
+                    value={formData.building}
+                    onChange={(e) => setFormData({ ...formData, building: e.target.value })}
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Max Capacity</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    placeholder="50"
+                    value={formData.maxCapacity}
+                    onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
+                    min="1"
+                  />
+                </div>
+
+                <div className="col-12">
+                  <label className="form-label">Notes</label>
+                  <textarea
+                    className="form-control"
+                    placeholder="Additional notes about this class"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    rows="3"
                   />
                 </div>
               </form>
@@ -533,6 +656,11 @@ function Class() {
             </div>
             <div className="class-modal-body">
               <form className="row g-3">
+                {/* Required Fields Section */}
+                <div className="col-12">
+                  <h6 className="fw-bold mb-3 text-muted">Required Information</h6>
+                </div>
+
                 <div className="col-md-6">
                   <label className="form-label fw-bold">Class Name *</label>
                   <input
@@ -542,37 +670,99 @@ function Class() {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
+
                 <div className="col-md-6">
-                  <label className="form-label fw-bold">Room Number *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.roomNumber}
-                    onChange={(e) => setFormData({ ...formData, roomNumber: e.target.value })}
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-bold">Class Teacher *</label>
+                  <label className="form-label fw-bold">Form Level *</label>
                   <select
                     className="form-select"
-                    value={formData.teacher}
-                    onChange={(e) => setFormData({ ...formData, teacher: e.target.value })}
+                    value={formData.formLevel}
+                    onChange={(e) => setFormData({ ...formData, formLevel: e.target.value })}
                   >
-                    <option value="">Select Teacher</option>
-                    {sampleTeachers.map((teacher) => (
-                      <option key={teacher.id} value={teacher.name}>
-                        {teacher.name}
-                      </option>
-                    ))}
+                    <option value="">Select Form Level</option>
+                    <option value="1">S.1 (Form 1)</option>
+                    <option value="2">S.2 (Form 2)</option>
+                    <option value="3">S.3 (Form 3)</option>
+                    <option value="4">S.4 (Form 4)</option>
+                    <option value="5">S.5 (Form 5)</option>
+                    <option value="6">S.6 (Form 6)</option>
                   </select>
                 </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-bold">Level Type *</label>
+                  <select
+                    className="form-select"
+                    value={formData.levelType}
+                    onChange={(e) => setFormData({ ...formData, levelType: e.target.value })}
+                  >
+                    <option value="O_LEVEL">O-Level (S1-S4)</option>
+                    <option value="A_LEVEL">A-Level (S5-S6)</option>
+                  </select>
+                </div>
+
                 <div className="col-md-6">
                   <label className="form-label fw-bold">Academic Year *</label>
                   <input
                     type="text"
                     className="form-control"
-                    value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                    value={formData.academicYear}
+                    onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
+                  />
+                </div>
+
+                {/* Optional Fields Section */}
+                <div className="col-12 mt-3">
+                  <h6 className="fw-bold mb-3 text-muted">Additional Information</h6>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Stream</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.stream}
+                    onChange={(e) => setFormData({ ...formData, stream: e.target.value })}
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Classroom</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.classroom}
+                    onChange={(e) => setFormData({ ...formData, classroom: e.target.value })}
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Building</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.building}
+                    onChange={(e) => setFormData({ ...formData, building: e.target.value })}
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label">Max Capacity</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={formData.maxCapacity}
+                    onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
+                    min="1"
+                  />
+                </div>
+
+                <div className="col-12">
+                  <label className="form-label">Notes</label>
+                  <textarea
+                    className="form-control"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    rows="3"
                   />
                 </div>
               </form>

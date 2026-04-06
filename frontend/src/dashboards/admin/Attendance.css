@@ -23,13 +23,13 @@
 
 /* Attendance Cards */
 .attendance-card {
-  width: 250px;
+  width: 100%;
   height: 140px;
   background: white;
   border-radius: 10px;
   box-shadow: 0 0 5px #999;
   transition: all 0.3s ease;
-  border-left: 4px solid #2563eb;
+  /* border-left: 4px solid #2563eb; */
   display: flex;
   flex-direction: column;
   align-items: center;

@@ -36,12 +36,17 @@ const StudentSearch = () => {
   const [addFormData, setAddFormData] = useState({
     firstName: '',
     lastName: '',
-    dateOfBirth: '',
+    email: '',
     gender: '',
-    nationality: '',
+    dateOfBirth: '',
+    phoneNumber: '',
     currentClass: '',
-    contact: '',
-    status: 'active',
+    stream: '',
+    residenceStatus: 'DAY',
+    otherNames: '',
+    nin: '',
+    linn: '',
+    nationality: '',
   });
 
   const [viewStudent, setViewStudent] = useState(null);
@@ -109,12 +114,17 @@ const StudentSearch = () => {
     setAddFormData({
       firstName: '',
       lastName: '',
-      dateOfBirth: '',
+      email: '',
       gender: '',
-      nationality: '',
+      dateOfBirth: '',
+      phoneNumber: '',
       currentClass: '',
-      contact: '',
-      status: 'active',
+      stream: '',
+      residenceStatus: 'DAY',
+      otherNames: '',
+      nin: '',
+      linn: '',
+      nationality: '',
     });
   };
 
@@ -131,43 +141,45 @@ const StudentSearch = () => {
 
     const firstName = addFormData.firstName.trim();
     const lastName = addFormData.lastName.trim();
+    const email = addFormData.email.trim();
     const dateOfBirth = addFormData.dateOfBirth;
     const gender = addFormData.gender;
-    const nationality = addFormData.nationality;
+    const phoneNumber = addFormData.phoneNumber.trim();
     const currentClass = addFormData.currentClass;
-    const contact = addFormData.contact.trim();
-    const status = addFormData.status;
 
-    // Basic validation: all add-student fields are required.
-    if (
-      !firstName ||
-      !lastName ||
-      !dateOfBirth ||
-      !gender ||
-      !nationality ||
-      !currentClass ||
-      !contact ||
-      !status
-    ) {
-      setAddFormError('Please fill in all fields.');
+    // Validate required fields (backend: firstName, lastName, email, gender, dateOfBirth are required)
+    if (!firstName || !lastName || !email || !gender || !dateOfBirth) {
+      setAddFormError('Please fill in all required fields (First Name, Last Name, Email, Gender, Date of Birth).');
       return;
     }
 
-    const fullName = `${firstName} ${lastName}`;
-    const studentClass = currentClass;
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setAddFormError('Please enter a valid email address.');
+      return;
+    }
 
+    // Map frontend data to backend field names
     const newStudent = {
       id: generateStudentId(),
-      name: fullName,
-      studentClass,
-      contact,
+      name: `${firstName} ${lastName}`,
+      studentClass: currentClass,
+      contact: phoneNumber, // Display field only
       firstName,
       lastName,
-      dateOfBirth,
+      email,
       gender,
-      nationality,
+      dateOfBirth,
+      phoneNumber,
       currentClass,
-      status,
+      stream: addFormData.stream,
+      residenceStatus: addFormData.residenceStatus,
+      otherNames: addFormData.otherNames,
+      nin: addFormData.nin,
+      linn: addFormData.linn,
+      nationality: addFormData.nationality,
+      status: 'active', // Frontend display only; backend auto-manages isActive
     };
 
     setStudents((prev) => [newStudent, ...prev]);
@@ -315,8 +327,11 @@ const StudentSearch = () => {
               {addFormError ? <p className="form-error">{addFormError}</p> : null}
 
               <div className="add-student-grid">
+                {/* Required Fields Section */}
+                <h4 className="form-section-title">Required Information</h4>
+
                 <div className="form-field">
-                  <label htmlFor="firstName">First Name</label>
+                  <label htmlFor="firstName">First Name *</label>
                   <input
                     id="firstName"
                     name="firstName"
@@ -324,11 +339,12 @@ const StudentSearch = () => {
                     value={addFormData.firstName}
                     onChange={handleAddInputChange}
                     placeholder="Enter first name"
+                    required
                   />
                 </div>
 
                 <div className="form-field">
-                  <label htmlFor="lastName">Last Name</label>
+                  <label htmlFor="lastName">Last Name *</label>
                   <input
                     id="lastName"
                     name="lastName"
@@ -336,51 +352,76 @@ const StudentSearch = () => {
                     value={addFormData.lastName}
                     onChange={handleAddInputChange}
                     placeholder="Enter last name"
+                    required
+                  />
+                </div>
+
+                <div className="form-field form-field-full">
+                  <label htmlFor="email">Email *</label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={addFormData.email}
+                    onChange={handleAddInputChange}
+                    placeholder="Enter email address"
+                    required
                   />
                 </div>
 
                 <div className="form-field">
-                  <label htmlFor="dateOfBirth">Date of Birth</label>
+                  <label htmlFor="gender">Gender *</label>
+                  <select
+                    id="gender"
+                    name="gender"
+                    value={addFormData.gender}
+                    onChange={handleAddInputChange}
+                    required
+                  >
+                    <option value="">Select gender</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="dateOfBirth">Date of Birth *</label>
                   <input
                     id="dateOfBirth"
                     name="dateOfBirth"
                     type="date"
                     value={addFormData.dateOfBirth}
                     onChange={handleAddInputChange}
+                    required
+                  />
+                </div>
+
+                {/* Optional Fields Section */}
+                <h4 className="form-section-title" style={{ marginTop: '12px' }}>Optional Information</h4>
+
+                <div className="form-field">
+                  <label htmlFor="otherNames">Other Names</label>
+                  <input
+                    id="otherNames"
+                    name="otherNames"
+                    type="text"
+                    value={addFormData.otherNames}
+                    onChange={handleAddInputChange}
+                    placeholder="Enter other names"
                   />
                 </div>
 
                 <div className="form-field">
-                  <label htmlFor="gender">Gender</label>
-                  <select
-                    id="gender"
-                    name="gender"
-                    value={addFormData.gender}
+                  <label htmlFor="phoneNumber">Phone Number</label>
+                  <input
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    type="tel"
+                    value={addFormData.phoneNumber}
                     onChange={handleAddInputChange}
-                  >
-                    <option value="">Select gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div className="form-field">
-                  <label htmlFor="nationality">Nationality</label>
-                  <select
-                    id="nationality"
-                    name="nationality"
-                    value={addFormData.nationality}
-                    onChange={handleAddInputChange}
-                  >
-                    <option value="">Select nationality</option>
-                    <option value="Ugandan">Ugandan</option>
-                    <option value="Kenyan">Kenyan</option>
-                    <option value="Tanzanian">Tanzanian</option>
-                    <option value="Rwandan">Rwandan</option>
-                    <option value="South Sudanese">South Sudanese</option>
-                    <option value="Other">Other</option>
-                  </select>
+                    placeholder="+256 701 234567"
+                  />
                 </div>
 
                 <div className="form-field">
@@ -402,28 +443,70 @@ const StudentSearch = () => {
                 </div>
 
                 <div className="form-field">
-                  <label htmlFor="contact">Contact</label>
+                  <label htmlFor="stream">Stream</label>
                   <input
-                    id="contact"
-                    name="contact"
+                    id="stream"
+                    name="stream"
                     type="text"
-                    value={addFormData.contact}
+                    value={addFormData.stream}
                     onChange={handleAddInputChange}
-                    placeholder="Enter contact"
+                    placeholder="e.g., Science, Arts, Commerce"
                   />
                 </div>
 
                 <div className="form-field">
-                  <label htmlFor="status">Status</label>
+                  <label htmlFor="residenceStatus">Residence Status</label>
                   <select
-                    id="status"
-                    name="status"
-                    value={addFormData.status}
+                    id="residenceStatus"
+                    name="residenceStatus"
+                    value={addFormData.residenceStatus}
                     onChange={handleAddInputChange}
                   >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="pending">Pending</option>
+                    <option value="DAY">Day Student</option>
+                    <option value="BOARDING">Boarding Student</option>
+                  </select>
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="nin">National ID Number (NIN)</label>
+                  <input
+                    id="nin"
+                    name="nin"
+                    type="text"
+                    value={addFormData.nin}
+                    onChange={handleAddInputChange}
+                    placeholder="14-character NIN"
+                    maxLength="14"
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="linn">Learner ID Number (LINN)</label>
+                  <input
+                    id="linn"
+                    name="linn"
+                    type="text"
+                    value={addFormData.linn}
+                    onChange={handleAddInputChange}
+                    placeholder="Learner ID"
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label htmlFor="nationality">Nationality</label>
+                  <select
+                    id="nationality"
+                    name="nationality"
+                    value={addFormData.nationality}
+                    onChange={handleAddInputChange}
+                  >
+                    <option value="">Select nationality</option>
+                    <option value="Ugandan">Ugandan</option>
+                    <option value="Kenyan">Kenyan</option>
+                    <option value="Tanzanian">Tanzanian</option>
+                    <option value="Rwandan">Rwandan</option>
+                    <option value="South Sudanese">South Sudanese</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
               </div>

@@ -1,13 +1,13 @@
-/* Class Management Component Styles */
+/* Room Management Component Styles */
 
-.class-page {
+.room-page {
   background-color: #f8f9fa;
   min-height: 100%;
   width: 100%;
 }
 
 /* Header Section */
-.class-header {
+.room-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -17,25 +17,25 @@
   gap: 1rem;
 }
 
-.class-header h1 {
+.room-header h1 {
   font-size: 2rem;
   font-weight: 700;
   color: #212529;
   margin: 0;
 }
 
-.class-header p {
+.room-header p {
   font-size: 0.95rem;
   color: #6c757d;
   margin: 0;
 }
 
-.class-header .btn {
+.room-header .btn {
   height: fit-content;
 }
 
-/* Overview Cards */
-.class-card {
+/* Room Cards */
+.room-card {
   background: white;
   border-radius: 10px;
   padding: 1.5rem;
@@ -51,12 +51,12 @@
   height: 100px;
 }
 
-.class-card:hover {
+.room-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
 }
 
-.class-card h3 {
+.room-card h3 {
   font-size: 0.875rem;
   color: #6c757d;
   font-weight: 500;
@@ -64,81 +64,43 @@
   margin-top: 0.5rem;
 }
 
-.class-card h2 {
+.room-card h2 {
   font-size: 1rem;
   font-weight: 700;
   color: #212529;
   margin: 0;
 }
 
-.class-card.total-card {
+.room-card.total-card {
   border-left-color: #2563eb;
 }
 
-.class-card.students-card {
+.room-card.available-card {
   border-left-color: #16a34a;
 }
 
-.class-card.attendance-card {
+.room-card.capacity-card {
   border-left-color: #f59e0b;
 }
 
-.class-card.performance-card {
-  border-left-color: #8b5cf6;
-}
-
-.class-icon {
-  flex-shrink: 0;
-}
-
-/* Tabs */
-.class-tabs {
-  display: flex;
-  gap: 1rem;
-  border-bottom: 2px solid #e9ecef;
-  padding-bottom: 0;
-}
-
-.tab-btn {
-  background: none;
-  border: none;
-  padding: 0.75rem 1rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #6c757d;
-  cursor: pointer;
-  border-bottom: 3px solid transparent;
-  transition: all 0.2s ease;
-  margin-bottom: -2px;
-}
-
-.tab-btn:hover {
-  color: #212529;
-}
-
-.tab-btn.active {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
-}
-
 /* Search and Filter Styles */
-.class-search-wrapper {
+.room-search-wrapper {
   position: relative;
 }
 
-.class-search-wrapper input {
+.room-search-wrapper input {
   padding-left: 2.5rem;
   border: 1px solid #dee2e6;
   border-radius: 6px;
   transition: all 0.2s ease;
 }
 
-.class-search-wrapper input:focus {
+.room-search-wrapper input:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.class-search-wrapper i {
+.room-search-wrapper i {
   position: absolute;
   left: 0.75rem;
   top: 50%;
@@ -199,16 +161,6 @@
   padding: 0.35rem 0.75rem;
   font-size: 0.8rem;
   font-weight: 600;
-}
-
-.badge.bg-success {
-  background-color: #dcfce7 !important;
-  color: #166534;
-}
-
-.badge.bg-info {
-  background-color: #cffafe !important;
-  color: #164e63;
 }
 
 /* Action Buttons */
@@ -281,39 +233,8 @@
   box-shadow: 0 0 0 3px rgba(153, 27, 27, 0.15);
 }
 
-/* Pagination */
-.pagination {
-  margin-top: 1.5rem;
-  gap: 0.25rem;
-}
-
-.page-link {
-  color: #2563eb;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  padding: 0.5rem 0.75rem;
-  transition: all 0.2s ease;
-}
-
-.page-link:hover {
-  color: #1d4ed8;
-  background-color: #dbeafe;
-  border-color: #93c5fd;
-}
-
-.page-item.active .page-link {
-  background-color: #2563eb;
-  border-color: #2563eb;
-  color: white;
-}
-
-.page-item.disabled .page-link {
-  color: #6c757d;
-  cursor: not-allowed;
-}
-
 /* Modal Styles */
-.class-modal-overlay {
+.room-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
@@ -324,7 +245,7 @@
   z-index: 1050;
 }
 
-.class-modal {
+.room-modal {
   background: white;
   border-radius: 10px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -334,7 +255,7 @@
   overflow-y: auto;
 }
 
-.class-modal-header {
+.room-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -342,14 +263,14 @@
   border-bottom: 1px solid #e9ecef;
 }
 
-.class-modal-header h3 {
+.room-modal-header h3 {
   font-size: 1.25rem;
   font-weight: 700;
   color: #212529;
   margin: 0;
 }
 
-.class-modal-header .btn-close {
+.room-modal-header .btn-close {
   background-color: #e9ecef;
   border: none;
   cursor: pointer;
@@ -364,15 +285,15 @@
   color: #212529;
 }
 
-.class-modal-header .btn-close:hover {
+.room-modal-header .btn-close:hover {
   background-color: #dee2e6;
 }
 
-.class-modal-body {
+.room-modal-body {
   padding: 1.5rem;
 }
 
-.class-modal-footer {
+.room-modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
@@ -380,7 +301,7 @@
   border-top: 1px solid #e9ecef;
 }
 
-.class-modal-footer .btn {
+.room-modal-footer .btn {
   padding: 0.5rem 1.5rem;
   border-radius: 6px;
   font-weight: 600;
@@ -389,22 +310,31 @@
   transition: all 0.2s ease;
 }
 
-.class-modal-footer .btn-secondary {
+.room-modal-footer .btn-secondary {
   background-color: #e9ecef;
   color: #212529;
 }
 
-.class-modal-footer .btn-secondary:hover {
+.room-modal-footer .btn-secondary:hover {
   background-color: #dee2e6;
 }
 
-.class-modal-footer .btn-primary {
+.room-modal-footer .btn-primary {
   background-color: #2563eb;
   color: white;
 }
 
-.class-modal-footer .btn-primary:hover {
+.room-modal-footer .btn-primary:hover {
   background-color: #1d4ed8;
+}
+
+.room-modal-footer .btn-danger {
+  background-color: #ef4444;
+  color: white;
+}
+
+.room-modal-footer .btn-danger:hover {
+  background-color: #dc2626;
 }
 
 /* Form Styles */
@@ -414,7 +344,8 @@
 }
 
 .form-control,
-.form-select {
+.form-select,
+textarea {
   padding: 0.625rem 0.75rem;
   border: 1px solid #dee2e6;
   border-radius: 6px;
@@ -423,69 +354,11 @@
 }
 
 .form-control:focus,
-.form-select:focus {
+.form-select:focus,
+textarea:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   outline: none;
-}
-
-/* Timetable Grid */
-.timetable-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-}
-
-.timetable-day {
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.day-header {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  color: white;
-  padding: 1rem;
-  font-weight: 700;
-  text-align: center;
-  font-size: 1rem;
-}
-
-.timetable-slot {
-  padding: 1rem;
-  border-bottom: 1px solid #e9ecef;
-  transition: background-color 0.2s ease;
-}
-
-.timetable-slot:last-child {
-  border-bottom: none;
-}
-
-.timetable-slot:hover {
-  background-color: #f8f9fa;
-}
-
-.slot-time {
-  font-size: 0.8rem;
-  color: #6c757d;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 0.3rem;
-}
-
-.slot-subject {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #212529;
-  margin-bottom: 0.3rem;
-}
-
-.slot-teacher {
-  font-size: 0.85rem;
-  color: #495057;
 }
 
 /* Card Styles */
@@ -496,50 +369,28 @@
   margin-bottom: 1.5rem;
 }
 
-.card-header {
-  border: none;
-  border-radius: 10px 10px 0 0;
-  padding: 1.5rem;
-}
-
 .card-body {
   padding: 1.5rem;
 }
 
-.card-footer {
-  border: none;
-  background-color: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 0 0 10px 10px;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
-  .class-page {
+  .room-page {
     padding: 0.75rem !important;
   }
 
-  .class-header {
+  .room-header {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .class-header h1 {
+  .room-header h1 {
     font-size: 1.5rem;
     margin-bottom: 0.5rem;
   }
 
-  .class-card {
+  .room-card {
     width: 100%;
-  }
-
-  .class-tabs {
-    flex-wrap: wrap;
-  }
-
-  .tab-btn {
-    font-size: 0.85rem;
-    padding: 0.5rem 0.75rem;
   }
 
   .table {
@@ -556,40 +407,31 @@
     font-size: 0.65rem;
   }
 
-  .timetable-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .class-modal {
+  .room-modal {
     max-width: 95vw;
   }
 }
 
 @media (max-width: 576px) {
-  .class-page {
+  .room-page {
     padding: 0.5rem !important;
   }
 
-  .class-header {
+  .room-header {
     flex-direction: column;
     gap: 0.5rem;
   }
 
-  .class-header h1 {
+  .room-header h1 {
     font-size: 1.25rem;
   }
 
-  .class-header p {
+  .room-header p {
     font-size: 0.85rem;
   }
 
-  .class-header .btn {
+  .room-header .btn {
     width: 100%;
-  }
-
-  .row.g-3 {
-    --bs-gutter-y: 0.5rem;
   }
 
   .table {
@@ -610,57 +452,9 @@
     font-size: 0.6rem;
   }
 
-  .timetable-grid {
-    gap: 0.75rem;
-  }
-
-  .timetable-slot {
-    padding: 0.75rem;
-  }
-
-  .slot-time {
-    font-size: 0.7rem;
-  }
-
-  .slot-subject {
-    font-size: 0.85rem;
-  }
-
-  .slot-teacher {
-    font-size: 0.75rem;
-  }
-
-  .class-modal-header,
-  .class-modal-body,
-  .class-modal-footer {
+  .room-modal-header,
+  .room-modal-body,
+  .room-modal-footer {
     padding: 1rem;
-  }
-}
-
-/* Print Styles */
-@media print {
-  .class-page {
-    background: white;
-  }
-
-  .class-header .btn,
-  .class-tabs,
-  .class-search-wrapper,
-  .form-select,
-  .action-buttons,
-  .pagination {
-    display: none;
-  }
-
-  .class-card,
-  .card,
-  .timetable-day {
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  .table {
-    page-break-inside: avoid;
-    break-inside: avoid;
   }
 }

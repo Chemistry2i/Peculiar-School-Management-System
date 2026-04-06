@@ -40,7 +40,7 @@
   gap: 15px;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border-left: 4px solid #2563eb;
+  /* border-left: 4px solid #2563eb; */
 }
 
 .subjects-card:hover {
@@ -87,7 +87,7 @@
 }
 
 .total-card {
-  border-left-color: #2563eb;
+  /* border-left-color: #2563eb; */
 }
 
 .total-card .subjects-card-icon {
