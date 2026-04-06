@@ -1,16 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
+import axios from 'axios';
 import './Room.css';
 
-const sampleRooms = [
-  { id: 1, roomNumber: '101', roomName: 'Class S1A', roomType: 'CLASSROOM', capacity: 45, building: 'Main Block', floor: '1', isAvailable: true },
-  { id: 2, roomNumber: '102', roomName: 'Class S1B', roomType: 'CLASSROOM', capacity: 42, building: 'Main Block', floor: '1', isAvailable: true },
-  { id: 3, roomNumber: 'LAB01', roomName: 'Physics Lab', roomType: 'LABORATORY', capacity: 30, building: 'Science Block', floor: '2', isAvailable: true },
-  { id: 4, roomNumber: 'LIB01', roomName: 'Main Library', roomType: 'LIBRARY', capacity: 100, building: 'Library Block', floor: '1', isAvailable: true },
-  { id: 5, roomNumber: 'HALL01', roomName: 'Assembly Hall', roomType: 'HALL', capacity: 200, building: 'Main Block', floor: 'Ground', isAvailable: true },
-];
+const API_BASE_URL = 'http://localhost:8080/api';
 
 function Room() {
-  const [rooms, setRooms] = useState(sampleRooms);
+  const [rooms, setRooms] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -19,6 +14,8 @@ function Room() {
   const [isDeleteConfirmModalOpen, setIsDeleteConfirmModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [roomToDelete, setRoomToDelete] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const [formData, setFormData] = useState({
     roomNumber: '',
@@ -33,6 +30,28 @@ function Room() {
     notes: '',
   });
 
+  // Fetch rooms from backend on component mount
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
+  const fetchRooms = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/rooms`);
+      // Backend returns directly as array (not wrapped like Department)
+      const roomsData = Array.isArray(response.data) ? response.data : [];
+      setRooms(roomsData);
+    } catch (err) {
+      console.error('Error fetching rooms:', err);
+      setError('Failed to load rooms. Please try again.');
+      setRooms([]); // Set to empty array on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Metrics
   const metrics = useMemo(() => {
     const totalRooms = rooms.length;
@@ -43,11 +62,33 @@ function Room() {
   }, [rooms]);
 
   const roomTypes = ['CLASSROOM', 'LABORATORY', 'LIBRARY', 'HALL', 'OFFICE'];
+  const equipmentOptions = [
+    'Projector',
+    'Whiteboard',
+    'Smart Board',
+    'Computer',
+    'Air Conditioner',
+    'Desk',
+    'Chair',
+    'Table',
+    'Microscope',
+    'Bunsen Burner',
+    'Lab Equipment',
+    'Sound System',
+    'Podium',
+    'Multimedia System',
+    'WiFi Router',
+    'None'
+  ];
 
   // Filter rooms
   const filteredRooms = useMemo(() => {
+    if (!Array.isArray(rooms)) {
+      return [];
+    }
     const term = searchTerm.toLowerCase();
     return rooms.filter(room => {
+      if (!room || !room.roomNumber) return false;
       const matchesSearch = room.roomNumber.toLowerCase().includes(term) ||
         (room.roomName && room.roomName.toLowerCase().includes(term)) ||
         (room.building && room.building.toLowerCase().includes(term));
@@ -56,83 +97,125 @@ function Room() {
     });
   }, [searchTerm, filterType, rooms]);
 
-  const handleAddRoom = (e) => {
+  const handleAddRoom = async (e) => {
     e.preventDefault();
     if (!formData.roomNumber || !formData.roomType) {
       alert('Please fill in required fields (Room Number, Room Type)');
       return;
     }
 
-    const newRoom = {
-      id: Math.max(...rooms.map(r => r.id), 0) + 1,
-      ...formData,
-      capacity: parseInt(formData.capacity) || 50,
-    };
+    try {
+      const roomData = {
+        ...formData,
+        capacity: parseInt(formData.capacity) || 50,
+      };
 
-    setRooms([...rooms, newRoom]);
-    setIsAddModalOpen(false);
-    setFormData({
-      roomNumber: '',
-      roomName: '',
-      roomType: 'CLASSROOM',
-      capacity: 50,
-      building: '',
-      floor: '',
-      location: '',
-      equipment: '',
-      isAvailable: true,
-      notes: '',
-    });
+      const response = await axios.post(`${API_BASE_URL}/rooms`, roomData);
+      
+      setRooms([...rooms, response.data]);
+      setIsAddModalOpen(false);
+      setFormData({
+        roomNumber: '',
+        roomName: '',
+        roomType: 'CLASSROOM',
+        capacity: 50,
+        building: '',
+        floor: '',
+        location: '',
+        equipment: '',
+        isAvailable: true,
+        notes: '',
+      });
+      setError(null);
+    } catch (err) {
+      if (err.response?.data?.message) {
+        alert(`Error: ${err.response.data.message}`);
+      } else {
+        alert('Failed to add room. Please try again.');
+      }
+      console.error('Error adding room:', err);
+    }
   };
 
-  const handleEditRoom = (e) => {
+  const handleEditRoom = async (e) => {
     e.preventDefault();
     if (!formData.roomNumber || !formData.roomType) {
       alert('Please fill in required fields');
       return;
     }
 
-    setRooms(
-      rooms.map(room =>
-        room.id === selectedRoom.id
-          ? { ...room, ...formData, capacity: parseInt(formData.capacity) || 50 }
-          : room
-      )
-    );
+    try {
+      const roomData = {
+        ...formData,
+        capacity: parseInt(formData.capacity) || 50,
+      };
 
-    setIsEditModalOpen(false);
-    setSelectedRoom(null);
-    setFormData({
-      roomNumber: '',
-      roomName: '',
-      roomType: 'CLASSROOM',
-      capacity: 50,
-      building: '',
-      floor: '',
-      location: '',
-      equipment: '',
-      isAvailable: true,
-      notes: '',
-    });
+      const response = await axios.put(`${API_BASE_URL}/rooms/${selectedRoom.id}`, roomData);
+      
+      setRooms(
+        rooms.map(room =>
+          room.id === selectedRoom.id ? response.data : room
+        )
+      );
+
+      setIsEditModalOpen(false);
+      setSelectedRoom(null);
+      setFormData({
+        roomNumber: '',
+        roomName: '',
+        roomType: 'CLASSROOM',
+        capacity: 50,
+        building: '',
+        floor: '',
+        location: '',
+        equipment: '',
+        isAvailable: true,
+        notes: '',
+      });
+      setError(null);
+    } catch (err) {
+      if (err.response?.data?.message) {
+        alert(`Error: ${err.response.data.message}`);
+      } else {
+        alert('Failed to update room. Please try again.');
+      }
+      console.error('Error updating room:', err);
+    }
   };
 
-  const handleDeleteRoom = () => {
+  const handleDeleteRoom = async () => {
     if (roomToDelete) {
-      setRooms(rooms.filter(room => room.id !== roomToDelete.id));
-      setIsDeleteConfirmModalOpen(false);
-      setRoomToDelete(null);
+      try {
+        await axios.delete(`${API_BASE_URL}/rooms/${roomToDelete.id}`);
+        
+        setRooms(rooms.filter(room => room.id !== roomToDelete.id));
+        setIsDeleteConfirmModalOpen(false);
+        setRoomToDelete(null);
+        setError(null);
+      } catch (err) {
+        if (err.response?.data?.message) {
+          alert(`Error: ${err.response.data.message}`);
+        } else {
+          alert('Failed to delete room. Please try again.');
+        }
+        console.error('Error deleting room:', err);
+      }
     }
   };
 
   const openEditModal = (room) => {
-    setSelectedRoom(room);
-    setFormData(room);
-    setIsEditModalOpen(true);
+    if (room && room.id) {
+      setSelectedRoom(room);
+      setFormData({ ...room });
+      setIsEditModalOpen(true);
+    }
   };
 
   const openDeleteConfirmModal = (room) => {
-    setRoomToDelete(room);
-    setIsDeleteConfirmModalOpen(true);
+    if (room && room.id) {
+      setRoomToDelete(room);
+      setIsDeleteConfirmModalOpen(true);
+    }
   };
 
   return (
@@ -142,10 +225,26 @@ function Room() {
           <h1 className="mb-2">Room Management</h1>
           <p className="text-muted mb-0">Manage classrooms, laboratories, halls, and facilities.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)}>
+        <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)} disabled={loading}>
           <i className="fa-solid fa-plus me-2"></i> Add New Room
         </button>
       </div>
+
+      {/* Error Alert */}
+      {error && (
+        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+          <i className="fa-solid fa-circle-exclamation me-2"></i>
+          {error}
+          <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+        </div>
+      )}
+
+      {/* Loading Indicator */}
+      {loading && (
+        <div className="alert alert-info" role="alert">
+          <i className="fa-solid fa-spinner me-2"></i> Loading rooms...
+        </div>
+      )}
 
       {/* Overview Cards */}
       <div className="row g-3 mb-4">
@@ -246,6 +345,7 @@ function Room() {
                             title="View Details"
                           >
                             <i className="fas fa-eye"></i>
+                        
                           </button>
                           <button
                             className="action-btn edit-btn"
@@ -253,6 +353,7 @@ function Room() {
                             title="Edit"
                           >
                             <i className="fas fa-edit"></i>
+                        
                           </button>
                           <button
                             className="action-btn delete-btn"
@@ -426,13 +527,16 @@ function Room() {
 
                 <div className="col-md-6">
                   <label className="form-label">Equipment</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="e.g., Projector, Whiteboard"
+                  <select
+                    className="form-select"
                     value={formData.equipment}
                     onChange={(e) => setFormData({ ...formData, equipment: e.target.value })}
-                  />
+                  >
+                    <option value="">-- Select Equipment --</option>
+                    {equipmentOptions.map(equipment => (
+                      <option key={equipment} value={equipment}>{equipment}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="col-12">
@@ -567,12 +671,16 @@ function Room() {
 
                 <div className="col-md-6">
                   <label className="form-label">Equipment</label>
-                  <input
-                    type="text"
-                    className="form-control"
+                  <select
+                    className="form-select"
                     value={formData.equipment}
                     onChange={(e) => setFormData({ ...formData, equipment: e.target.value })}
-                  />
+                  >
+                    <option value="">-- Select Equipment --</option>
+                    {equipmentOptions.map(equipment => (
+                      <option key={equipment} value={equipment}>{equipment}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="col-12">

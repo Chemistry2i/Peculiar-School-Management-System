@@ -1,16 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
+import axios from 'axios';
 import './Department.css';
 
-const sampleDepartments = [
-  { id: 1, name: 'Mathematics', departmentCode: 'MATH', status: 'ACTIVE', academicFocus: 'Pure and Applied Mathematics', building: 'Science Block', email: 'math@school.edu' },
-  { id: 2, name: 'Science', departmentCode: 'SCI', status: 'ACTIVE', academicFocus: 'Physics, Chemistry, Biology', building: 'Science Block', email: 'science@school.edu' },
-  { id: 3, name: 'Languages', departmentCode: 'LANG', status: 'ACTIVE', academicFocus: 'English, French, Luganda', building: 'Main Block', email: 'languages@school.edu' },
-  { id: 4, name: 'Social Studies', departmentCode: 'SOCS', status: 'ACTIVE', academicFocus: 'History, Geography, Civics', building: 'Main Block', email: 'socstudies@school.edu' },
-  { id: 5, name: 'Technical Studies', departmentCode: 'TECH', status: 'ACTIVE', academicFocus: 'Computer Science, Engineering', building: 'Tech Block', email: 'tech@school.edu' },
-];
+const API_BASE_URL = 'http://localhost:8080/api';
 
 function Department() {
-  const [departments, setDepartments] = useState(sampleDepartments);
+  const [departments, setDepartments] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -19,6 +14,8 @@ function Department() {
   const [isDeleteConfirmModalOpen, setIsDeleteConfirmModalOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [departmentToDelete, setDepartmentToDelete] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -39,6 +36,29 @@ function Department() {
     isCoreDepartment: true,
   });
 
+  // Fetch departments from backend on component mount
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  const fetchDepartments = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/departments`);
+      // Backend returns { success: true, data: [...], total: X }
+      const departmentsData = response.data?.data || response.data;
+      const departmentsArray = Array.isArray(departmentsData) ? departmentsData : [];
+      setDepartments(departmentsArray);
+    } catch (err) {
+      console.error('Error fetching departments:', err);
+      setError('Failed to load departments. Please try again.');
+      setDepartments([]); // Set to empty array on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Metrics
   const metrics = useMemo(() => {
     const totalDepartments = departments.length;
@@ -49,8 +69,12 @@ function Department() {
 
   // Filter departments
   const filteredDepartments = useMemo(() => {
+    if (!Array.isArray(departments)) {
+      return [];
+    }
     const term = searchTerm.toLowerCase();
     return departments.filter(dept => {
+      if (!dept || !dept.name) return false;
       const matchesSearch = dept.name.toLowerCase().includes(term) ||
         (dept.departmentCode && dept.departmentCode.toLowerCase().includes(term)) ||
         (dept.academicFocus && dept.academicFocus.toLowerCase().includes(term));
@@ -59,103 +83,141 @@ function Department() {
     });
   }, [searchTerm, filterStatus, departments]);
 
-  const handleAddDepartment = (e) => {
+  const handleAddDepartment = async (e) => {
     e.preventDefault();
     if (!formData.name) {
       alert('Please fill in required fields (Department Name)');
       return;
     }
 
-    const newDepartment = {
-      id: Math.max(...departments.map(d => d.id), 0) + 1,
-      ...formData,
-      establishedYear: parseInt(formData.establishedYear) || new Date().getFullYear(),
-      targetEnrollment: parseInt(formData.targetEnrollment) || 100,
-      minimumStaff: parseInt(formData.minimumStaff) || 3,
-    };
+    try {
+      const departmentData = {
+        ...formData,
+        establishedYear: parseInt(formData.establishedYear) || new Date().getFullYear(),
+        targetEnrollment: parseInt(formData.targetEnrollment) || 100,
+        minimumStaff: parseInt(formData.minimumStaff) || 3,
+      };
 
-    setDepartments([...departments, newDepartment]);
-    setIsAddModalOpen(false);
-    setFormData({
-      name: '',
-      description: '',
-      departmentCode: '',
-      status: 'ACTIVE',
-      building: '',
-      floor: '',
-      officeRoom: '',
-      phoneNumber: '',
-      email: '',
-      academicFocus: '',
-      visionStatement: '',
-      missionStatement: '',
-      establishedYear: new Date().getFullYear(),
-      targetEnrollment: 100,
-      minimumStaff: 3,
-      isCoreDepartment: true,
-    });
+      const response = await axios.post(`${API_BASE_URL}/departments`, departmentData);
+      
+      setDepartments([...departments, response.data]);
+      setIsAddModalOpen(false);
+      setFormData({
+        name: '',
+        description: '',
+        departmentCode: '',
+        status: 'ACTIVE',
+        building: '',
+        floor: '',
+        officeRoom: '',
+        phoneNumber: '',
+        email: '',
+        academicFocus: '',
+        visionStatement: '',
+        missionStatement: '',
+        establishedYear: new Date().getFullYear(),
+        targetEnrollment: 100,
+        minimumStaff: 3,
+        isCoreDepartment: true,
+      });
+      setError(null);
+    } catch (err) {
+      if (err.response?.data?.message) {
+        alert(`Error: ${err.response.data.message}`);
+      } else {
+        alert('Failed to add department. Please try again.');
+      }
+      console.error('Error adding department:', err);
+    }
   };
 
-  const handleEditDepartment = (e) => {
+  const handleEditDepartment = async (e) => {
     e.preventDefault();
     if (!formData.name) {
       alert('Please fill in required fields');
       return;
     }
 
-    setDepartments(
-      departments.map(dept =>
-        dept.id === selectedDepartment.id
-          ? {
-              ...dept,
-              ...formData,
-              establishedYear: parseInt(formData.establishedYear) || new Date().getFullYear(),
-              targetEnrollment: parseInt(formData.targetEnrollment) || 100,
-              minimumStaff: parseInt(formData.minimumStaff) || 3,
-            }
-          : dept
-      )
-    );
+    try {
+      const departmentData = {
+        ...formData,
+        establishedYear: parseInt(formData.establishedYear) || new Date().getFullYear(),
+        targetEnrollment: parseInt(formData.targetEnrollment) || 100,
+        minimumStaff: parseInt(formData.minimumStaff) || 3,
+      };
 
-    setIsEditModalOpen(false);
-    setSelectedDepartment(null);
-    setFormData({
-      name: '',
-      description: '',
-      departmentCode: '',
-      status: 'ACTIVE',
-      building: '',
-      floor: '',
-      officeRoom: '',
-      phoneNumber: '',
-      email: '',
-      academicFocus: '',
-      visionStatement: '',
-      missionStatement: '',
-      establishedYear: new Date().getFullYear(),
-      targetEnrollment: 100,
-      minimumStaff: 3,
-      isCoreDepartment: true,
-    });
+      const response = await axios.put(`${API_BASE_URL}/departments/${selectedDepartment.id}`, departmentData);
+      
+      setDepartments(
+        departments.map(dept =>
+          dept.id === selectedDepartment.id ? response.data : dept
+        )
+      );
+
+      setIsEditModalOpen(false);
+      setSelectedDepartment(null);
+      setFormData({
+        name: '',
+        description: '',
+        departmentCode: '',
+        status: 'ACTIVE',
+        building: '',
+        floor: '',
+        officeRoom: '',
+        phoneNumber: '',
+        email: '',
+        academicFocus: '',
+        visionStatement: '',
+        missionStatement: '',
+        establishedYear: new Date().getFullYear(),
+        targetEnrollment: 100,
+        minimumStaff: 3,
+        isCoreDepartment: true,
+      });
+      setError(null);
+    } catch (err) {
+      if (err.response?.data?.message) {
+        alert(`Error: ${err.response.data.message}`);
+      } else {
+        alert('Failed to update department. Please try again.');
+      }
+      console.error('Error updating department:', err);
+    }
   };
 
-  const handleDeleteDepartment = () => {
+  const handleDeleteDepartment = async () => {
     if (departmentToDelete) {
-      setDepartments(departments.filter(dept => dept.id !== departmentToDelete.id));
-      setIsDeleteConfirmModalOpen(false);
-      setDepartmentToDelete(null);
+      try {
+        await axios.delete(`${API_BASE_URL}/departments/${departmentToDelete.id}`);
+        
+        setDepartments(departments.filter(dept => dept.id !== departmentToDelete.id));
+        setIsDeleteConfirmModalOpen(false);
+        setDepartmentToDelete(null);
+        setError(null);
+      } catch (err) {
+        if (err.response?.data?.message) {
+          alert(`Error: ${err.response.data.message}`);
+        } else {
+          alert('Failed to delete department. Please try again.');
+        }
+        console.error('Error deleting department:', err);
+      }
     }
   };
 
   const openEditModal = (dept) => {
-    setSelectedDepartment(dept);
-    setFormData(dept);
-    setIsEditModalOpen(true);
+    if (dept && dept.id) {
+      setSelectedDepartment(dept);
+      setFormData({ ...dept });
+      setIsEditModalOpen(true);
+    }
   };
 
   const openDeleteConfirmModal = (dept) => {
-    setDepartmentToDelete(dept);
-    setIsDeleteConfirmModalOpen(true);
+    if (dept && dept.id) {
+      setDepartmentToDelete(dept);
+      setIsDeleteConfirmModalOpen(true);
+    }
   };
 
   const getStatusBadgeClass = (status) => {
@@ -172,10 +234,26 @@ function Department() {
           <h1 className="mb-2">Department Management</h1>
           <p className="text-muted mb-0">Manage academic departments and their information.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)}>
+        <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)} disabled={loading}>
           <i className="fa-solid fa-plus me-2"></i> Add New Department
         </button>
       </div>
+
+      {/* Error Alert */}
+      {error && (
+        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+          <i className="fa-solid fa-circle-exclamation me-2"></i>
+          {error}
+          <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+        </div>
+      )}
+
+      {/* Loading Indicator */}
+      {loading && (
+        <div className="alert alert-info" role="alert">
+          <i className="fa-solid fa-spinner me-2"></i> Loading departments...
+        </div>
+      )}
 
       {/* Overview Cards */}
       <div className="row g-3 mb-4">
