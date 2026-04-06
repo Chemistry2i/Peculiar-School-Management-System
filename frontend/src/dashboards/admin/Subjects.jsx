@@ -26,6 +26,7 @@ const SUBJECT_LEVELS = [
 
 function Subjects() {
   const [subjects, setSubjects] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [selectedSubject, setSelectedSubject] = useState(null);
@@ -58,6 +59,7 @@ function Subjects() {
   // Fetch subjects from backend on component mount
   useEffect(() => {
     fetchSubjects();
+    fetchDepartments();
   }, []);
 
   const fetchSubjects = async () => {
@@ -77,6 +79,44 @@ function Subjects() {
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      console.log('Fetching departments from:', `${API_BASE_URL}/departments`);
+      const response = await axios.get(`${API_BASE_URL}/departments`);
+      console.log('Departments API Response:', response.data);
+      console.log('Response type:', typeof response.data);
+      console.log('Is array:', Array.isArray(response.data));
+      
+      // Backend returns direct array or { success: true, data: [...], total: X }
+      let departmentsData = [];
+      
+      if (Array.isArray(response.data)) {
+        console.log('Response is direct array');
+        departmentsData = response.data;
+      } else if (response.data && typeof response.data === 'object' && response.data.data && Array.isArray(response.data.data)) {
+        console.log('Extracting data from wrapped response');
+        departmentsData = response.data.data;
+      } else {
+        console.warn('Unexpected response format:', response.data);
+        departmentsData = [];
+      }
+      
+      // Filter for only valid departments with id and name
+      const validDepartments = departmentsData.filter(d => d && d.id && d.name);
+      console.log('Valid departments:', validDepartments);
+      console.log('Departments count:', validDepartments.length);
+      setDepartments(validDepartments);
+    } catch (err) {
+      console.error('Error fetching departments:', err);
+      console.error('Error message:', err.message);
+      if (err.response) {
+        console.error('Error response status:', err.response.status);
+        console.error('Error response data:', err.response.data);
+      }
+      setDepartments([]);
+    }
+  };
+
   // Calculate metrics
   const metrics = useMemo(() => {
     const totalSubjects = subjects.length;
@@ -92,13 +132,14 @@ function Subjects() {
     const normalizedTerm = searchTerm.trim().toLowerCase();
 
     return subjects.filter((subject) => {
+      const isActive = subject.isActive !== false;
       const matchesSearch = subject.code.toLowerCase().includes(normalizedTerm) || 
                            subject.name.toLowerCase().includes(normalizedTerm);
       const matchesType = filterType === "all" || 
                          (filterType === "Compulsory" && subject.isCompulsory === true) ||
                          (filterType === "Elective" && subject.isCompulsory === false);
 
-      return matchesSearch && matchesType;
+      return isActive && matchesSearch && matchesType;
     });
   }, [searchTerm, filterType, subjects]);
 
@@ -120,6 +161,12 @@ function Subjects() {
 
     setLoading(true);
     try {
+      // Map department name/value to ID
+      let departmentId = null;
+      if (formData.department) {
+        departmentId = parseInt(formData.department);
+      }
+
       const subjectData = {
         code: formData.code,
         name: formData.name,
@@ -132,7 +179,7 @@ function Subjects() {
         maxMarksPerPaper: parseInt(formData.maxMarksPerPaper) || 100,
         creditUnits: parseInt(formData.creditUnits) || 1,
         description: formData.description,
-        department: formData.department,
+        departmentId: departmentId,
         isActive: formData.isActive,
       };
 
@@ -144,21 +191,6 @@ function Subjects() {
       await fetchSubjects();
       
       setIsAddModalOpen(false);
-      setFormData({
-        code: "",
-        name: "",
-        category: "MATHEMATICS",
-        level: "O_LEVEL",
-        isCompulsory: true,
-        isScience: false,
-        isArts: false,
-        paperCount: 1,
-        maxMarksPerPaper: 100,
-        creditUnits: 1,
-        description: "",
-        department: "",
-        isActive: true,
-      });
       setError(null);
     } catch (err) {
       console.error('Error adding subject:', err);
@@ -182,6 +214,12 @@ function Subjects() {
 
     setLoading(true);
     try {
+      // Map department name/value to ID
+      let departmentId = null;
+      if (formData.department) {
+        departmentId = parseInt(formData.department);
+      }
+
       const subjectData = {
         code: formData.code,
         name: formData.name,
@@ -194,7 +232,7 @@ function Subjects() {
         maxMarksPerPaper: parseInt(formData.maxMarksPerPaper) || 100,
         creditUnits: parseInt(formData.creditUnits) || 1,
         description: formData.description,
-        department: formData.department,
+        departmentId: departmentId,
         isActive: formData.isActive,
       };
 
@@ -655,14 +693,20 @@ function Subjects() {
 
                 <div className="col-md-6">
                   <label className="form-label fw-bold">Department</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="e.g., Mathematics Department"
+                  <select
+                    className="form-select"
                     value={formData.department}
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    maxLength="100"
-                  />
+                  >
+                    <option value="">Select a Department</option>
+                    {Array.isArray(departments) && departments.length > 0 ? (
+                      departments.map(dept => (
+                        <option key={dept.id} value={dept.id}>{dept.name}</option>
+                      ))
+                    ) : (
+                      <option disabled>No departments available</option>
+                    )}
+                  </select>
                 </div>
 
                 <div className="col-md-4">
@@ -710,48 +754,53 @@ function Subjects() {
                   />
                 </div>
 
-                <div className="col-md-6">
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="isScience"
-                      checked={formData.isScience}
-                      onChange={(e) => setFormData({ ...formData, isScience: e.target.checked })}
-                    />
-                    <label className="form-check-label" htmlFor="isScience">
-                      Is Science
-                    </label>
-                  </div>
-                </div>
+                <div className="col-12">
+                  <label className="form-label fw-bold mb-3 d-block">Subject Attributes</label>
+                  <div className="row g-3 ps-3">
+                    <div className="col-md-4">
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id="isScience"
+                          checked={formData.isScience}
+                          onChange={(e) => setFormData({ ...formData, isScience: e.target.checked })}
+                        />
+                        <label className="form-check-label" htmlFor="isScience">
+                          Is Science
+                        </label>
+                      </div>
+                    </div>
 
-                <div className="col-md-6">
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="isArts"
-                      checked={formData.isArts}
-                      onChange={(e) => setFormData({ ...formData, isArts: e.target.checked })}
-                    />
-                    <label className="form-check-label" htmlFor="isArts">
-                      Is Arts
-                    </label>
-                  </div>
-                </div>
+                    <div className="col-md-4">
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id="isArts"
+                          checked={formData.isArts}
+                          onChange={(e) => setFormData({ ...formData, isArts: e.target.checked })}
+                        />
+                        <label className="form-check-label" htmlFor="isArts">
+                          Is Arts
+                        </label>
+                      </div>
+                    </div>
 
-                <div className="col-md-6">
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="isActive"
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    />
-                    <label className="form-check-label" htmlFor="isActive">
-                      Active
-                    </label>
+                    <div className="col-md-4">
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id="isActive"
+                          checked={formData.isActive}
+                          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                        />
+                        <label className="form-check-label" htmlFor="isActive">
+                          Active
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </form>
@@ -843,13 +892,20 @@ function Subjects() {
 
                 <div className="col-md-6">
                   <label className="form-label fw-bold">Department</label>
-                  <input
-                    type="text"
-                    className="form-control"
+                  <select
+                    className="form-select"
                     value={formData.department}
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    maxLength="100"
-                  />
+                  >
+                    <option value="">Select a Department</option>
+                    {Array.isArray(departments) && departments.length > 0 ? (
+                      departments.map(dept => (
+                        <option key={dept.id} value={dept.id}>{dept.name}</option>
+                      ))
+                    ) : (
+                      <option disabled>No departments available</option>
+                    )}
+                  </select>
                 </div>
 
                 <div className="col-md-4">
@@ -896,48 +952,53 @@ function Subjects() {
                   />
                 </div>
 
-                <div className="col-md-6">
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="editIsScience"
-                      checked={formData.isScience}
-                      onChange={(e) => setFormData({ ...formData, isScience: e.target.checked })}
-                    />
-                    <label className="form-check-label" htmlFor="editIsScience">
-                      Is Science
-                    </label>
-                  </div>
-                </div>
+                <div className="col-12">
+                  <label className="form-label fw-bold mb-3 d-block">Subject Attributes</label>
+                  <div className="row g-3 ps-3">
+                    <div className="col-md-4">
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id="editIsScience"
+                          checked={formData.isScience}
+                          onChange={(e) => setFormData({ ...formData, isScience: e.target.checked })}
+                        />
+                        <label className="form-check-label" htmlFor="editIsScience">
+                          Is Science
+                        </label>
+                      </div>
+                    </div>
 
-                <div className="col-md-6">
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="editIsArts"
-                      checked={formData.isArts}
-                      onChange={(e) => setFormData({ ...formData, isArts: e.target.checked })}
-                    />
-                    <label className="form-check-label" htmlFor="editIsArts">
-                      Is Arts
-                    </label>
-                  </div>
-                </div>
+                    <div className="col-md-4">
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id="editIsArts"
+                          checked={formData.isArts}
+                          onChange={(e) => setFormData({ ...formData, isArts: e.target.checked })}
+                        />
+                        <label className="form-check-label" htmlFor="editIsArts">
+                          Is Arts
+                        </label>
+                      </div>
+                    </div>
 
-                <div className="col-md-6">
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="editIsActive"
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    />
-                    <label className="form-check-label" htmlFor="editIsActive">
-                      Active
-                    </label>
+                    <div className="col-md-4">
+                      <div className="form-check">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id="editIsActive"
+                          checked={formData.isActive}
+                          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                        />
+                        <label className="form-check-label" htmlFor="editIsActive">
+                          Active
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </form>
