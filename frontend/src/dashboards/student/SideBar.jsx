@@ -1,75 +1,73 @@
 
-
 import React from "react";
-import { Link } from "react-router-dom";
-import kyuLogo from '/src/assets/images-removebg-preview.png'
-import './SideBar.css'
+import profilePic from '../../assets/team-4.jpg';
+import './SideBar.css';
+import { NavLink, useLocation } from "react-router-dom";
 
-function SideBar(){
-    return(
-        <div style={{width: "23%", boxShadow:"0 0 5px gray", minHeight: "90vh", padding: "20px"}}>
+function SideBar() {
+    const location = useLocation();
+    
+    // Helper to determine active class
+    const isActive = (path) => location.pathname === path ? "sidebar-link active" : "sidebar-link";
 
-            <div className="Kyu">
-                <img src={kyuLogo} alt="" className="KyuLogo" />
+    return (
+        <div className="student-sidebar">
+            {/* Profile Section */}
+            <div className="sidebar-profile">
+                <div className="profile-img-container">
+                    <img src={profilePic} alt="Student" />
+                </div>
+                <h3>Student User</h3>
+                <span className="role-badge">Student</span>
+                <p className="user-email">student@school.com</p>
             </div>
 
-            <h3 style={{color:"black", textAlign:"center", marginBottom: "10px",fontWeight:"bold"}}>Student Dashboard</h3>
-                <hr />
-            <div className="links">
-                <i class="fa-solid fa-house-user" id="std-sidebar-icons"></i>
-                <a href="">Dashboard</a>
-            </div>
+            <hr className="sidebar-divider" />
 
-            <div className="links">
-                <i class="fa-solid fa-message" id="std-sidebar-icons"></i>
-                <a href="">Messages</a>
-            </div>
+            {/* Navigation Links */}
+            <nav className="sidebar-nav">
+                <NavLink to="/student" className={isActive("/student")} end>
+                    <i className="fa-solid fa-house-user"></i>
+                    <span>Dashboard</span>
+                </NavLink>
 
-            <div className="links">
-                <i class="fa-solid fa-users" id="std-sidebar-icons"></i>
-                <a href="">Users</a>
-            </div>
+                <NavLink to="/student/courses" className={isActive("/student/courses")}>
+                    <i className="fa-solid fa-book"></i>
+                    <span>My Courses</span>
+                </NavLink>
 
-            <div className="links">
-                <i class="fa-solid fa-bell" id="std-sidebar-icons"></i>
-                <a href="">Notification</a>
-            </div>
+                <NavLink to="/student/grades" className={isActive("/student/grades")}>
+                    <i className="fa-solid fa-marker"></i>
+                    <span>My Grades</span>
+                </NavLink>
 
-            <div className="links">
-                <i class="fa-solid fa-circle-info" id="std-sidebar-icons"></i>
-                <a href="">Information</a>
-            </div>
+                <NavLink to="/student/attendance" className={isActive("/student/attendance")}>
+                    <i className="fa-solid fa-clipboard-user"></i>
+                    <span>Attendance</span>
+                </NavLink>
 
-            <div className="links">
-                <i class="fa-solid fa-marker" id="std-sidebar-icons"></i>
-                <a href="">Marks</a>
-            </div>
+                <NavLink to="/student/assignments" className={isActive("/student/assignments")}>
+                    <i className="fa-solid fa-tasks"></i>
+                    <span>Assignments</span>
+                </NavLink>
 
-            <div className="links">
-                <i class="fa-solid fa-clipboard-user" id="std-sidebar-icons"></i>
-                <a href="">Attendencs</a>
-            </div>
+                <NavLink to="/student/schedule" className={isActive("/student/schedule")}>
+                    <i className="fa-solid fa-calendar-days"></i>
+                    <span>Schedule</span>
+                </NavLink>
 
-            <div className="links">
-                <i class="fa-solid fa-calendar" id="std-sidebar-icons"></i>
-                <a href="">Schedules</a>
-            </div>
+                <NavLink to="/student/messages" className={isActive("/student/messages")}>
+                    <i className="fa-solid fa-envelope"></i>
+                    <span>Messages</span>
+                </NavLink>
 
-            <div className="links">
-                <i class="fa-solid fa-circle-question" id="std-sidebar-icons"></i>
-                <a href="">Help</a>
-            </div>
-
-            <div className="links">
-                <i class="fa-solid fa-gear" id="std-sidebar-icons"></i>
-                <a href="">Settings</a>
-            </div>
-            <hr />
-            <div style={{color:"black"}}>
-                <h2>student@gmail.com</h2>
-            </div>
+                <NavLink to="/student/settings" className={isActive("/student/settings")} style={{ marginTop: 'auto' }}>
+                    <i className="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </NavLink>
+            </nav>
         </div>
-    )
+    );
 }
 
 export default SideBar;

@@ -1,24 +1,18 @@
 import React from "react";
 import Header from "./Header";
 import SideBar from "./SideBar";
-import Banner from "./Banner";
-import OverViewCards from "./OverViewCards";
-import Charts from "./Charts";
+import Body from "./Body";
+import Footer from "./Footer";
 
 function StudentDashboard() {
   return (
     <>
         <Header />
-        <div className="Home" style={{display: "flex", gap: "20px"}}>
-            <SideBar />
-            <div style={{ width:"100%",padding:"20px"}}>
-                <Banner />
-                <OverViewCards />
-                <Charts />
-            </div>
+        <SideBar />
+        <div style={{ marginLeft: '250px', paddingBottom: '60px' }}>
+            <Body />
+            <Footer />
         </div>
-
-
     </>
   );
 }
