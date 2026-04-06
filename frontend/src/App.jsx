@@ -23,7 +23,7 @@ function App() {
     <>
   <BrowserRouter>
       <Routes>
-          <Route path="/student" element={<StudentDashboard />}/>
+          <Route path="/student/*" element={<StudentDashboard />}/>
           <Route path="/librarian" element={<Libriarian />} />
           <Route path="/login" element={< LoginForm />} />
           <Route path="/student/Reg" element={<StudentRegistration />} />

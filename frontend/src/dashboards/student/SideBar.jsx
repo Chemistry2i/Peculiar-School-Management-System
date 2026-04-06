@@ -8,7 +8,7 @@ function SideBar() {
     const location = useLocation();
     
     // Helper to determine active class
-    const isActive = (path) => location.pathname === path ? "sidebar-link active" : "sidebar-link";
+    const isActive = (path) => location.pathname.includes(path) ? "sidebar-link active" : "sidebar-link";
 
     return (
         <div className="student-sidebar">
@@ -26,11 +26,15 @@ function SideBar() {
 
             {/* Navigation Links */}
             <nav className="sidebar-nav">
+                {/* Main Section */}
+                <div className="sidebar-section-header">Main</div>
                 <NavLink to="/student" className={isActive("/student")} end>
                     <i className="fa-solid fa-house-user"></i>
                     <span>Dashboard</span>
                 </NavLink>
 
+                {/* Academics Section */}
+                <div className="sidebar-section-header">Academics</div>
                 <NavLink to="/student/courses" className={isActive("/student/courses")}>
                     <i className="fa-solid fa-book"></i>
                     <span>My Courses</span>
@@ -41,26 +45,31 @@ function SideBar() {
                     <span>My Grades</span>
                 </NavLink>
 
-                <NavLink to="/student/attendance" className={isActive("/student/attendance")}>
-                    <i className="fa-solid fa-clipboard-user"></i>
-                    <span>Attendance</span>
-                </NavLink>
-
                 <NavLink to="/student/assignments" className={isActive("/student/assignments")}>
                     <i className="fa-solid fa-tasks"></i>
                     <span>Assignments</span>
                 </NavLink>
 
+                {/* Attendance & Schedule Section */}
+                <div className="sidebar-section-header">Schedule & Attendance</div>
                 <NavLink to="/student/schedule" className={isActive("/student/schedule")}>
                     <i className="fa-solid fa-calendar-days"></i>
-                    <span>Schedule</span>
+                    <span>Time Schedule</span>
                 </NavLink>
 
+                <NavLink to="/student/attendance" className={isActive("/student/attendance")}>
+                    <i className="fa-solid fa-clipboard-user"></i>
+                    <span>Attendance</span>
+                </NavLink>
+
+                {/* Communication Section */}
+                <div className="sidebar-section-header">Communication</div>
                 <NavLink to="/student/messages" className={isActive("/student/messages")}>
                     <i className="fa-solid fa-envelope"></i>
                     <span>Messages</span>
                 </NavLink>
 
+                {/* Settings */}
                 <NavLink to="/student/settings" className={isActive("/student/settings")} style={{ marginTop: 'auto' }}>
                     <i className="fa-solid fa-gear"></i>
                     <span>Settings</span>

@@ -150,38 +150,17 @@
     border-top: 1px solid transparent; 
 }
 
-/* ---------------------------------
-   Footer
---------------------------------- */
-.sidebar-footer {
-    padding: 15px 20px;
-    border-top: 1px solid #f1f5f9;
-    text-align: center;
-    background-color: #ffffff;
-}
-
-.sidebar-footer p {
-    font-size: 11px;
-    color: #94a3b8;
-    margin: 0;
-}
-
-.sidebar-footer small {
+/* Section Headers */
+.sidebar-section-header {
     font-size: 10px;
-    color: #cbd5e1;
-    display: block;
-    margin-top: 2px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 16px 15px 8px 15px;
+    margin-top: 8px;
 }
 
-/* ---------------------------------
-   Responsive Adjustments
---------------------------------- */
-@media (max-width: 768px) {
-    .student-sidebar {
-        width: 100%; /* Full width on mobile if usually shown as drawer, or hidden */
-        height: auto;
-        position: relative;
-        border-right: none;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
+.sidebar-section-header:first-child {
+    margin-top: 0;
 }
