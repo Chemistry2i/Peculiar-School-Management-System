@@ -1,27 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import axios from "axios";
 import "./Class.css";
 
-// Sample data
-const sampleClasses = [
-  { id: 1, name: "S.1A", roomNumber: "101", teacher: "Mr. Okello", students: 45, year: "2025-2026", attendance: 92, performance: 3.8 },
-  { id: 2, name: "S.2A", roomNumber: "102", teacher: "Mr. Tumwesigye", students: 42, year: "2025-2026", attendance: 90, performance: 3.9 },
-  { id: 3, name: "S.3A", roomNumber: "103", teacher: "Mr. Johnson", students: 40, year: "2025-2026", attendance: 94, performance: 4.1 },
-];
-
-const sampleTeachers = [
-  { id: 1, name: "Mr. Okello" },
-  { id: 2, name: "Mr. Tumwesigye" },
-  { id: 3, name: "Mr. Johnson" },
-];
-
-const sampleStudents = [
-  { id: 1, name: "John Makumbi", classId: 1, enrollment: "STU-001" },
-  { id: 2, name: "Sarah Ocan", classId: 1, enrollment: "STU-002" },
-  { id: 3, name: "Michael Otto", classId: 2, enrollment: "STU-003" },
-  { id: 4, name: "Emily Watera", classId: 2, enrollment: "STU-004" },
-  { id: 5, name: "David Kijjambu", classId: 3, enrollment: "STU-005" },
-  { id: 6, name: "Anna Nanyonjo", classId: 3, enrollment: "STU-006" },
-];
+const API_BASE_URL = 'http://localhost:8080/api';
 
 const sampleTimetable = [
   { day: "Monday", time: "8:00-9:00", subject: "Mathematics", teacher: "Mr. Okello" },
@@ -37,7 +18,8 @@ const sampleTimetable = [
 ];
 
 function Class() {
-  const [classes, setClasses] = useState(sampleClasses);
+  const [classes, setClasses] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRoom, setFilterRoom] = useState("all");
   const [selectedClass, setSelectedClass] = useState(null);
@@ -49,6 +31,8 @@ function Class() {
   const [currentPage, setCurrentPage] = useState(1);
   const [classesPerPage] = useState(5);
   const [selectedTab, setSelectedTab] = useState("overview");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -56,25 +40,61 @@ function Class() {
     levelType: 'O_LEVEL',
     academicYear: '2025-2026',
     stream: '',
-    classroom: '',
-    building: '',
-    maxCapacity: 50,
+    roomId: '',
     notes: '',
   });
 
+  // Fetch classes and rooms on component mount
+  useEffect(() => {
+    fetchClasses();
+    fetchRooms();
+  }, []);
+
+  const fetchClasses = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/classes`);
+      const classesData = Array.isArray(response.data) ? response.data : [];
+      setClasses(classesData);
+    } catch (err) {
+      console.error('Error fetching classes:', err);
+      setError('Failed to load classes. Please try again.');
+      setClasses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRooms = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/rooms`);
+      const roomsData = Array.isArray(response.data) ? response.data : [];
+      setRooms(roomsData);
+    } catch (err) {
+      console.error('Error fetching rooms:', err);
+      setRooms([]);
+    }
+  };
+
   // Calculate metrics
   const metrics = useMemo(() => {
+    if (!Array.isArray(classes) || classes.length === 0) {
+      return { totalClasses: 0, totalStudents: 0, avgAttendance: 0, totalRooms: 0 };
+    }
     const totalClasses = classes.length;
-    const totalStudents = classes.reduce((sum, cls) => sum + cls.students, 0);
-    const avgAttendance = (classes.reduce((sum, cls) => sum + cls.attendance, 0) / classes.length).toFixed(1);
-    const totalRooms = [...new Set(classes.map((cls) => cls.roomNumber))].length;
+    const totalStudents = classes.reduce((sum, cls) => sum + (cls.students || 0), 0);
+    const totalAttendance = classes.reduce((sum, cls) => sum + (cls.attendance || 0), 0);
+    const avgAttendance = (totalAttendance / classes.length).toFixed(1);
+    const totalRooms = [...new Set(classes.map((cls) => cls.roomNumber || cls.classroom))].length;
 
     return { totalClasses, totalStudents, avgAttendance, totalRooms };
   }, [classes]);
 
   // Get unique room numbers
   const uniqueRooms = useMemo(() => {
-    return [...new Set(classes.map((cls) => cls.roomNumber))].sort();
+    if (!Array.isArray(classes)) return [];
+    return [...new Set(classes.map((cls) => cls.roomNumber || cls.classroom || '').filter(Boolean))].sort();
   }, [classes]);
 
   // Filter classes
@@ -82,8 +102,8 @@ function Class() {
     const normalizedTerm = searchTerm.trim().toLowerCase();
 
     return classes.filter((cls) => {
-      const matchesSearch = cls.name.toLowerCase().includes(normalizedTerm) || cls.roomNumber.toLowerCase().includes(normalizedTerm);
-      const matchesRoom = filterRoom === "all" || cls.roomNumber === filterRoom;
+      const matchesSearch = (cls.name || '').toLowerCase().includes(normalizedTerm) || (cls.roomNumber || cls.classroom || '').toLowerCase().includes(normalizedTerm);
+      const matchesRoom = filterRoom === "all" || (cls.roomNumber || cls.classroom) === filterRoom;
 
       return matchesSearch && matchesRoom;
     });
@@ -97,103 +117,123 @@ function Class() {
 
   const totalPages = Math.ceil(filteredClasses.length / classesPerPage);
 
-  // Get students for selected class
-  const classStudents = useMemo(() => {
-    if (!selectedClass) return [];
-    return sampleStudents.filter((student) => student.classId === selectedClass.id);
-  }, [selectedClass]);
-
   // Handle add class
-  const handleAddClass = () => {
-    if (!formData.name || !formData.formLevel || !formData.levelType || !formData.academicYear) {
-      alert("Please fill in all required fields (Name, Form Level, Level Type, Academic Year)");
+  const handleAddClass = async () => {
+    if (!formData.name || !formData.formLevel || !formData.levelType || !formData.academicYear || !formData.roomId) {
+      alert("Please fill in all required fields including selecting a room");
       return;
     }
 
-    const newClass = {
-      id: Math.max(...classes.map((c) => c.id), 0) + 1,
-      name: formData.name,
-      roomNumber: formData.classroom, // Display field for table
-      teacher: sampleTeachers[0]?.name || 'Unassigned', // Display field
-      students: 0,
-      year: formData.academicYear,
-      attendance: 0,
-      performance: 0,
-      // Backend fields
-      formLevel: parseInt(formData.formLevel),
-      levelType: formData.levelType,
-      academicYear: formData.academicYear,
-      stream: formData.stream,
-      classroom: formData.classroom,
-      building: formData.building,
-      maxCapacity: parseInt(formData.maxCapacity) || 50,
-      notes: formData.notes,
-      isActive: true,
-    };
+    try {
+      const selectedRoom = rooms.find(r => r.id === parseInt(formData.roomId));
+      
+      const classData = {
+        name: formData.name,
+        formLevel: parseInt(formData.formLevel),
+        levelType: formData.levelType,
+        academicYear: formData.academicYear,
+        stream: formData.stream,
+        classroom: selectedRoom?.roomNumber || '',
+        building: selectedRoom?.building || '',
+        maxCapacity: selectedRoom?.capacity || 50,
+        notes: formData.notes,
+        isActive: true,
+      };
 
-    setClasses([...classes, newClass]);
-    setIsAddModalOpen(false);
-    setFormData({
-      name: '',
-      formLevel: 1,
-      levelType: 'O_LEVEL',
-      academicYear: '2025-2026',
-      stream: '',
-      classroom: '',
-      building: '',
-      maxCapacity: 50,
-      notes: '',
-    });
+      const response = await axios.post(`${API_BASE_URL}/classes`, classData);
+      
+      setClasses([...classes, response.data]);
+      setIsAddModalOpen(false);
+      setFormData({
+        name: '',
+        formLevel: 1,
+        levelType: 'O_LEVEL',
+        academicYear: '2025-2026',
+        stream: '',
+        roomId: '',
+        notes: '',
+      });
+      setError(null);
+    } catch (err) {
+      if (err.response?.data?.message) {
+        alert(`Error: ${err.response.data.message}`);
+      } else {
+        alert('Failed to add class. Please try again.');
+      }
+      console.error('Error adding class:', err);
+    }
   };
 
   // Handle edit class
-  const handleEditClass = () => {
-    if (!formData.name || !formData.formLevel || !formData.levelType || !formData.academicYear) {
-      alert("Please fill in all required fields (Name, Form Level, Level Type, Academic Year)");
+  const handleEditClass = async () => {
+    if (!formData.name || !formData.formLevel || !formData.levelType || !formData.academicYear || !formData.roomId) {
+      alert("Please fill in all required fields including selecting a room");
       return;
     }
 
-    setClasses(
-      classes.map((cls) =>
-        cls.id === selectedClass.id
-          ? {
-              ...cls,
-              name: formData.name,
-              roomNumber: formData.classroom,
-              formLevel: parseInt(formData.formLevel),
-              levelType: formData.levelType,
-              academicYear: formData.academicYear,
-              stream: formData.stream,
-              classroom: formData.classroom,
-              building: formData.building,
-              maxCapacity: parseInt(formData.maxCapacity) || 50,
-              notes: formData.notes,
-            }
-          : cls
-      )
-    );
+    try {
+      const selectedRoom = rooms.find(r => r.id === parseInt(formData.roomId));
+      
+      const classData = {
+        name: formData.name,
+        formLevel: parseInt(formData.formLevel),
+        levelType: formData.levelType,
+        academicYear: formData.academicYear,
+        stream: formData.stream,
+        classroom: selectedRoom?.roomNumber || '',
+        building: selectedRoom?.building || '',
+        maxCapacity: selectedRoom?.capacity || 50,
+        notes: formData.notes,
+      };
 
-    setIsEditModalOpen(false);
-    setSelectedClass(null);
-    setFormData({
-      name: '',
-      formLevel: 1,
-      levelType: 'O_LEVEL',
-      academicYear: '2025-2026',
-      stream: '',
-      classroom: '',
-      building: '',
-      maxCapacity: 50,
-      notes: '',
-    });
+      const response = await axios.put(`${API_BASE_URL}/classes/${selectedClass.id}`, classData);
+      
+      setClasses(
+        classes.map((cls) =>
+          cls.id === selectedClass.id ? response.data : cls
+        )
+      );
+
+      setIsEditModalOpen(false);
+      setSelectedClass(null);
+      setFormData({
+        name: '',
+        formLevel: 1,
+        levelType: 'O_LEVEL',
+        academicYear: '2025-2026',
+        stream: '',
+        roomId: '',
+        notes: '',
+      });
+      setError(null);
+    } catch (err) {
+      if (err.response?.data?.message) {
+        alert(`Error: ${err.response.data.message}`);
+      } else {
+        alert('Failed to update class. Please try again.');
+      }
+      console.error('Error updating class:', err);
+    }
   };
 
   // Handle delete class
-  const handleDeleteClass = () => {
+  const handleDeleteClass = async () => {
     if (classToDelete) {
-      setClasses(classes.filter((cls) => cls.id !== classToDelete.id));
-      setIsDeleteConfirmModalOpen(false);
-      setClassToDelete(null);
+      try {
+        await axios.delete(`${API_BASE_URL}/classes/${classToDelete.id}`);
+        
+        setClasses(classes.filter((cls) => cls.id !== classToDelete.id));
+        setIsDeleteConfirmModalOpen(false);
+        setClassToDelete(null);
+        setError(null);
+      } catch (err) {
+        if (err.response?.data?.message) {
+          alert(`Error: ${err.response.data.message}`);
+        } else {
+          alert('Failed to delete class. Please try again.');
+        }
+        console.error('Error deleting class:', err);
+      }
     }
   };
 
@@ -206,15 +246,15 @@ function Class() {
   // Open edit modal
   const openEditModal = (cls) => {
     setSelectedClass(cls);
+    // Find room by classroom number
+    const room = rooms.find(r => r.roomNumber === (cls.classroom || cls.roomNumber));
     setFormData({
       name: cls.name,
       formLevel: cls.formLevel || 1,
       levelType: cls.levelType || 'O_LEVEL',
       academicYear: cls.academicYear || cls.year,
       stream: cls.stream || '',
-      classroom: cls.classroom || cls.roomNumber || '',
-      building: cls.building || '',
-      maxCapacity: cls.maxCapacity || 50,
+      roomId: room?.id?.toString() || '',
       notes: cls.notes || '',
     });
     setIsEditModalOpen(true);
@@ -227,10 +267,26 @@ function Class() {
           <h1 className="mb-2">Class Management</h1>
           <p className="text-muted mb-0">Manage classes, students, schedules, and performance data.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)}>
+        <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)} disabled={loading}>
           <i className="fa-solid fa-plus me-2"></i> Add New Class
         </button>
       </div>
+
+      {/* Error Alert */}
+      {error && (
+        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+          <i className="fa-solid fa-circle-exclamation me-2"></i>
+          {error}
+          <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+        </div>
+      )}
+
+      {/* Loading Indicator */}
+      {loading && (
+        <div className="alert alert-info" role="alert">
+          <i className="fa-solid fa-spinner me-2"></i> Loading classes...
+        </div>
+      )}
 
       {/* Overview Cards */}
       <div className="row g-3 mb-4">
@@ -522,14 +578,15 @@ function Class() {
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label fw-bold">Class Name *</label>
+                  <label className="form-label fw-bold">Class Name * <small className="text-muted">(e.g., S1, S2, S3)</small></label>
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="e.g., S1A"
+                    placeholder="S1A, S2C, S3B, etc."
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
+                  <small className="text-muted">Class name without stream</small>
                 </div>
 
                 <div className="col-md-6">
@@ -578,48 +635,32 @@ function Class() {
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label">Stream</label>
+                  <label className="form-label">Stream <small className="text-muted">(Optional)</small></label>
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="e.g., A, B, East, West"
+                    placeholder="A, B, East, West (or leave empty)"
                     value={formData.stream}
                     onChange={(e) => setFormData({ ...formData, stream: e.target.value })}
                   />
+                  {/* <small className="text-muted">Added to class name: S1 + A = S1A</small> */}
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label">Classroom</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="e.g., Room 101"
-                    value={formData.classroom}
-                    onChange={(e) => setFormData({ ...formData, classroom: e.target.value })}
-                  />
-                </div>
-
-                <div className="col-md-6">
-                  <label className="form-label">Building</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="e.g., Main Block"
-                    value={formData.building}
-                    onChange={(e) => setFormData({ ...formData, building: e.target.value })}
-                  />
-                </div>
-
-                <div className="col-md-6">
-                  <label className="form-label">Max Capacity</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    placeholder="50"
-                    value={formData.maxCapacity}
-                    onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
-                    min="1"
-                  />
+                  <label className="form-label fw-bold">Classroom/Room *</label>
+                  <select
+                    className="form-select"
+                    value={formData.roomId}
+                    onChange={(e) => setFormData({ ...formData, roomId: e.target.value })}
+                  >
+                    <option value="">-- Select Room --</option>
+                    {rooms.map((room) => (
+                      <option key={room.id} value={room.id}>
+                        {room.roomNumber} - {room.roomName || 'Room'} ({room.building || 'N/A'})
+                      </option>
+                    ))}
+                  </select>
+                  {/* <small className="text-muted">Building and capacity auto-populated from room</small> */}
                 </div>
 
                 <div className="col-12">
@@ -638,7 +679,7 @@ function Class() {
               <button className="btn btn-secondary" onClick={() => setIsAddModalOpen(false)}>
                 Cancel
               </button>
-              <button className="btn btn-primary" onClick={handleAddClass}>
+              <button className="btn btn-primary" onClick={handleAddClass} disabled={loading}>
                 <i className="fas fa-plus me-2"></i> Create Class
               </button>
             </div>
@@ -662,13 +703,14 @@ function Class() {
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label fw-bold">Class Name *</label>
+                  <label className="form-label fw-bold">Class Name * <small className="text-muted">(e.g., S1, S2, S3)</small></label>
                   <input
                     type="text"
                     className="form-control"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
+                  <small className="text-muted">Class name without stream</small>
                 </div>
 
                 <div className="col-md-6">
@@ -716,44 +758,31 @@ function Class() {
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label">Stream</label>
+                  <label className="form-label">Stream <small className="text-muted">(Optional)</small></label>
                   <input
                     type="text"
                     className="form-control"
                     value={formData.stream}
                     onChange={(e) => setFormData({ ...formData, stream: e.target.value })}
                   />
+                  <small className="text-muted">Added to class name: S1 + A = S1A</small>
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label">Classroom</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.classroom}
-                    onChange={(e) => setFormData({ ...formData, classroom: e.target.value })}
-                  />
-                </div>
-
-                <div className="col-md-6">
-                  <label className="form-label">Building</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.building}
-                    onChange={(e) => setFormData({ ...formData, building: e.target.value })}
-                  />
-                </div>
-
-                <div className="col-md-6">
-                  <label className="form-label">Max Capacity</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    value={formData.maxCapacity}
-                    onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
-                    min="1"
-                  />
+                  <label className="form-label fw-bold">Classroom/Room *</label>
+                  <select
+                    className="form-select"
+                    value={formData.roomId}
+                    onChange={(e) => setFormData({ ...formData, roomId: e.target.value })}
+                  >
+                    <option value="">-- Select Room --</option>
+                    {rooms.map((room) => (
+                      <option key={room.id} value={room.id}>
+                        {room.roomNumber} - {room.roomName || 'Room'} ({room.building || 'N/A'})
+                      </option>
+                    ))}
+                  </select>
+                  <small className="text-muted">Building and capacity auto-populated from room</small>
                 </div>
 
                 <div className="col-12">
@@ -771,7 +800,7 @@ function Class() {
               <button className="btn btn-secondary" onClick={() => setIsEditModalOpen(false)}>
                 Cancel
               </button>
-              <button className="btn btn-primary" onClick={handleEditClass}>
+              <button className="btn btn-primary" onClick={handleEditClass} disabled={loading}>
                 <i className="fas fa-save me-2"></i> Save Changes
               </button>
             </div>

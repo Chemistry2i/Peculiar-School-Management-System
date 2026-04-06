@@ -1,25 +1,31 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import axios from "axios";
 import "./Subjects.css";
 
-// Sample data
-const sampleSubjects = [
-  { id: 1, code: "MTH101", name: "Mathematics", type: "Compulsory", teachers: ["Mr. Okello", "Ms. Nakiyingi"], students: 120, description: "Core mathematics for all forms" },
-  { id: 2, code: "ENG101", name: "English", type: "Compulsory", teachers: ["Ms. Naomi"], students: 125, description: "Language and literature" },
-  { id: 3, code: "SCI101", name: "Science", type: "Compulsory", teachers: ["Mr. Johnson", "Mr. Tumwesigye"], students: 118, description: "Combined sciences curriculum" },
-  { id: 4, code: "PHY101", name: "Physics", type: "Elective", teachers: ["Mr. Johnson"], students: 45, description: "Advanced physics studies" },
-  { id: 5, code: "CHM101", name: "Chemistry", type: "Elective", teachers: ["Mr. Tumwesigye"], students: 42, description: "Organic and inorganic chemistry" },
+const API_BASE_URL = 'http://localhost:8080/api';
+
+// Subject category options
+const SUBJECT_CATEGORIES = [
+  { value: 'LANGUAGES', label: 'Languages' },
+  { value: 'MATHEMATICS', label: 'Mathematics' },
+  { value: 'SCIENCES', label: 'Sciences' },
+  { value: 'HUMANITIES', label: 'Humanities' },
+  { value: 'RELIGIOUS_EDUCATION', label: 'Religious Education' },
+  { value: 'TECHNICAL', label: 'Technical' },
+  { value: 'VOCATIONAL', label: 'Vocational' },
+  { value: 'CREATIVE_ARTS', label: 'Creative Arts' },
+  { value: 'PHYSICAL_EDUCATION', label: 'Physical Education' },
 ];
 
-const sampleTeachers = [
-  { id: 1, name: "Mr. Okello" },
-  { id: 2, name: "Ms. Nakiyingi" },
-  { id: 3, name: "Ms. Naomi" },
-  { id: 4, name: "Mr. Johnson" },
-  { id: 5, name: "Mr. Tumwesigye" },
+// Subject level options
+const SUBJECT_LEVELS = [
+  { value: 'O_LEVEL', label: 'O-Level' },
+  { value: 'A_LEVEL', label: 'A-Level' },
+  { value: 'BOTH', label: 'Both' },
 ];
 
 function Subjects() {
-  const [subjects, setSubjects] = useState(sampleSubjects);
+  const [subjects, setSubjects] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [selectedSubject, setSelectedSubject] = useState(null);
@@ -30,21 +36,53 @@ function Subjects() {
   const [subjectToDelete, setSubjectToDelete] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [subjectsPerPage] = useState(5);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const [formData, setFormData] = useState({
     code: "",
     name: "",
-    type: "Compulsory",
+    category: "MATHEMATICS",
+    level: "O_LEVEL",
+    isCompulsory: true,
+    isScience: false,
+    isArts: false,
+    paperCount: 1,
+    maxMarksPerPaper: 100,
+    creditUnits: 1,
     description: "",
-    teachers: [],
+    department: "",
+    isActive: true,
   });
+
+  // Fetch subjects from backend on component mount
+  useEffect(() => {
+    fetchSubjects();
+  }, []);
+
+  const fetchSubjects = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/subjects`);
+      console.log('Subjects API Response:', response.data);
+      const subjectsArray = Array.isArray(response.data) ? response.data : [];
+      setSubjects(subjectsArray);
+    } catch (err) {
+      console.error('Error fetching subjects:', err);
+      setError('Failed to load subjects. Please try again.');
+      setSubjects([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Calculate metrics
   const metrics = useMemo(() => {
     const totalSubjects = subjects.length;
-    const activeSubjects = subjects.length;
-    const compulsoryCount = subjects.filter((s) => s.type === "Compulsory").length;
-    const electiveCount = subjects.filter((s) => s.type === "Elective").length;
+    const activeSubjects = subjects.filter(s => s.isActive !== false).length;
+    const compulsoryCount = subjects.filter((s) => s.isCompulsory === true).length;
+    const electiveCount = subjects.filter((s) => s.isCompulsory === false).length;
 
     return { totalSubjects, activeSubjects, compulsoryCount, electiveCount };
   }, [subjects]);
@@ -56,7 +94,9 @@ function Subjects() {
     return subjects.filter((subject) => {
       const matchesSearch = subject.code.toLowerCase().includes(normalizedTerm) || 
                            subject.name.toLowerCase().includes(normalizedTerm);
-      const matchesType = filterType === "all" || subject.type === filterType;
+      const matchesType = filterType === "all" || 
+                         (filterType === "Compulsory" && subject.isCompulsory === true) ||
+                         (filterType === "Elective" && subject.isCompulsory === false);
 
       return matchesSearch && matchesType;
     });
@@ -71,53 +111,151 @@ function Subjects() {
   const totalPages = Math.ceil(filteredSubjects.length / subjectsPerPage);
 
   // Handle add subject
-  const handleAddSubject = () => {
-    if (!formData.code || !formData.name || !formData.type) {
-      alert("Please fill in all required fields");
+  const handleAddSubject = async (e) => {
+    e.preventDefault();
+    if (!formData.code || !formData.name) {
+      alert("Please fill in required fields (Code and Name)");
       return;
     }
 
-    const newSubject = {
-      id: Math.max(...subjects.map((s) => s.id), 0) + 1,
-      code: formData.code,
-      name: formData.name,
-      type: formData.type,
-      description: formData.description,
-      teachers: formData.teachers,
-      students: 0,
-    };
+    setLoading(true);
+    try {
+      const subjectData = {
+        code: formData.code,
+        name: formData.name,
+        category: formData.category,
+        level: formData.level,
+        isCompulsory: formData.isCompulsory,
+        isScience: formData.isScience,
+        isArts: formData.isArts,
+        paperCount: parseInt(formData.paperCount) || 1,
+        maxMarksPerPaper: parseInt(formData.maxMarksPerPaper) || 100,
+        creditUnits: parseInt(formData.creditUnits) || 1,
+        description: formData.description,
+        department: formData.department,
+        isActive: formData.isActive,
+      };
 
-    setSubjects([...subjects, newSubject]);
-    setIsAddModalOpen(false);
-    setFormData({ code: "", name: "", type: "Compulsory", description: "", teachers: [] });
+      console.log('Submitting subject:', subjectData);
+      await axios.post(`${API_BASE_URL}/subjects`, subjectData);
+      console.log('Subject created successfully');
+      
+      // Refresh subjects list from backend
+      await fetchSubjects();
+      
+      setIsAddModalOpen(false);
+      setFormData({
+        code: "",
+        name: "",
+        category: "MATHEMATICS",
+        level: "O_LEVEL",
+        isCompulsory: true,
+        isScience: false,
+        isArts: false,
+        paperCount: 1,
+        maxMarksPerPaper: 100,
+        creditUnits: 1,
+        description: "",
+        department: "",
+        isActive: true,
+      });
+      setError(null);
+    } catch (err) {
+      console.error('Error adding subject:', err);
+      if (err.response?.data?.message) {
+        alert(`Error: ${err.response.data.message}`);
+      } else {
+        alert('Failed to add subject. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle edit subject
-  const handleEditSubject = () => {
-    if (!formData.code || !formData.name || !formData.type) {
-      alert("Please fill in all required fields");
+  const handleEditSubject = async (e) => {
+    e.preventDefault();
+    if (!formData.code || !formData.name) {
+      alert("Please fill in required fields");
       return;
     }
 
-    setSubjects(
-      subjects.map((subject) =>
-        subject.id === selectedSubject.id
-          ? { ...subject, code: formData.code, name: formData.name, type: formData.type, description: formData.description, teachers: formData.teachers }
-          : subject
-      )
-    );
+    setLoading(true);
+    try {
+      const subjectData = {
+        code: formData.code,
+        name: formData.name,
+        category: formData.category,
+        level: formData.level,
+        isCompulsory: formData.isCompulsory,
+        isScience: formData.isScience,
+        isArts: formData.isArts,
+        paperCount: parseInt(formData.paperCount) || 1,
+        maxMarksPerPaper: parseInt(formData.maxMarksPerPaper) || 100,
+        creditUnits: parseInt(formData.creditUnits) || 1,
+        description: formData.description,
+        department: formData.department,
+        isActive: formData.isActive,
+      };
 
-    setIsEditModalOpen(false);
-    setSelectedSubject(null);
-    setFormData({ code: "", name: "", type: "Compulsory", description: "", teachers: [] });
+      await axios.put(`${API_BASE_URL}/subjects/${selectedSubject.id}`, subjectData);
+      
+      // Refresh subjects list from backend
+      await fetchSubjects();
+
+      setIsEditModalOpen(false);
+      setSelectedSubject(null);
+      setFormData({
+        code: "",
+        name: "",
+        category: "MATHEMATICS",
+        level: "O_LEVEL",
+        isCompulsory: true,
+        isScience: false,
+        isArts: false,
+        paperCount: 1,
+        maxMarksPerPaper: 100,
+        creditUnits: 1,
+        description: "",
+        department: "",
+        isActive: true,
+      });
+      setError(null);
+    } catch (err) {
+      if (err.response?.data?.message) {
+        alert(`Error: ${err.response.data.message}`);
+      } else {
+        alert('Failed to update subject. Please try again.');
+      }
+      console.error('Error updating subject:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle delete subject
-  const handleDeleteSubject = () => {
+  const handleDeleteSubject = async () => {
     if (subjectToDelete) {
-      setSubjects(subjects.filter((subject) => subject.id !== subjectToDelete.id));
-      setIsDeleteConfirmModalOpen(false);
-      setSubjectToDelete(null);
+      setLoading(true);
+      try {
+        await axios.delete(`${API_BASE_URL}/subjects/${subjectToDelete.id}`);
+        
+        // Refresh subjects list from backend
+        await fetchSubjects();
+        
+        setIsDeleteConfirmModalOpen(false);
+        setSubjectToDelete(null);
+        setError(null);
+      } catch (err) {
+        if (err.response?.data?.message) {
+          alert(`Error: ${err.response.data.message}`);
+        } else {
+          alert('Failed to delete subject. Please try again.');
+        }
+        console.error('Error deleting subject:', err);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -127,9 +265,17 @@ function Subjects() {
     setFormData({
       code: subject.code,
       name: subject.name,
-      type: subject.type,
-      description: subject.description,
-      teachers: subject.teachers,
+      category: subject.category || "MATHEMATICS",
+      level: subject.level || "O_LEVEL",
+      isCompulsory: subject.isCompulsory !== false,
+      isScience: subject.isScience || false,
+      isArts: subject.isArts || false,
+      paperCount: subject.paperCount || 1,
+      maxMarksPerPaper: subject.maxMarksPerPaper || 100,
+      creditUnits: subject.creditUnits || 1,
+      description: subject.description || "",
+      department: subject.department || "",
+      isActive: subject.isActive !== false,
     });
     setIsEditModalOpen(true);
   };
@@ -140,32 +286,33 @@ function Subjects() {
     setIsDeleteConfirmModalOpen(true);
   };
 
-  // Toggle teacher selection
-  const toggleTeacher = (teacherName) => {
-    if (formData.teachers.includes(teacherName)) {
-      setFormData({
-        ...formData,
-        teachers: formData.teachers.filter((t) => t !== teacherName),
-      });
-    } else {
-      setFormData({
-        ...formData,
-        teachers: [...formData.teachers, teacherName],
-      });
-    }
-  };
-
   return (
     <div className="subjects-page p-4">
       <div className="subjects-header mb-4">
         <div>
           <h1 className="mb-2">Subjects Management</h1>
-          <p className="text-muted mb-0">Manage subjects, assign teachers, and view course information.</p>
+          <p className="text-muted mb-0">Manage subjects, assign categories, and view course information.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)}>
+        <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)} disabled={loading}>
           <i className="fa-solid fa-plus me-2"></i> Add New Subject
         </button>
       </div>
+
+      {/* Error Alert */}
+      {error && (
+        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+          <i className="fa-solid fa-circle-exclamation me-2"></i>
+          {error}
+          <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+        </div>
+      )}
+
+      {/* Loading Indicator */}
+      {loading && (
+        <div className="alert alert-info" role="alert">
+          <i className="fa-solid fa-spinner me-2"></i> Processing...
+        </div>
+      )}
 
       {/* Overview Cards */}
       <div className="row g-3 mb-4">
@@ -265,8 +412,8 @@ function Subjects() {
                   <th>Code</th>
                   <th>Subject Name</th>
                   <th>Type</th>
-                  <th>Teachers</th>
-                  <th>Students</th>
+                  <th>Category</th>
+                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -277,14 +424,18 @@ function Subjects() {
                       <td className="fw-bold">{subject.code}</td>
                       <td>{subject.name}</td>
                       <td>
-                        <span className={`badge ${subject.type === "Compulsory" ? "bg-warning" : "bg-info"}`}>
-                          {subject.type}
+                        <span className={`badge ${subject.isCompulsory ? "bg-warning" : "bg-info"}`}>
+                          {subject.isCompulsory ? "Compulsory" : "Elective"}
                         </span>
                       </td>
                       <td>
-                        <small>{subject.teachers.join(", ") || "Not assigned"}</small>
+                        <small>{subject.category || 'N/A'}</small>
                       </td>
-                      <td>{subject.students}</td>
+                      <td>
+                        <span className={`badge ${subject.isActive ? "bg-success" : "bg-secondary"}`}>
+                          {subject.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
                       <td>
                         <div className="action-buttons">
                           <button
@@ -367,31 +518,22 @@ function Subjects() {
                   <h6 className="fw-bold mb-3">Subject Information</h6>
                   <p><strong>Code:</strong> {selectedSubject.code}</p>
                   <p><strong>Name:</strong> {selectedSubject.name}</p>
-                  <p><strong>Type:</strong> <span className={`badge ${selectedSubject.type === "Compulsory" ? "bg-warning" : "bg-info"}`}>{selectedSubject.type}</span></p>
+                  <p><strong>Type:</strong> <span className={`badge ${selectedSubject.isCompulsory ? "bg-warning" : "bg-info"}`}>{selectedSubject.isCompulsory ? "Compulsory" : "Elective"}</span></p>
+                  <p><strong>Category:</strong> {selectedSubject.category || 'N/A'}</p>
+                  <p><strong>Level:</strong> {selectedSubject.level || 'N/A'}</p>
                   <p><strong>Description:</strong> {selectedSubject.description || "No description"}</p>
                 </div>
                 <div className="col-md-6">
-                  <h6 className="fw-bold mb-3">Subject Stats</h6>
-                  <p><strong>Total Students:</strong> {selectedSubject.students}</p>
-                  <p><strong>Assigned Teachers:</strong> {selectedSubject.teachers.length}</p>
-                  <p><strong>Status:</strong> <span className="badge bg-success">Active</span></p>
+                  <h6 className="fw-bold mb-3">Subject Details</h6>
+                  <p><strong>Paper Count:</strong> {selectedSubject.paperCount || 1}</p>
+                  <p><strong>Max Marks per Paper:</strong> {selectedSubject.maxMarksPerPaper || 100}</p>
+                  <p><strong>Credit Units:</strong> {selectedSubject.creditUnits || 1}</p>
+                  <p><strong>Department:</strong> {selectedSubject.department || 'N/A'}</p>
+                  <p><strong>Is Science:</strong> {selectedSubject.isScience ? "Yes" : "No"}</p>
+                  <p><strong>Is Arts:</strong> {selectedSubject.isArts ? "Yes" : "No"}</p>
+                  <p><strong>Status:</strong> <span className={`badge ${selectedSubject.isActive ? "bg-success" : "bg-secondary"}`}>{selectedSubject.isActive ? "Active" : "Inactive"}</span></p>
                 </div>
               </div>
-
-              <hr />
-
-              <h6 className="fw-bold mb-3">Assigned Teachers</h6>
-              {selectedSubject.teachers.length > 0 ? (
-                <ul className="list-group">
-                  {selectedSubject.teachers.map((teacher, index) => (
-                    <li key={index} className="list-group-item">
-                      <i className="fas fa-user-tie me-2"></i>{teacher}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="alert alert-info">No teachers assigned to this subject yet.</div>
-              )}
             </div>
             <div className="subjects-modal-footer">
               <button className="btn btn-secondary" onClick={() => setIsDetailsModalOpen(false)}>
@@ -445,15 +587,17 @@ function Subjects() {
               <button className="btn-close" onClick={() => setIsAddModalOpen(false)}></button>
             </div>
             <div className="subjects-modal-body">
-              <form className="row g-3">
+              <form className="row g-3" onSubmit={handleAddSubject}>
                 <div className="col-md-6">
                   <label className="form-label fw-bold">Subject Code *</label>
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="e.g., MTH101"
+                    placeholder="e.g., MTH"
                     value={formData.code}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                    maxLength="10"
+                    required
                   />
                 </div>
                 <div className="col-md-6">
@@ -464,56 +608,160 @@ function Subjects() {
                     placeholder="e.g., Mathematics"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    maxLength="100"
+                    required
                   />
                 </div>
+
                 <div className="col-md-6">
-                  <label className="form-label fw-bold">Type *</label>
+                  <label className="form-label fw-bold">Category *</label>
                   <select
                     className="form-select"
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    required
+                  >
+                    {SUBJECT_CATEGORIES.map(cat => (
+                      <option key={cat.value} value={cat.value}>{cat.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-bold">Level *</label>
+                  <select
+                    className="form-select"
+                    value={formData.level}
+                    onChange={(e) => setFormData({ ...formData, level: e.target.value })}
+                    required
+                  >
+                    {SUBJECT_LEVELS.map(lvl => (
+                      <option key={lvl.value} value={lvl.value}>{lvl.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-bold">Type</label>
+                  <select
+                    className="form-select"
+                    value={formData.isCompulsory ? "Compulsory" : "Elective"}
+                    onChange={(e) => setFormData({ ...formData, isCompulsory: e.target.value === "Compulsory" })}
                   >
                     <option value="Compulsory">Compulsory</option>
                     <option value="Elective">Elective</option>
                   </select>
                 </div>
+
                 <div className="col-md-6">
-                  <label className="form-label fw-bold">Description</label>
+                  <label className="form-label fw-bold">Department</label>
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Brief description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="e.g., Mathematics Department"
+                    value={formData.department}
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    maxLength="100"
                   />
                 </div>
+
+                <div className="col-md-4">
+                  <label className="form-label fw-bold">Paper Count</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={formData.paperCount}
+                    onChange={(e) => setFormData({ ...formData, paperCount: e.target.value })}
+                    min="1"
+                  />
+                </div>
+
+                <div className="col-md-4">
+                  <label className="form-label fw-bold">Max Marks/Paper</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={formData.maxMarksPerPaper}
+                    onChange={(e) => setFormData({ ...formData, maxMarksPerPaper: e.target.value })}
+                    min="1"
+                  />
+                </div>
+
+                <div className="col-md-4">
+                  <label className="form-label fw-bold">Credit Units</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={formData.creditUnits}
+                    onChange={(e) => setFormData({ ...formData, creditUnits: e.target.value })}
+                    min="1"
+                  />
+                </div>
+
                 <div className="col-12">
-                  <label className="form-label fw-bold">Assign Teachers</label>
-                  <div className="border rounded p-3">
-                    {sampleTeachers.map((teacher) => (
-                      <div key={teacher.id} className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          id={`teacher-${teacher.id}`}
-                          checked={formData.teachers.includes(teacher.name)}
-                          onChange={() => toggleTeacher(teacher.name)}
-                        />
-                        <label className="form-check-label" htmlFor={`teacher-${teacher.id}`}>
-                          {teacher.name}
-                        </label>
-                      </div>
-                    ))}
+                  <label className="form-label fw-bold">Description</label>
+                  <textarea
+                    className="form-control"
+                    placeholder="Subject description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    maxLength="500"
+                    rows="2"
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="isScience"
+                      checked={formData.isScience}
+                      onChange={(e) => setFormData({ ...formData, isScience: e.target.checked })}
+                    />
+                    <label className="form-check-label" htmlFor="isScience">
+                      Is Science
+                    </label>
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="isArts"
+                      checked={formData.isArts}
+                      onChange={(e) => setFormData({ ...formData, isArts: e.target.checked })}
+                    />
+                    <label className="form-check-label" htmlFor="isArts">
+                      Is Arts
+                    </label>
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="isActive"
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                    />
+                    <label className="form-check-label" htmlFor="isActive">
+                      Active
+                    </label>
                   </div>
                 </div>
               </form>
             </div>
             <div className="subjects-modal-footer">
-              <button className="btn btn-secondary" onClick={() => setIsAddModalOpen(false)}>
+              <button className="btn btn-secondary" onClick={() => setIsAddModalOpen(false)} disabled={loading}>
                 Cancel
               </button>
-              <button className="btn btn-primary" onClick={handleAddSubject}>
-                <i className="fas fa-plus me-2"></i> Create Subject
+              <button className="btn btn-primary" onClick={handleAddSubject} disabled={loading}>
+                <i className="fas fa-plus me-2"></i> {loading ? 'Creating...' : 'Create Subject'}
               </button>
             </div>
           </div>
@@ -529,7 +777,7 @@ function Subjects() {
               <button className="btn-close" onClick={() => setIsEditModalOpen(false)}></button>
             </div>
             <div className="subjects-modal-body">
-              <form className="row g-3">
+              <form className="row g-3" onSubmit={handleEditSubject}>
                 <div className="col-md-6">
                   <label className="form-label fw-bold">Subject Code *</label>
                   <input
@@ -537,6 +785,8 @@ function Subjects() {
                     className="form-control"
                     value={formData.code}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                    maxLength="10"
+                    required
                   />
                 </div>
                 <div className="col-md-6">
@@ -546,55 +796,158 @@ function Subjects() {
                     className="form-control"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    maxLength="100"
+                    required
                   />
                 </div>
+
                 <div className="col-md-6">
-                  <label className="form-label fw-bold">Type *</label>
+                  <label className="form-label fw-bold">Category *</label>
                   <select
                     className="form-select"
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    required
+                  >
+                    {SUBJECT_CATEGORIES.map(cat => (
+                      <option key={cat.value} value={cat.value}>{cat.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-bold">Level *</label>
+                  <select
+                    className="form-select"
+                    value={formData.level}
+                    onChange={(e) => setFormData({ ...formData, level: e.target.value })}
+                    required
+                  >
+                    {SUBJECT_LEVELS.map(lvl => (
+                      <option key={lvl.value} value={lvl.value}>{lvl.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label fw-bold">Type</label>
+                  <select
+                    className="form-select"
+                    value={formData.isCompulsory ? "Compulsory" : "Elective"}
+                    onChange={(e) => setFormData({ ...formData, isCompulsory: e.target.value === "Compulsory" })}
                   >
                     <option value="Compulsory">Compulsory</option>
                     <option value="Elective">Elective</option>
                   </select>
                 </div>
+
                 <div className="col-md-6">
-                  <label className="form-label fw-bold">Description</label>
+                  <label className="form-label fw-bold">Department</label>
                   <input
                     type="text"
                     className="form-control"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    value={formData.department}
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    maxLength="100"
                   />
                 </div>
+
+                <div className="col-md-4">
+                  <label className="form-label fw-bold">Paper Count</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={formData.paperCount}
+                    onChange={(e) => setFormData({ ...formData, paperCount: e.target.value })}
+                    min="1"
+                  />
+                </div>
+
+                <div className="col-md-4">
+                  <label className="form-label fw-bold">Max Marks/Paper</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={formData.maxMarksPerPaper}
+                    onChange={(e) => setFormData({ ...formData, maxMarksPerPaper: e.target.value })}
+                    min="1"
+                  />
+                </div>
+
+                <div className="col-md-4">
+                  <label className="form-label fw-bold">Credit Units</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={formData.creditUnits}
+                    onChange={(e) => setFormData({ ...formData, creditUnits: e.target.value })}
+                    min="1"
+                  />
+                </div>
+
                 <div className="col-12">
-                  <label className="form-label fw-bold">Assign Teachers</label>
-                  <div className="border rounded p-3">
-                    {sampleTeachers.map((teacher) => (
-                      <div key={teacher.id} className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          id={`teacher-edit-${teacher.id}`}
-                          checked={formData.teachers.includes(teacher.name)}
-                          onChange={() => toggleTeacher(teacher.name)}
-                        />
-                        <label className="form-check-label" htmlFor={`teacher-edit-${teacher.id}`}>
-                          {teacher.name}
-                        </label>
-                      </div>
-                    ))}
+                  <label className="form-label fw-bold">Description</label>
+                  <textarea
+                    className="form-control"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    maxLength="500"
+                    rows="2"
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="editIsScience"
+                      checked={formData.isScience}
+                      onChange={(e) => setFormData({ ...formData, isScience: e.target.checked })}
+                    />
+                    <label className="form-check-label" htmlFor="editIsScience">
+                      Is Science
+                    </label>
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="editIsArts"
+                      checked={formData.isArts}
+                      onChange={(e) => setFormData({ ...formData, isArts: e.target.checked })}
+                    />
+                    <label className="form-check-label" htmlFor="editIsArts">
+                      Is Arts
+                    </label>
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="editIsActive"
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                    />
+                    <label className="form-check-label" htmlFor="editIsActive">
+                      Active
+                    </label>
                   </div>
                 </div>
               </form>
             </div>
             <div className="subjects-modal-footer">
-              <button className="btn btn-secondary" onClick={() => setIsEditModalOpen(false)}>
+              <button className="btn btn-secondary" onClick={() => setIsEditModalOpen(false)} disabled={loading}>
                 Cancel
               </button>
-              <button className="btn btn-primary" onClick={handleEditSubject}>
-                <i className="fas fa-save me-2"></i> Update Subject
+              <button className="btn btn-primary" onClick={handleEditSubject} disabled={loading}>
+                <i className="fas fa-save me-2"></i> {loading ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>

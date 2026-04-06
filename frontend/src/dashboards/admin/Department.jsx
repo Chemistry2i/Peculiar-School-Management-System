@@ -21,7 +21,7 @@ function Department() {
     name: '',
     description: '',
     departmentCode: '',
-    status: 'ACTIVE',
+    status: 'Active',
     building: '',
     floor: '',
     officeRoom: '',
@@ -46,9 +46,19 @@ function Department() {
     setError(null);
     try {
       const response = await axios.get(`${API_BASE_URL}/departments`);
-      // Backend returns { success: true, data: [...], total: X }
-      const departmentsData = response.data?.data || response.data;
+      console.log('Department API Response:', response);
+      console.log('Response Data:', response.data);
+      
+      // Backend returns { success: true, data: [...], total: X } or direct array
+      let departmentsData = response.data;
+      
+      // If response has a data property that's an array, use it
+      if (response.data && typeof response.data === 'object' && !Array.isArray(response.data) && response.data.data) {
+        departmentsData = response.data.data;
+      }
+      
       const departmentsArray = Array.isArray(departmentsData) ? departmentsData : [];
+      console.log('Final departments array:', departmentsArray);
       setDepartments(departmentsArray);
     } catch (err) {
       console.error('Error fetching departments:', err);
@@ -61,10 +71,34 @@ function Department() {
 
   // Metrics
   const metrics = useMemo(() => {
+    console.log('Calculating metrics for departments:', departments);
+    if (!Array.isArray(departments) || departments.length === 0) {
+      return { totalDepartments: 0, activeDepartments: 0, inactiveDepartments: 0, suspendedDepartments: 0 };
+    }
+    
     const totalDepartments = departments.length;
-    const activeDepartments = departments.filter(d => d.status === 'ACTIVE').length;
+    
+    // Check what status values exist in the data
+    const statusValues = departments.map(d => d.status);
+    console.log('Status values in departments:', statusValues);
+    
+    // Case-insensitive comparison for each status
+    const activeDepartments = departments.filter(d => {
+      console.log(`Department "${d.name}" has status: "${d.status}"`);
+      return d.status && d.status.toLowerCase() === 'active';
+    }).length;
 
-    return { totalDepartments, activeDepartments };
+    const inactiveDepartments = departments.filter(d => {
+      return d.status && d.status.toLowerCase() === 'inactive';
+    }).length;
+
+    const suspendedDepartments = departments.filter(d => {
+      return d.status && d.status.toLowerCase() === 'suspended';
+    }).length;
+    
+    console.log(`Total: ${totalDepartments}, Active: ${activeDepartments}, Inactive: ${inactiveDepartments}, Suspended: ${suspendedDepartments}`);
+
+    return { totalDepartments, activeDepartments, inactiveDepartments, suspendedDepartments };
   }, [departments]);
 
   // Filter departments
@@ -78,7 +112,11 @@ function Department() {
       const matchesSearch = dept.name.toLowerCase().includes(term) ||
         (dept.departmentCode && dept.departmentCode.toLowerCase().includes(term)) ||
         (dept.academicFocus && dept.academicFocus.toLowerCase().includes(term));
-      const matchesStatus = filterStatus === 'all' || dept.status === filterStatus;
+      
+      // Case-insensitive status comparison
+      const matchesStatus = filterStatus === 'all' || 
+        (dept.status && dept.status.toLowerCase() === filterStatus.toLowerCase());
+      
       return matchesSearch && matchesStatus;
     });
   }, [searchTerm, filterStatus, departments]);
@@ -98,15 +136,20 @@ function Department() {
         minimumStaff: parseInt(formData.minimumStaff) || 3,
       };
 
+      console.log('Submitting department:', departmentData);
       const response = await axios.post(`${API_BASE_URL}/departments`, departmentData);
+      console.log('Department created successfully:', response.data);
       
-      setDepartments([...departments, response.data]);
+      // Refresh departments list from backend
+      console.log('Fetching updated departments...');
+      await fetchDepartments();
+      
       setIsAddModalOpen(false);
       setFormData({
         name: '',
         description: '',
         departmentCode: '',
-        status: 'ACTIVE',
+        status: 'Active',
         building: '',
         floor: '',
         officeRoom: '',
@@ -122,12 +165,12 @@ function Department() {
       });
       setError(null);
     } catch (err) {
+      console.error('Error adding department:', err);
       if (err.response?.data?.message) {
         alert(`Error: ${err.response.data.message}`);
       } else {
         alert('Failed to add department. Please try again.');
       }
-      console.error('Error adding department:', err);
     }
   };
 
@@ -146,13 +189,10 @@ function Department() {
         minimumStaff: parseInt(formData.minimumStaff) || 3,
       };
 
-      const response = await axios.put(`${API_BASE_URL}/departments/${selectedDepartment.id}`, departmentData);
+      await axios.put(`${API_BASE_URL}/departments/${selectedDepartment.id}`, departmentData);
       
-      setDepartments(
-        departments.map(dept =>
-          dept.id === selectedDepartment.id ? response.data : dept
-        )
-      );
+      // Refresh departments list from backend
+      await fetchDepartments();
 
       setIsEditModalOpen(false);
       setSelectedDepartment(null);
@@ -160,7 +200,7 @@ function Department() {
         name: '',
         description: '',
         departmentCode: '',
-        status: 'ACTIVE',
+        status: 'Active',
         building: '',
         floor: '',
         officeRoom: '',
@@ -190,7 +230,9 @@ function Department() {
       try {
         await axios.delete(`${API_BASE_URL}/departments/${departmentToDelete.id}`);
         
-        setDepartments(departments.filter(dept => dept.id !== departmentToDelete.id));
+        // Refresh departments list from backend
+        await fetchDepartments();
+        
         setIsDeleteConfirmModalOpen(false);
         setDepartmentToDelete(null);
         setError(null);
@@ -221,9 +263,9 @@ function Department() {
   };
 
   const getStatusBadgeClass = (status) => {
-    if (status === 'ACTIVE') return 'badge bg-success';
-    if (status === 'INACTIVE') return 'badge bg-secondary';
-    if (status === 'SUSPENDED') return 'badge bg-danger';
+    if (status && status.toLowerCase() === 'active') return 'badge bg-success';
+    if (status && status.toLowerCase() === 'inactive') return 'badge bg-secondary';
+    if (status && status.toLowerCase() === 'suspended') return 'badge bg-danger';
     return 'badge bg-warning';
   };
 
@@ -272,6 +314,22 @@ function Department() {
             <h2>{metrics.activeDepartments}</h2>
           </div>
         </div>
+
+        <div className="col-12 col-sm-6 col-lg-3">
+          <div className="department-card inactive-card h-100">
+            <i className="fa-solid fa-circle-pause" style={{ border: '1px solid #6b7280', borderRadius: '50%', width: '50px', height: '50px', fontSize: '15px', display: 'grid', placeItems: 'center', color: '#6b7280', marginBottom: '5px' }} aria-hidden="true"></i>
+            <h3>Inactive</h3>
+            <h2>{metrics.inactiveDepartments}</h2>
+          </div>
+        </div>
+
+        <div className="col-12 col-sm-6 col-lg-3">
+          <div className="department-card suspended-card h-100">
+            <i className="fa-solid fa-ban" style={{ border: '1px solid #dc2626', borderRadius: '50%', width: '50px', height: '50px', fontSize: '15px', display: 'grid', placeItems: 'center', color: '#dc2626', marginBottom: '5px' }} aria-hidden="true"></i>
+            <h3>Suspended</h3>
+            <h2>{metrics.suspendedDepartments}</h2>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
@@ -296,9 +354,9 @@ function Department() {
             onChange={(e) => setFilterStatus(e.target.value)}
           >
             <option value="all">All Status</option>
-            <option value="ACTIVE">Active</option>
-            <option value="INACTIVE">Inactive</option>
-            <option value="SUSPENDED">Suspended</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+            <option value="Suspended">Suspended</option>
           </select>
         </div>
       </div>
@@ -456,9 +514,9 @@ function Department() {
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     required
                   >
-                    <option value="ACTIVE">Active</option>
-                    <option value="INACTIVE">Inactive</option>
-                    <option value="SUSPENDED">Suspended</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="Suspended">Suspended</option>
                   </select>
                 </div>
 
@@ -633,9 +691,9 @@ function Department() {
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     required
                   >
-                    <option value="ACTIVE">Active</option>
-                    <option value="INACTIVE">Inactive</option>
-                    <option value="SUSPENDED">Suspended</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="Suspended">Suspended</option>
                   </select>
                 </div>
 
