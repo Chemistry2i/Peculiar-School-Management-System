@@ -1,46 +1,35 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
+import axios from 'axios';
 import './StudentSearch.css';
 
+const API_BASE_URL = 'http://localhost:8080/api';
+
 const StudentSearch = () => {
+  const [students, setStudents] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  // Single source of truth for all student records.
-  const [students, setStudents] = useState([
-    {
-      id: 'STU001',
-      name: 'John Makumbi',
-      studentClass: 'S.4 North',
-      contact: '+256701112233',
-      status: 'active',
-    },
-    {
-      id: 'STU002',
-      name: 'Sarah Ocan',
-      studentClass: 'S.3 East',
-      contact: '+256702223344',
-      status: 'inactive',
-    },
-    {
-      id: 'STU003',
-      name: 'Michael Otto',
-      studentClass: 'S.5 West',
-      contact: '+256703334455',
-      status: 'active',
-    },
-  ]);
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [addFormError, setAddFormError] = useState('');
   const [recentAdmissions, setRecentAdmissions] = useState(0);
-  const [addFormData, setAddFormData] = useState({
+
+  // Modal states
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const [formError, setFormError] = useState('');
+  const [selectedStudent, setSelectedStudent] = useState(null);
+
+  // Form data
+  const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     gender: '',
     dateOfBirth: '',
     phoneNumber: '',
-    currentClass: '',
+    schoolClassId: '',
     stream: '',
     residenceStatus: 'DAY',
     otherNames: '',
@@ -49,76 +38,108 @@ const StudentSearch = () => {
     nationality: '',
   });
 
-  const [viewStudent, setViewStudent] = useState(null);
-  const [editStudent, setEditStudent] = useState(null);
-  const [editFormError, setEditFormError] = useState('');
-  const [editFormData, setEditFormData] = useState({
-    name: '',
-    studentClass: '',
-    contact: '',
-    status: 'active',
-  });
+  // Fetch data on mount
+  useEffect(() => {
+    fetchStudents();
+    fetchClasses();
+  }, []);
 
-  const [deleteConfirmStudent, setDeleteConfirmStudent] = useState(null);
+  useEffect(() => {
+    console.log('Classes state updated:', classes);
+  }, [classes]);
 
-  // Demo fee value for dashboard summary card.
-  const totalFeesCollectedUsd = 0.00;
-
-  const todaysAttendance = useMemo(() => {
-    const totalActive = students.filter((student) => student.status === 'active').length;
-    if (totalActive === 0) {
-      return 0;
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/students`);
+      const studentList = response.data.students || [];
+      setStudents(studentList);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching students:', err);
+      setError('Failed to load students from database');
+      setStudents([]);
+    } finally {
+      setLoading(false);
     }
-    // Demo attendance estimator tied to active students for dashboard display.
-    return Math.max(1, Math.round(totalActive * 0.92));
-  }, [students]);
+  };
 
-  const totalActiveStudents = useMemo(
-    () => students.filter((student) => student.status === 'active').length,
-    [students]
-  );
+  const fetchClasses = async () => {
+    try {
+      console.log('Fetching classes from:', `${API_BASE_URL}/classes`);
+      const response = await axios.get(`${API_BASE_URL}/classes`);
+      console.log('Classes response:', response.data);
+      
+      let classList = [];
+      
+      if (Array.isArray(response.data)) {
+        console.log('Response is direct array');
+        classList = response.data;
+      } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        console.log('Response has data property');
+        classList = response.data.data;
+      } else if (response.data && response.data.schools && Array.isArray(response.data.schools)) {
+        console.log('Response has schools property');
+        classList = response.data.schools;
+      }
+      
+      console.log('Final classList:', classList);
+      setClasses(classList.length > 0 ? classList : [
+        { id: 1, name: 'S.1' },
+        { id: 2, name: 'S.2' },
+        { id: 3, name: 'S.3' },
+        { id: 4, name: 'S.4' },
+        { id: 5, name: 'S.5' },
+        { id: 6, name: 'S.6' },
+      ]);
+    } catch (err) {
+      console.error('Error fetching classes:', err);
+      setClasses([
+        { id: 1, name: 'S.1' },
+        { id: 2, name: 'S.2' },
+        { id: 3, name: 'S.3' },
+        { id: 4, name: 'S.4' },
+        { id: 5, name: 'S.5' },
+        { id: 6, name: 'S.6' },
+      ]);
+    }
+  };
 
   const filteredStudents = useMemo(() => {
     const term = searchTerm.toLowerCase();
-    return students.filter(
-      (student) =>
-        student.name.toLowerCase().includes(term) ||
-        student.id.toLowerCase().includes(term) ||
-        student.studentClass.toLowerCase().includes(term) ||
-        student.contact.toLowerCase().includes(term) ||
-        student.status.toLowerCase().includes(term)
+    return students.filter(student =>
+      (student.firstName || '').toLowerCase().includes(term) ||
+      (student.lastName || '').toLowerCase().includes(term) ||
+      (student.studentId || '').toLowerCase().includes(term) ||
+      (student.schoolClass?.name || '').toLowerCase().includes(term) ||
+      (student.phoneNumber || '').toLowerCase().includes(term)
     );
   }, [searchTerm, students]);
 
-  const openAddModal = () => {
-    setAddFormError('');
-    setIsAddModalOpen(true);
-  };
+  const totalActiveStudents = useMemo(
+    () => students.filter(s => s.isActive !== false).length,
+    [students]
+  );
 
-  const closeAddModal = () => {
-    setAddFormError('');
-    setIsAddModalOpen(false);
-  };
+  const todaysAttendance = useMemo(() => {
+    const totalActive = totalActiveStudents;
+    return totalActive > 0 ? Math.max(1, Math.round(totalActive * 0.92)) : 0;
+  }, [totalActiveStudents]);
 
-  const handleAddInputChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setAddFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleEditInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const resetAddForm = () => {
-    setAddFormData({
+  const resetForm = () => {
+    setFormData({
       firstName: '',
       lastName: '',
       email: '',
       gender: '',
       dateOfBirth: '',
       phoneNumber: '',
-      currentClass: '',
+      schoolClassId: '',
       stream: '',
       residenceStatus: 'DAY',
       otherNames: '',
@@ -126,171 +147,183 @@ const StudentSearch = () => {
       linn: '',
       nationality: '',
     });
+    setFormError('');
   };
 
-  const generateStudentId = () => {
-    const maxNumericId = students.reduce((max, student) => {
-      const numeric = Number(student.id.replace('STU', ''));
-      return Number.isNaN(numeric) ? max : Math.max(max, numeric);
-    }, 0);
-    return `STU${String(maxNumericId + 1).padStart(3, '0')}`;
+  const validateForm = () => {
+    if (!formData.firstName.trim()) return 'First name is required';
+    if (!formData.lastName.trim()) return 'Last name is required';
+    if (!formData.email.trim()) return 'Email is required';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Invalid email format';
+    if (!formData.gender) return 'Gender is required';
+    if (!formData.dateOfBirth) return 'Date of birth is required';
+    return '';
   };
 
-  const handleAddStudent = (e) => {
+  const handleAddStudent = async (e) => {
     e.preventDefault();
-
-    const firstName = addFormData.firstName.trim();
-    const lastName = addFormData.lastName.trim();
-    const email = addFormData.email.trim();
-    const dateOfBirth = addFormData.dateOfBirth;
-    const gender = addFormData.gender;
-    const phoneNumber = addFormData.phoneNumber.trim();
-    const currentClass = addFormData.currentClass;
-
-    // Validate required fields (backend: firstName, lastName, email, gender, dateOfBirth are required)
-    if (!firstName || !lastName || !email || !gender || !dateOfBirth) {
-      setAddFormError('Please fill in all required fields (First Name, Last Name, Email, Gender, Date of Birth).');
+    const validationError = validateForm();
+    if (validationError) {
+      setFormError(validationError);
       return;
     }
 
-    // Basic email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setAddFormError('Please enter a valid email address.');
-      return;
+    setLoading(true);
+    try {
+      const studentData = {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim(),
+        gender: formData.gender,
+        dateOfBirth: formData.dateOfBirth,
+      };
+
+      // Only include optional fields if they have values
+      if (formData.phoneNumber.trim()) studentData.phoneNumber = formData.phoneNumber.trim();
+      if (formData.schoolClassId) studentData.schoolClassId = parseInt(formData.schoolClassId);
+      if (formData.stream.trim()) studentData.stream = formData.stream.trim();
+      if (formData.residenceStatus) studentData.residenceStatus = formData.residenceStatus;
+      if (formData.otherNames.trim()) studentData.otherNames = formData.otherNames.trim();
+      if (formData.nin.trim()) studentData.nin = formData.nin.trim();
+      if (formData.linn.trim()) studentData.linn = formData.linn.trim();
+      if (formData.nationality) studentData.nationality = formData.nationality;
+
+      await axios.post(`${API_BASE_URL}/students`, studentData);
+      
+      // Close modal immediately
+      setIsAddModalOpen(false);
+      resetForm();
+      setRecentAdmissions(prev => prev + 1);
+      
+      // Fetch in background (don't block UI)
+      fetchStudents();
+    } catch (err) {
+      console.error('Error adding student:', err);
+      setFormError(err.response?.data?.message || 'Failed to add student');
+    } finally {
+      setLoading(false);
     }
-
-    // Map frontend data to backend field names
-    const newStudent = {
-      id: generateStudentId(),
-      name: `${firstName} ${lastName}`,
-      studentClass: currentClass,
-      contact: phoneNumber, // Display field only
-      firstName,
-      lastName,
-      email,
-      gender,
-      dateOfBirth,
-      phoneNumber,
-      currentClass,
-      stream: addFormData.stream,
-      residenceStatus: addFormData.residenceStatus,
-      otherNames: addFormData.otherNames,
-      nin: addFormData.nin,
-      linn: addFormData.linn,
-      nationality: addFormData.nationality,
-      status: 'active', // Frontend display only; backend auto-manages isActive
-    };
-
-    setStudents((prev) => [newStudent, ...prev]);
-    // Recent admissions increases whenever a student is added in this session.
-    setRecentAdmissions((prev) => prev + 1);
-    resetAddForm();
-    closeAddModal();
   };
 
-  const openViewModal = (student) => {
-    setViewStudent(student);
-  };
-
-  const closeViewModal = () => {
-    setViewStudent(null);
-  };
-
-  const openEditModal = (student) => {
-    setEditStudent(student);
-    setEditFormError('');
-    setEditFormData({
-      name: student.name,
-      studentClass: student.studentClass,
-      contact: student.contact,
-      status: student.status,
+  const handleEditStudent = (student) => {
+    setSelectedStudent(student);
+    setFormData({
+      firstName: student.firstName || '',
+      lastName: student.lastName || '',
+      email: student.email || '',
+      gender: student.gender || '',
+      dateOfBirth: student.dateOfBirth || '',
+      phoneNumber: student.phoneNumber || '',
+      schoolClassId: student.schoolClass?.id || '',
+      stream: student.stream || '',
+      residenceStatus: student.residenceStatus || 'DAY',
+      otherNames: student.otherNames || '',
+      nin: student.nin || '',
+      linn: student.linn || '',
+      nationality: student.nationality || '',
     });
+    setFormError('');
+    setIsEditModalOpen(true);
   };
 
-  const closeEditModal = () => {
-    setEditStudent(null);
-    setEditFormError('');
-  };
-
-  const handleSaveEdit = (e) => {
+  const handleUpdateStudent = async (e) => {
     e.preventDefault();
-
-    const name = editFormData.name.trim();
-    const studentClass = editFormData.studentClass.trim();
-    const contact = editFormData.contact.trim();
-    const status = editFormData.status;
-
-    if (!name || !studentClass || !contact || !status) {
-      setEditFormError('Please fill in all fields.');
+    const validationError = validateForm();
+    if (validationError) {
+      setFormError(validationError);
       return;
     }
 
-    setStudents((prev) =>
-      prev.map((student) =>
-        student.id === editStudent.id
-          ? {
-              ...student,
-              name,
-              studentClass,
-              contact,
-              status,
-            }
-          : student
-      )
-    );
-    closeEditModal();
+    setLoading(true);
+    try {
+      const studentData = {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim(),
+        gender: formData.gender,
+        dateOfBirth: formData.dateOfBirth,
+      };
+
+      if (formData.phoneNumber.trim()) studentData.phoneNumber = formData.phoneNumber.trim();
+      if (formData.schoolClassId) studentData.schoolClassId = parseInt(formData.schoolClassId);
+      if (formData.stream.trim()) studentData.stream = formData.stream.trim();
+      if (formData.residenceStatus) studentData.residenceStatus = formData.residenceStatus;
+      if (formData.otherNames.trim()) studentData.otherNames = formData.otherNames.trim();
+      if (formData.nin.trim()) studentData.nin = formData.nin.trim();
+      if (formData.linn.trim()) studentData.linn = formData.linn.trim();
+      if (formData.nationality) studentData.nationality = formData.nationality;
+
+      await axios.put(`${API_BASE_URL}/students/${selectedStudent.id}`, studentData);
+      
+      // Close modal immediately
+      setIsEditModalOpen(false);
+      setSelectedStudent(null);
+      resetForm();
+      
+      // Fetch in background (don't block UI)
+      fetchStudents();
+    } catch (err) {
+      console.error('Error updating student:', err);
+      setFormError(err.response?.data?.message || 'Failed to update student');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const openDeleteModal = (student) => {
-    setDeleteConfirmStudent(student);
+  const handleDeleteStudent = async () => {
+    setLoading(true);
+    try {
+      await axios.delete(`${API_BASE_URL}/students/${selectedStudent.id}`);
+      
+      // Close modal immediately
+      setIsDeleteModalOpen(false);
+      setSelectedStudent(null);
+      
+      // Fetch in background (don't block UI)
+      fetchStudents();
+    } catch (err) {
+      console.error('Error deleting student:', err);
+      setFormError(err.response?.data?.message || 'Failed to delete student');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const closeDeleteModal = () => {
-    setDeleteConfirmStudent(null);
-  };
-
-  const handleDeleteStudent = (studentId) => {
-    setStudents((prev) => prev.filter((student) => student.id !== studentId));
-    closeDeleteModal();
-  };
-
-  const getStatusBadgeClass = (status) => {
-    if (status === 'active') return 'status-badge status-active';
-    if (status === 'inactive') return 'status-badge status-inactive';
-    return 'status-badge status-pending';
+  const getStatusBadge = (isActive) => {
+    const status = isActive !== false ? 'active' : 'inactive';
+    return <span className={`status-badge status-${status}`}>{status}</span>;
   };
 
   return (
     <div className="student-search-container">
       <div className="search-header">
         <h2>Student Management</h2>
-        <button className="btn btn-add-student" onClick={openAddModal}>
+        <button className="btn btn-add-student" onClick={() => setIsAddModalOpen(true)}>
           Add Student
         </button>
       </div>
 
-      <section className="summary-cards" aria-label="Student summaries">
+      <section className="summary-cards">
         <article className="summary-card summary-card-active">
-          <i className="fa-solid fa-user-graduate summary-card-icon" aria-hidden="true"></i>
+          <i className="fa-solid fa-user-graduate summary-card-icon"></i>
           <p className="summary-label">Total Active Students</p>
           <h3>{totalActiveStudents}</h3>
         </article>
 
         <article className="summary-card summary-card-recent">
-          <i className="fa-solid fa-user-plus summary-card-icon" aria-hidden="true"></i>
+          <i className="fa-solid fa-user-plus summary-card-icon"></i>
           <p className="summary-label">Recent Admissions</p>
           <h3>{recentAdmissions}</h3>
         </article>
 
         <article className="summary-card summary-card-fees">
-          <i className="fa-solid fa-dollar-sign summary-card-icon" aria-hidden="true"></i>
+          <i className="fa-solid fa-dollar-sign summary-card-icon"></i>
           <p className="summary-label">Total Fees Collected</p>
-          <h3>{`$${totalFeesCollectedUsd.toLocaleString()}`}</h3>
+          <h3>$0.00</h3>
         </article>
 
         <article className="summary-card summary-card-attendance">
-          <i className="fa-solid fa-calendar-check summary-card-icon" aria-hidden="true"></i>
+          <i className="fa-solid fa-calendar-check summary-card-icon"></i>
           <p className="summary-label">Today's Attendance</p>
           <h3>{todaysAttendance}</h3>
         </article>
@@ -301,7 +334,7 @@ const StudentSearch = () => {
           <div className="search-input-wrapper">
             <input
               type="text"
-              placeholder="Search by name, ID, class, contact, or status..."
+              placeholder="Search by name, ID, class, contact..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
@@ -313,356 +346,245 @@ const StudentSearch = () => {
         </div>
       </div>
 
+      {/* ADD MODAL */}
       {isAddModalOpen && (
-        <div className="modal-overlay" onClick={closeAddModal}>
-          <div className="modal-content add-student-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Add New Student</h3>
-              <button className="modal-close" onClick={closeAddModal} aria-label="Close modal">
-                x
-              </button>
+              <button className="modal-close" onClick={() => { setIsAddModalOpen(false); resetForm(); }}>×</button>
             </div>
-
-            <form className="student-form" onSubmit={handleAddStudent}>
-              {addFormError ? <p className="form-error">{addFormError}</p> : null}
-
-              <div className="add-student-grid">
-                {/* Required Fields Section */}
+            <form onSubmit={handleAddStudent} className="student-form">
+              {formError && <p className="form-error">{formError}</p>}
+              <div className="form-grid">
                 <h4 className="form-section-title">Required Information</h4>
-
                 <div className="form-field">
-                  <label htmlFor="firstName">First Name *</label>
-                  <input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    value={addFormData.firstName}
-                    onChange={handleAddInputChange}
-                    placeholder="Enter first name"
-                    required
-                  />
+                  <label>First Name *</label>
+                  <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} placeholder="First name" required />
                 </div>
-
                 <div className="form-field">
-                  <label htmlFor="lastName">Last Name *</label>
-                  <input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    value={addFormData.lastName}
-                    onChange={handleAddInputChange}
-                    placeholder="Enter last name"
-                    required
-                  />
+                  <label>Last Name *</label>
+                  <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} placeholder="Last name" required />
                 </div>
-
                 <div className="form-field form-field-full">
-                  <label htmlFor="email">Email *</label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={addFormData.email}
-                    onChange={handleAddInputChange}
-                    placeholder="Enter email address"
-                    required
-                  />
+                  <label>Email *</label>
+                  <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email address" required />
                 </div>
-
                 <div className="form-field">
-                  <label htmlFor="gender">Gender *</label>
-                  <select
-                    id="gender"
-                    name="gender"
-                    value={addFormData.gender}
-                    onChange={handleAddInputChange}
-                    required
-                  >
+                  <label>Gender *</label>
+                  <select name="gender" value={formData.gender} onChange={handleInputChange} required>
                     <option value="">Select gender</option>
                     <option value="MALE">Male</option>
                     <option value="FEMALE">Female</option>
                     <option value="OTHER">Other</option>
                   </select>
                 </div>
-
                 <div className="form-field">
-                  <label htmlFor="dateOfBirth">Date of Birth *</label>
-                  <input
-                    id="dateOfBirth"
-                    name="dateOfBirth"
-                    type="date"
-                    value={addFormData.dateOfBirth}
-                    onChange={handleAddInputChange}
-                    required
-                  />
+                  <label>Date of Birth *</label>
+                  <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleInputChange} required />
                 </div>
 
-                {/* Optional Fields Section */}
                 <h4 className="form-section-title" style={{ marginTop: '12px' }}>Optional Information</h4>
-
                 <div className="form-field">
-                  <label htmlFor="otherNames">Other Names</label>
-                  <input
-                    id="otherNames"
-                    name="otherNames"
-                    type="text"
-                    value={addFormData.otherNames}
-                    onChange={handleAddInputChange}
-                    placeholder="Enter other names"
-                  />
+                  <label>Other Names</label>
+                  <input type="text" name="otherNames" value={formData.otherNames} onChange={handleInputChange} />
                 </div>
-
                 <div className="form-field">
-                  <label htmlFor="phoneNumber">Phone Number</label>
-                  <input
-                    id="phoneNumber"
-                    name="phoneNumber"
-                    type="tel"
-                    value={addFormData.phoneNumber}
-                    onChange={handleAddInputChange}
-                    placeholder="+256 701 234567"
-                  />
+                  <label>Phone Number</label>
+                  <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} />
                 </div>
-
                 <div className="form-field">
-                  <label htmlFor="currentClass">Current Class</label>
-                  <select
-                    id="currentClass"
-                    name="currentClass"
-                    value={addFormData.currentClass}
-                    onChange={handleAddInputChange}
-                  >
+                  <label>Current Class</label>
+                  <select name="schoolClassId" value={formData.schoolClassId} onChange={handleInputChange}>
                     <option value="">Select class</option>
-                    <option value="S.1">S.1</option>
-                    <option value="S.2">S.2</option>
-                    <option value="S.3">S.3</option>
-                    <option value="S.4">S.4</option>
-                    <option value="S.5">S.5</option>
-                    <option value="S.6">S.6</option>
+                    {classes.length > 0 && classes.map(cls => (
+                      <option key={cls.id} value={cls.id}>{cls.name}</option>
+                    ))}
                   </select>
                 </div>
-
                 <div className="form-field">
-                  <label htmlFor="stream">Stream</label>
-                  <input
-                    id="stream"
-                    name="stream"
-                    type="text"
-                    value={addFormData.stream}
-                    onChange={handleAddInputChange}
-                    placeholder="e.g., Science, Arts, Commerce"
-                  />
+                  <label>Stream</label>
+                  <input type="text" name="stream" value={formData.stream} onChange={handleInputChange} placeholder="Science, Arts, Commerce..." />
                 </div>
-
                 <div className="form-field">
-                  <label htmlFor="residenceStatus">Residence Status</label>
-                  <select
-                    id="residenceStatus"
-                    name="residenceStatus"
-                    value={addFormData.residenceStatus}
-                    onChange={handleAddInputChange}
-                  >
+                  <label>Residence Status</label>
+                  <select name="residenceStatus" value={formData.residenceStatus} onChange={handleInputChange}>
                     <option value="DAY">Day Student</option>
                     <option value="BOARDING">Boarding Student</option>
                   </select>
                 </div>
-
                 <div className="form-field">
-                  <label htmlFor="nin">National ID Number (NIN)</label>
-                  <input
-                    id="nin"
-                    name="nin"
-                    type="text"
-                    value={addFormData.nin}
-                    onChange={handleAddInputChange}
-                    placeholder="14-character NIN"
-                    maxLength="14"
-                  />
+                  <label>NIN (14 characters)</label>
+                  <input type="text" name="nin" value={formData.nin} onChange={handleInputChange} maxLength="14" />
                 </div>
-
                 <div className="form-field">
-                  <label htmlFor="linn">Learner ID Number (LINN)</label>
-                  <input
-                    id="linn"
-                    name="linn"
-                    type="text"
-                    value={addFormData.linn}
-                    onChange={handleAddInputChange}
-                    placeholder="Learner ID"
-                  />
+                  <label>LINN</label>
+                  <input type="text" name="linn" value={formData.linn} onChange={handleInputChange} />
                 </div>
-
                 <div className="form-field">
-                  <label htmlFor="nationality">Nationality</label>
-                  <select
-                    id="nationality"
-                    name="nationality"
-                    value={addFormData.nationality}
-                    onChange={handleAddInputChange}
-                  >
+                  <label>Nationality</label>
+                  <select name="nationality" value={formData.nationality} onChange={handleInputChange}>
                     <option value="">Select nationality</option>
                     <option value="Ugandan">Ugandan</option>
                     <option value="Kenyan">Kenyan</option>
                     <option value="Tanzanian">Tanzanian</option>
-                    <option value="Rwandan">Rwandan</option>
-                    <option value="South Sudanese">South Sudanese</option>
                     <option value="Other">Other</option>
                   </select>
                 </div>
               </div>
-
               <div className="form-actions">
-                <button type="button" className="btn btn-secondary" onClick={closeAddModal}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Save Student
-                </button>
+                <button type="button" className="btn btn-secondary" onClick={() => { setIsAddModalOpen(false); resetForm(); }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={loading}>Save Student</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {viewStudent && (
-        <div className="modal-overlay" onClick={closeViewModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Student Details</h3>
-              <button className="modal-close" onClick={closeViewModal} aria-label="Close modal">
-                x
-              </button>
-            </div>
-
-            <div className="student-details-grid">
-              <p><strong>Student Name:</strong> {viewStudent.name}</p>
-              <p><strong>Student ID:</strong> {viewStudent.id}</p>
-              <p><strong>Class:</strong> {viewStudent.studentClass}</p>
-              <p><strong>Contact:</strong> {viewStudent.contact}</p>
-              <p><strong>Status:</strong> {viewStudent.status}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {deleteConfirmStudent && (
-        <div className="modal-overlay" onClick={closeDeleteModal}>
-          <div className="modal-content delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header delete-header">
-              <div className="delete-icon-container">
-                <i className="fa-solid fa-triangle-exclamation"></i>
-              </div>
-              <h3>Delete Student</h3>
-              <button className="modal-close" onClick={closeDeleteModal} aria-label="Close modal">
-                x
-              </button>
-            </div>
-
-            <div className="delete-confirmation-body">
-              <p className="confirmation-message">
-                Are you sure you want to delete <strong>{deleteConfirmStudent.name}</strong>?
-              </p>
-              <p className="confirmation-details">
-                Student ID: <strong>{deleteConfirmStudent.id}</strong>
-              </p>
-              <p className="warning-text">
-                <i className="fa-solid fa-info-circle"></i>
-                This action cannot be undone.
-              </p>
-            </div>
-
-            <div className="form-actions delete-actions">
-              <button type="button" className="btn btn-secondary" onClick={closeDeleteModal}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={() => handleDeleteStudent(deleteConfirmStudent.id)}
-              >
-                Delete Student
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {editStudent && (
-        <div className="modal-overlay" onClick={closeEditModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      {/* EDIT MODAL */}
+      {isEditModalOpen && selectedStudent && (
+        <div className="modal-overlay" onClick={() => setIsEditModalOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Edit Student</h3>
-              <button className="modal-close" onClick={closeEditModal} aria-label="Close modal">
-                x
-              </button>
+              <button className="modal-close" onClick={() => setIsEditModalOpen(false)}>×</button>
             </div>
+            <form onSubmit={handleUpdateStudent} className="student-form">
+              {formError && <p className="form-error">{formError}</p>}
+              <div className="form-grid">
+                <h4 className="form-section-title">Required Information</h4>
+                <div className="form-field">
+                  <label>First Name *</label>
+                  <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} required />
+                </div>
+                <div className="form-field">
+                  <label>Last Name *</label>
+                  <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} required />
+                </div>
+                <div className="form-field form-field-full">
+                  <label>Email *</label>
+                  <input type="email" name="email" value={formData.email} onChange={handleInputChange} required />
+                </div>
+                <div className="form-field">
+                  <label>Gender *</label>
+                  <select name="gender" value={formData.gender} onChange={handleInputChange} required>
+                    <option value="">Select gender</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+                <div className="form-field">
+                  <label>Date of Birth *</label>
+                  <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleInputChange} required />
+                </div>
 
-            <form className="student-form" onSubmit={handleSaveEdit}>
-              {editFormError ? <p className="form-error">{editFormError}</p> : null}
-
-              <label htmlFor="editName">Student Name</label>
-              <input
-                id="editName"
-                name="name"
-                type="text"
-                value={editFormData.name}
-                onChange={handleEditInputChange}
-              />
-
-              <label htmlFor="editClass">Class</label>
-              <input
-                id="editClass"
-                name="studentClass"
-                type="text"
-                value={editFormData.studentClass}
-                onChange={handleEditInputChange}
-              />
-
-              <label htmlFor="editContact">Contact</label>
-              <input
-                id="editContact"
-                name="contact"
-                type="text"
-                value={editFormData.contact}
-                onChange={handleEditInputChange}
-              />
-
-              <label htmlFor="editStatus">Status</label>
-              <select
-                id="editStatus"
-                name="status"
-                value={editFormData.status}
-                onChange={handleEditInputChange}
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="pending">Pending</option>
-              </select>
-
+                <h4 className="form-section-title" style={{ marginTop: '12px' }}>Optional Information</h4>
+                <div className="form-field">
+                  <label>Other Names</label>
+                  <input type="text" name="otherNames" value={formData.otherNames} onChange={handleInputChange} />
+                </div>
+                <div className="form-field">
+                  <label>Phone Number</label>
+                  <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} />
+                </div>
+                <div className="form-field">
+                  <label>Current Class</label>
+                  <select name="schoolClassId" value={formData.schoolClassId} onChange={handleInputChange}>
+                    <option value="">Select class</option>
+                    {classes.length > 0 && classes.map(cls => (
+                      <option key={cls.id} value={cls.id}>{cls.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-field">
+                  <label>Stream</label>
+                  <input type="text" name="stream" value={formData.stream} onChange={handleInputChange} />
+                </div>
+                <div className="form-field">
+                  <label>Residence Status</label>
+                  <select name="residenceStatus" value={formData.residenceStatus} onChange={handleInputChange}>
+                    <option value="DAY">Day Student</option>
+                    <option value="BOARDING">Boarding Student</option>
+                  </select>
+                </div>
+                <div className="form-field">
+                  <label>NIN</label>
+                  <input type="text" name="nin" value={formData.nin} onChange={handleInputChange} maxLength="14" />
+                </div>
+                <div className="form-field">
+                  <label>LINN</label>
+                  <input type="text" name="linn" value={formData.linn} onChange={handleInputChange} />
+                </div>
+                <div className="form-field">
+                  <label>Nationality</label>
+                  <select name="nationality" value={formData.nationality} onChange={handleInputChange}>
+                    <option value="">Select nationality</option>
+                    <option value="Ugandan">Ugandan</option>
+                    <option value="Kenyan">Kenyan</option>
+                    <option value="Tanzanian">Tanzanian</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
               <div className="form-actions">
-                <button type="button" className="btn btn-secondary" onClick={closeEditModal}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Save Changes
-                </button>
+                <button type="button" className="btn btn-secondary" onClick={() => setIsEditModalOpen(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={loading}>Save Changes</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
+      {/* VIEW MODAL */}
+      {isViewModalOpen && selectedStudent && (
+        <div className="modal-overlay" onClick={() => setIsViewModalOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Student Details</h3>
+              <button className="modal-close" onClick={() => setIsViewModalOpen(false)}>×</button>
+            </div>
+            <div className="student-details-grid">
+              <p><strong>Name:</strong> {selectedStudent.firstName} {selectedStudent.lastName}</p>
+              <p><strong>Student ID:</strong> {selectedStudent.studentId}</p>
+              <p><strong>Email:</strong> {selectedStudent.email}</p>
+              <p><strong>Class:</strong> {selectedStudent.schoolClass?.name || 'N/A'}</p>
+              <p><strong>Phone:</strong> {selectedStudent.phoneNumber || 'N/A'}</p>
+              <p><strong>Status:</strong> {getStatusBadge(selectedStudent.isActive)}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
+      {/* DELETE CONFIRMATION MODAL */}
+      {isDeleteModalOpen && selectedStudent && (
+        <div className="modal-overlay" onClick={() => setIsDeleteModalOpen(false)}>
+          <div className="modal-content delete-confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header delete-header">
+              <h3>Delete Student</h3>
+              <button className="modal-close" onClick={() => setIsDeleteModalOpen(false)}>×</button>
+            </div>
+            <p>Are you sure you want to delete <strong>{selectedStudent.firstName} {selectedStudent.lastName}</strong>?</p>
+            <p className="warning-text">This action cannot be undone.</p>
+            <div className="form-actions delete-actions">
+              <button className="btn btn-secondary" onClick={() => setIsDeleteModalOpen(false)}>Cancel</button>
+              <button className="btn btn-danger" onClick={handleDeleteStudent} disabled={loading}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TABLE */}
       <div className="table-wrapper">
         {loading ? (
-          <div className="loading-state">Fetching students from Academix API...</div>
+          <div className="loading-state">Loading...</div>
         ) : error ? (
           <div className="error-state">{error}</div>
         ) : filteredStudents.length > 0 ? (
           <table className="students-table">
             <thead>
               <tr>
-                <th>Full Name</th>
+                <th>Name</th>
                 <th>Student ID</th>
                 <th>Class</th>
                 <th>Contact</th>
@@ -671,41 +593,18 @@ const StudentSearch = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredStudents.map((student) => (
-                /* UNIQUE KEY FIX: Uses database ID */
+              {filteredStudents.map(student => (
                 <tr key={student.id}>
-                  <td>{student.name}</td>
-                  <td>{student.id}</td>
-                  <td>{student.studentClass}</td>
-                  <td>{student.contact}</td>
-                  <td>
-                    <span className={getStatusBadgeClass(student.status)}>
-                      {student.status}
-                    </span>
-                  </td>
+                  <td>{student.firstName} {student.lastName}</td>
+                  <td>{student.studentId}</td>
+                  <td>{student.schoolClass?.name || 'N/A'}</td>
+                  <td>{student.phoneNumber || '-'}</td>
+                  <td>{getStatusBadge(student.isActive)}</td>
                   <td>
                     <div className="action-buttons">
-                      <button
-                        type="button"
-                        className="btn btn-info btn-sm"
-                        onClick={() => openViewModal(student)}
-                      >
-                        View
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-warning btn-sm"
-                        onClick={() => openEditModal(student)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-danger btn-sm"
-                        onClick={() => openDeleteModal(student)}
-                      >
-                        Delete
-                      </button>
+                      <button className="btn btn-info btn-sm" onClick={() => { setSelectedStudent(student); setIsViewModalOpen(true); }}>View</button>
+                      <button className="btn btn-warning btn-sm" onClick={() => handleEditStudent(student)}>Edit</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => { setSelectedStudent(student); setIsDeleteModalOpen(true); }}>Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -713,14 +612,12 @@ const StudentSearch = () => {
             </tbody>
           </table>
         ) : (
-          <div className="no-results">
-            <p>No student records found in the database.</p>
-          </div>
+          <div className="no-results">No students found.</div>
         )}
       </div>
 
       <div className="table-footer">
-        <p>Showing {filteredStudents.length} of {students.length} total students</p>
+        <p>Showing {filteredStudents.length} of {students.length} students</p>
       </div>
     </div>
   );

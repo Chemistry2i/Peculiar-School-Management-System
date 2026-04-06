@@ -370,6 +370,17 @@ public class StudentController {
         summary.put("combination", student.getCombination());
         summary.put("isActive", student.getIsActive());
         summary.put("createdAt", student.getCreatedAt());
+        
+        // Include schoolClass relationship if it exists
+        if (student.getSchoolClass() != null) {
+            Map<String, Object> schoolClassMap = new HashMap<>();
+            schoolClassMap.put("id", student.getSchoolClass().getId());
+            schoolClassMap.put("name", student.getSchoolClass().getName());
+            summary.put("schoolClass", schoolClassMap);
+        } else {
+            summary.put("schoolClass", null);
+        }
+        
         return summary;
     }
 

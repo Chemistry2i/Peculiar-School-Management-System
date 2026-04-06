@@ -49,7 +49,7 @@ public class Student extends User {
     // ============ RELATIONSHIPS ============
 
     // Current class relationship
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "school_class_id")
     private SchoolClass schoolClass;
 
