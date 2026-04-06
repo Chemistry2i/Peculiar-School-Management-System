@@ -5,8 +5,69 @@ import AddStudentMarks from "../../auth/AddStudentMarks";
 import MyClasses from "./MyClasses";
 
 function Body(){
+    const currentDate = new Date().toLocaleDateString('en-US', {
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+
     return(
         <div className="container-fluid py-4">
+          {/* Welcome Banner */}
+          <div className="banner-container mb-4">
+            <div className="banner-content">
+              <h1>Welcome back, Teacher!</h1>
+              <p>Here's your teaching dashboard. Stay on top of your classes, grades, and attendance.</p>
+            </div>
+            <div className="banner-date">
+              <span>{currentDate}</span>
+            </div>
+          </div>
+
+          {/* Dashboard Status Cards */}
+          <div className="stats-grid mb-4">
+            <div className="stat-card">
+              <div className="stat-icon classes-today">
+                <i className="fa-solid fa-book-open"></i>
+              </div>
+              <div className="stat-info">
+                <h3>Classes Today</h3>
+                <p>5</p>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon students-count">
+                <i className="fa-solid fa-users"></i>
+              </div>
+              <div className="stat-info">
+                <h3>Total Students</h3>
+                <p>128</p>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon attendance-rate">
+                <i className="fa-solid fa-chart-pie"></i>
+              </div>
+              <div className="stat-info">
+                <h3>Attendance Rate</h3>
+                <p>92.3%</p>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon grades-pending">
+                <i className="fa-solid fa-marker"></i>
+              </div>
+              <div className="stat-info">
+                <h3>Grades Pending</h3>
+                <p>23</p>
+              </div>
+            </div>
+          </div>
+
           <div className="row g-4">
             
             {/* Recent Activities Section */}

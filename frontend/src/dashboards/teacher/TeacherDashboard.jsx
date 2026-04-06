@@ -6,6 +6,11 @@ import Body from "./Body";
 import Grading from "./Grading";
 import TeacherStudents from "./TeacherStudents";
 import MyClasses from "./MyClasses";
+import AssignmentManagement from "./AssignmentManagement";
+import AttendanceSummary from "./AttendanceSummary";
+import ExamSchedule from "./ExamSchedule";
+import StudentPerformanceReport from "./StudentPerformanceReport";
+import StudentProgressTracker from "./StudentProgressTracker";
 
 function DashboardHome() {
     return (
@@ -31,6 +36,11 @@ function TeacherDashboard() {
                         <Route path="grading" element={<Grading />} />
                         <Route path="students" element={<TeacherStudents />} />
                         <Route path="myclasses" element={<MyClasses />} />
+                        <Route path="assignments" element={<AssignmentManagement />} />
+                        <Route path="attendance-summary" element={<AttendanceSummary />} />
+                        <Route path="exam-schedule" element={<ExamSchedule />} />
+                        <Route path="performance-report" element={<StudentPerformanceReport />} />
+                        <Route path="student-progress" element={<StudentProgressTracker />} />
                     </Routes>
                 </div>
             </div>
