@@ -25,7 +25,7 @@ function ForgotPassword (){
                     <div className="forgot-btn">
                         <button>SendLink</button>
                     </div>
-                    <p>Then proceed to reset,<Link to='/resetpassword' id="proceed">Reset</Link></p>
+                    <p>Remembered my Password? <Link to='/login' id="proceed">Login</Link></p>
                 </div>
             </form>
         </div>
