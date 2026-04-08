@@ -9,6 +9,7 @@ import MyClasses from "./MyClasses";
 import AssignmentManagement from "./AssignmentManagement";
 import AttendanceSummary from "./AttendanceSummary";
 import ExamSchedule from "./ExamSchedule";
+import CreateExam from "./CreateExam";
 import StudentPerformanceReport from "./StudentPerformanceReport";
 import StudentProgressTracker from "./StudentProgressTracker";
 
@@ -39,6 +40,7 @@ function TeacherDashboard() {
                         <Route path="assignments" element={<AssignmentManagement />} />
                         <Route path="attendance-summary" element={<AttendanceSummary />} />
                         <Route path="exam-schedule" element={<ExamSchedule />} />
+                        <Route path="create-exam" element={<CreateExam />} />
                         <Route path="performance-report" element={<StudentPerformanceReport />} />
                         <Route path="student-progress" element={<StudentProgressTracker />} />
                     </Routes>

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   BarElement,
   CategoryScale,
@@ -12,74 +12,84 @@ import "./Grades.css";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
-const subjectOverview = [
-  { subject: "Math", score: 62 },
-  { subject: "English", score: 55 },
-  { subject: "Science", score: 60 },
-  { subject: "Art", score: 49 },
-];
-
-const initialGradeRows = [
-  {
-    id: "GR-101",
-    student: "John Makumbi",
-    className: "S4A",
-    average: 64,
-    subject: "Math",
-    term: "term1",
-  },
-  {
-    id: "GR-102",
-    student: "Sarah Ocan",
-    className: "S4B",
-    average: 71,
-    subject: "English",
-    term: "term1",
-  },
-  {
-    id: "GR-103",
-    student: "Michael Otto",
-    className: "S3A",
-    average: 39,
-    subject: "Science",
-    term: "term1",
-  },
-  {
-    id: "GR-104",
-    student: "Emily Watera",
-    className: "S5A",
-    average: 67,
-    subject: "Art",
-    term: "term2",
-  },
-  {
-    id: "GR-105",
-    student: "David Kijjambu",
-    className: "S4A",
-    average: 74,
-    subject: "Math",
-    term: "term3",
-  },
-];
-
 const Grades = () => {
-  const [gradeRows, setGradeRows] = useState(initialGradeRows);
+  const [gradeRows, setGradeRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [termFilter, setTermFilter] = useState("term1");
+  const [termFilter, setTermFilter] = useState("all");
   const [subjectFilter, setSubjectFilter] = useState("all");
 
+  // Fetch results from backend
+  useEffect(() => {
+    const fetchResults = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await fetch("/api/results", {
+          method: "GET",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("API Error Response:", errorText);
+          throw new Error(`API returned ${response.status}: ${response.statusText}`);
+        }
+
+        const results = await response.json();
+        
+        // Map backend Result model to frontend format
+        const mappedRows = results.map((result, index) => ({
+          id: `RESULT-${result.id}`,
+          student: result.studentNumber || `Student ${result.studentId}`, // Fallback to student ID
+          className: result.className,
+          average: result.percentage || 0,
+          subject: result.subjectName || result.subjectCode,
+          term: `term${result.term}`,
+          grade: result.grade,
+          gradePoints: result.gradePoints,
+          remarks: result.remarks,
+          marksObtained: result.marksObtained,
+          maxMarks: result.maxMarks,
+          examCode: result.examCode,
+        }));
+
+        setGradeRows(mappedRows);
+      } catch (err) {
+        console.error("Error fetching results:", err);
+        setError(err.message || "Failed to load grades from server");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResults();
+  }, []);
+
   const getGradeLabel = (average) => {
-    if (average >= 70) return "A";
-    if (average >= 60) return "B";
-    if (average >= 50) return "C";
-    return "D";
+    // Using Ugandan O-Level grading scale
+    if (average >= 80) return "D1";  // Distinction
+    if (average >= 70) return "D2";  // Distinction
+    if (average >= 65) return "C3";  // Credit
+    if (average >= 60) return "C4";  // Credit
+    if (average >= 55) return "C5";  // Credit
+    if (average >= 50) return "C6";  // Credit
+    if (average >= 40) return "P7";  // Pass
+    if (average >= 34) return "P8";  // Pass
+    return "F9";                     // Fail
   };
 
   const getPerformanceLabel = (average) => {
-    if (average >= 75) return "Top Performer";
-    if (average >= 65) return "Excellent";
-    if (average >= 55) return "Good";
+    if (average >= 75) return "Excellent";
+    if (average >= 65) return "Good";
+    if (average >= 55) return "Satisfactory";
     if (average >= 50) return "Fair";
+    if (average >= 34) return "Pass";
     return "Needs Support";
   };
 
@@ -114,6 +124,24 @@ const Grades = () => {
     return gradeRows.filter((row) => row.average < 50).length;
   }, [gradeRows]);
 
+  // Calculate subject overview from actual data
+  const subjectOverview = useMemo(() => {
+    const subjectMap = {};
+    gradeRows.forEach((row) => {
+      if (!subjectMap[row.subject]) {
+        subjectMap[row.subject] = { scores: [], count: 0 };
+      }
+      subjectMap[row.subject].scores.push(row.average);
+    });
+
+    return Object.entries(subjectMap).map(([subject, data]) => ({
+      subject,
+      score: Math.round(
+        data.scores.reduce((a, b) => a + b, 0) / data.scores.length
+      ),
+    }));
+  }, [gradeRows]);
+
   const filteredRows = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 
@@ -126,7 +154,7 @@ const Grades = () => {
 
       return matchesSearch && matchesTerm && matchesSubject;
     });
-  }, [searchTerm, termFilter, subjectFilter]);
+  }, [searchTerm, termFilter, subjectFilter, gradeRows]);
 
   const chartData = {
     labels: subjectOverview.map((item) => item.subject),
@@ -163,7 +191,37 @@ const Grades = () => {
         <p>Review subject outcomes, track class trends, and support struggling learners.</p>
       </div>
 
-      <div className="grades-cards">
+      {/* Error Alert */}
+      {error && (
+        <div style={{
+          padding: "12px 16px",
+          background: "#fee2e2",
+          border: "1px solid #fca5a5",
+          borderRadius: "6px",
+          color: "#991b1b",
+          marginBottom: "20px",
+          display: "flex",
+          alignItems: "center",
+          gap: "10px"
+        }}>
+          <i className="fa-solid fa-exclamation-circle" style={{ fontSize: "18px" }}></i>
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading ? (
+        <div style={{
+          textAlign: "center",
+          padding: "40px",
+          color: "#6b7280"
+        }}>
+          <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: "32px", marginBottom: "16px" }}></i>
+          <p>Loading student grades...</p>
+        </div>
+      ) : (
+        <>
+          <div className="grades-cards">
         <div className="grades-card class-average">
           <div>
             <h3>Class Average</h3>
@@ -228,10 +286,9 @@ const Grades = () => {
 
             <select value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)}>
               <option value="all">All Subjects</option>
-              <option value="math">Math</option>
-              <option value="english">English</option>
-              <option value="science">Science</option>
-              <option value="art">Art</option>
+              {[...new Set(gradeRows.map(r => r.subject))].sort().map(subject => (
+                <option key={subject} value={subject}>{subject}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -255,23 +312,14 @@ const Grades = () => {
                   <tr key={row.id}>
                     <td>{row.student}</td>
                     <td>{row.className}</td>
-                    <td>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={row.average}
-                        onChange={(event) => handleAverageChange(row.id, event.target.value)}
-                        className="grade-input"
-                      />
-                    </td>
-                    <td>{getGradeLabel(row.average)}</td>
+                    <td>{row.average}%</td>
+                    <td><span style={{fontWeight: "600", color: "#667eea"}}>{row.grade || getGradeLabel(row.average)}</span></td>
                     <td>{row.subject}</td>
                     <td>{getPerformanceLabel(row.average)}</td>
                     <td>
-                      <div className="action-buttons">
-                        <button type="button" className="action-btn view-btn">View Details</button>
-                        <button type="button" className="action-btn edit-btn">Edit Grades</button>
+                      <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                        {row.remarks && <p>{row.remarks}</p>}
+                        <p style={{ fontSize: "11px" }}>Exam: {row.examCode || "N/A"}</p>
                       </div>
                     </td>
                   </tr>
@@ -287,6 +335,8 @@ const Grades = () => {
           </table>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };

@@ -66,6 +66,11 @@ function SideBar() {
                     <span>Exam Schedule</span>
                 </NavLink>
 
+                <NavLink to="/teacher/create-exam" className={isActive("/teacher/create-exam")}>
+                    <i className="fa-solid fa-pencil-alt"></i>
+                    <span>Create Exam</span>
+                </NavLink>
+
                 <NavLink to="/teacher/performance-report" className={isActive("/teacher/performance-report")}>
                     <i className="fa-solid fa-chart-line"></i>
                     <span>Performance Report</span>
