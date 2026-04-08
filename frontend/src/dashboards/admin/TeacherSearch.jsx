@@ -24,10 +24,8 @@ const TeacherSearch = () => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    teacherCode: '',
     email: '',
     contactNumber: '',
-    password: '',
     dateOfBirth: '',
     gender: '',
     nationality: '',
@@ -40,7 +38,6 @@ const TeacherSearch = () => {
   const [editFormData, setEditFormData] = useState({
     firstName: '',
     lastName: '',
-    teacherCode: '',
     email: '',
     contactNumber: '',
     dateOfBirth: '',
@@ -66,9 +63,14 @@ const TeacherSearch = () => {
       const response = await fetch(`${API_BASE_URL}/teachers`);
       if (!response.ok) throw new Error('Failed to fetch teachers');
       const data = await response.json();
-      const teacherList = data.teachers || [];
+      const teacherList = (data.teachers || []).map((teacher) => ({
+        ...teacher,
+        // Use teacher_id from backend as the primary identifier
+        displayId: teacher.teacher_id || teacher.teacherId || teacher.id,
+      }));
       setTeachers(teacherList);
       setError('');
+      console.log('Teachers loaded:', teacherList); // Debug log
     } catch (err) {
       console.error('Error fetching teachers:', err);
       setError('Failed to load teachers');
@@ -167,10 +169,8 @@ const TeacherSearch = () => {
     setFormData({
       firstName: '',
       lastName: '',
-      teacherCode: '',
       email: '',
       contactNumber: '',
-      password: '',
       dateOfBirth: '',
       gender: '',
       nationality: '',
@@ -186,10 +186,8 @@ const TeacherSearch = () => {
 
     const firstName = formData.firstName.trim();
     const lastName = formData.lastName.trim();
-    const teacherCode = formData.teacherCode.trim().toUpperCase();
     const email = formData.email.trim();
     const contactNumber = formData.contactNumber.trim();
-    const password = formData.password.trim();
     const dateOfBirth = formData.dateOfBirth;
     const gender = formData.gender;
     const nationality = formData.nationality;
@@ -201,10 +199,8 @@ const TeacherSearch = () => {
     if (
       !firstName ||
       !lastName ||
-      !teacherCode ||
       !email ||
       !contactNumber ||
-      !password ||
       !dateOfBirth ||
       !gender ||
       !nationality ||
@@ -221,10 +217,8 @@ const TeacherSearch = () => {
       const teacherPayload = {
         firstName,
         lastName,
-        teacherCode,
         email,
         contactNumber,
-        password,
         dateOfBirth,
         gender,
         nationality,
@@ -268,11 +262,12 @@ const TeacherSearch = () => {
 
   const handleEditTeacher = (teacher) => {
     setEditError('');
-    setTeacherToEditId(teacher.id);
+    // Use teacher_id or teacherId from backend, fallback to id
+    const teacherId = teacher.teacher_id || teacher.teacherId || teacher.id;
+    setTeacherToEditId(teacherId);
     setEditFormData({
       firstName: teacher.firstName || '',
       lastName: teacher.lastName || '',
-      teacherCode: teacher.teacherCode || '',
       email: teacher.email || '',
       contactNumber: teacher.contactNumber || teacher.phone || '',
       dateOfBirth: teacher.dateOfBirth || '',
@@ -348,7 +343,9 @@ const TeacherSearch = () => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/teachers/${teacher.id}`, {
+      // Use teacher_id or teacherId from backend, fallback to id
+      const teacherId = teacher.teacher_id || teacher.teacherId || teacher.id;
+      const response = await fetch(`${API_BASE_URL}/teachers/${teacherId}`, {
         method: 'DELETE',
       });
 
@@ -438,11 +435,6 @@ const TeacherSearch = () => {
                 </div>
 
                 <div className="teacher-form-field">
-                  <label htmlFor="teacherCode">Teacher Code</label>
-                  <input id="teacherCode" name="teacherCode" type="text" value={formData.teacherCode} onChange={handleInputChange} placeholder="e.g TEACH007" />
-                </div>
-
-                <div className="teacher-form-field">
                   <label htmlFor="email">Email</label>
                   <input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} />
                 </div>
@@ -450,11 +442,6 @@ const TeacherSearch = () => {
                 <div className="teacher-form-field">
                   <label htmlFor="contactNumber">Contact Number</label>
                   <input id="contactNumber" name="contactNumber" type="text" value={formData.contactNumber} onChange={handleInputChange} placeholder="e.g +256700123456" />
-                </div>
-
-                <div className="teacher-form-field">
-                  <label htmlFor="password">Password</label>
-                  <input id="password" name="password" type="password" value={formData.password} onChange={handleInputChange} />
                 </div>
 
                 <div className="teacher-form-field">
@@ -466,9 +453,9 @@ const TeacherSearch = () => {
                   <label htmlFor="gender">Gender</label>
                   <select id="gender" name="gender" value={formData.gender} onChange={handleInputChange}>
                     <option value="">Select gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
                   </select>
                 </div>
 
@@ -546,9 +533,9 @@ const TeacherSearch = () => {
 
             <div className="teacher-details-grid">
               <p><strong>Teacher Name:</strong> {viewTeacher.firstName} {viewTeacher.lastName}</p>
-              <p><strong>Teacher Code:</strong> {viewTeacher.teacherCode}</p>
+              <p><strong>Teacher ID:</strong> <strong>{viewTeacher.displayId || viewTeacher.teacher_id || viewTeacher.teacherId || viewTeacher.id}</strong></p>
               <p><strong>Email:</strong> {viewTeacher.email || '-'}</p>
-              <p><strong>Contact:</strong> {viewTeacher.contactNumber || viewTeacher.phone || '-'}</p>
+              <p><strong>Contact Number:</strong> {viewTeacher.contactNumber || viewTeacher.phone || '-'}</p>
               <p><strong>Gender:</strong> {viewTeacher.gender || '-'}</p>
               <p><strong>Nationality:</strong> {viewTeacher.nationality || '-'}</p>
               <p><strong>Qualification:</strong> {viewTeacher.qualification || '-'}</p>
@@ -584,11 +571,6 @@ const TeacherSearch = () => {
                 </div>
 
                 <div className="teacher-form-field">
-                  <label htmlFor="editTeacherCode">Teacher Code</label>
-                  <input id="editTeacherCode" name="teacherCode" type="text" value={editFormData.teacherCode} readOnly className="teacher-readonly-input" />
-                </div>
-
-                <div className="teacher-form-field">
                   <label htmlFor="editEmail">Email</label>
                   <input id="editEmail" name="email" type="email" value={editFormData.email} onChange={handleEditInputChange} />
                 </div>
@@ -607,9 +589,9 @@ const TeacherSearch = () => {
                   <label htmlFor="editGender">Gender</label>
                   <select id="editGender" name="gender" value={editFormData.gender} onChange={handleEditInputChange}>
                     <option value="">Select gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
                   </select>
                 </div>
 
@@ -685,7 +667,7 @@ const TeacherSearch = () => {
             <thead>
               <tr>
                 <th>Teacher Name</th>
-                <th>Teacher Code</th>
+                <th>Teacher ID</th>
                 <th>Specialization</th>
                 <th>Email</th>
                 <th>Phone Number</th>
@@ -696,12 +678,12 @@ const TeacherSearch = () => {
               {filteredTeachers.map((teacher) => (
                 <tr key={teacher.id}>
                   <td>{teacher.firstName} {teacher.lastName}</td>
-                  <td>{teacher.teacherCode}</td>
+                  <td><strong>{teacher.displayId || teacher.teacher_id || teacher.teacherId || teacher.id}</strong></td>
                   <td>
                     <span className="subject-badge">{teacher.specialization}</span>
                   </td>
                   <td className="email">{teacher.email}</td>
-                  <td className="phone">{teacher.contactNumber || teacher.phone}</td>
+                  <td className="phone">{teacher.contactNumber || teacher.phone || '-'}</td>
                   <td>
                     <div className="action-buttons">
                       <button
