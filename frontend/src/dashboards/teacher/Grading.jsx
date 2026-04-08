@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./Grading.css";
-import AddStudentMarks from "../../auth/AddStudentMarks";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
@@ -273,37 +272,6 @@ function Grading() {
           <p>Enter student marks and review the grades.</p>
         </div>
       </div>
-{/* 
-      <div className="grading-add-student-row">
-        <button type="button" className="add-student-btn">Add Student</button>
-      </div> */}
-
-            <div>
-              <button className="btn btn-primary btn-l rounded-4" data-bs-toggle="modal" data-bs-target="#addstudentModal">Add New Student</button>
-            </div>
-
-            <div className="modal fade" id="addstudentModal" tabIndex="-1">
-              <div className="modal-dialog modal-xl">
-
-                <div className="modal-content">
-
-                  <div className="modal-header">  
-                      <h3 className="modal-title">Students Details</h3>
-                      <button className="btn-close" data-bs-dismiss="modal"></button>
-                  </div>
-
-                  <div className="modal-body">
-                    <AddStudentMarks/>
-                  </div>
-
-                  <div className="modal-footer">
-                    <button className="btn btn-secondary" data-bs-dismiss="modal">close</button>
-                  </div>
-
-                </div>
-                
-              </div>
-            </div>
 
       <div className="grading-filters-grid">
         <div className="grading-field">
