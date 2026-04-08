@@ -1,5 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './TeacherSearch.css';
+
+const API_BASE_URL = 'http://localhost:8080/api';
 
 const TeacherSearch = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -10,149 +12,111 @@ const TeacherSearch = () => {
   const [teacherToEditId, setTeacherToEditId] = useState('');
   const [editError, setEditError] = useState('');
   const [formError, setFormError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  // Data from backend
+  const [teachers, setTeachers] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [uniqueSpecializations, setUniqueSpecializations] = useState([]);
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    teacherId: '',
+    teacherCode: '',
     email: '',
-    contactDetails: '',
+    contactNumber: '',
     password: '',
     dateOfBirth: '',
     gender: '',
     nationality: '',
     qualification: '',
-    specialisation: '',
+    specialization: '',
     department: '',
     hireDate: '',
   });
+
   const [editFormData, setEditFormData] = useState({
     firstName: '',
     lastName: '',
-    teacherId: '',
+    teacherCode: '',
     email: '',
-    contactDetails: '',
+    contactNumber: '',
     dateOfBirth: '',
     gender: '',
     nationality: '',
     qualification: '',
-    specialisation: '',
+    specialization: '',
     department: '',
     hireDate: '',
   });
 
-  // Sample teacher data
-  const [teachers, setTeachers] = useState([
-    {
-      id: 'TEACH001',
-      name: 'Mr. Robert Tamale',
-      subject: 'Mathematics',
-      email: 'robert.tamale@school.edu',
-      phone: '+254712345678',
-      firstName: 'Robert',
-      lastName: 'Tamale',
-      contactDetails: '+254712345678',
-      dateOfBirth: '1985-03-14',
-      gender: 'Male',
-      nationality: 'Ugandan',
-      qualification: 'Masters',
-      specialisation: 'Mathematics',
-      department: 'Science',
-      hireDate: '2021-01-10',
-    },
-    {
-      id: 'TEACH002',
-      name: 'Ms. Sarah Nantume',
-      subject: 'English Literature',
-      email: 'sarah.nantume@school.edu',
-      phone: '+254787654321',
-      firstName: 'Sarah',
-      lastName: 'Nantume',
-      contactDetails: '+254787654321',
-      dateOfBirth: '1989-07-21',
-      gender: 'Female',
-      nationality: 'Ugandan',
-      qualification: 'Bachelors',
-      specialisation: 'English Literature',
-      department: 'Languages',
-      hireDate: '2022-04-05',
-    },
-    {
-      id: 'TEACH003',
-      name: 'Mr. James Nduga',
-      subject: 'Physics',
-      email: 'james.nduga@school.edu',
-      phone: '+254722334455',
-      firstName: 'James',
-      lastName: 'Nduga',
-      contactDetails: '+254722334455',
-      dateOfBirth: '1982-11-09',
-      gender: 'Male',
-      nationality: 'Kenyan',
-      qualification: 'PhD',
-      specialisation: 'Physics',
-      department: 'Science',
-      hireDate: '2019-09-02',
-    },
-    {
-      id: 'TEACH004',
-      name: 'Ms. Emily kajoba',
-      subject: 'Chemistry',
-      email: 'emily.kajoba@school.edu',
-      phone: '+254799887766',
-      firstName: 'Emily',
-      lastName: 'Kajoba',
-      contactDetails: '+254799887766',
-      dateOfBirth: '1990-05-18',
-      gender: 'Female',
-      nationality: 'Tanzanian',
-      qualification: 'Masters',
-      specialisation: 'Chemistry',
-      department: 'Science',
-      hireDate: '2020-06-15',
-    },
-    {
-      id: 'TEACH005',
-      name: 'Mr. David Bali',
-      subject: 'History',
-      email: 'david.bali@school.edu',
-      phone: '+254711223344',
-      firstName: 'David',
-      lastName: 'Bali',
-      contactDetails: '+254711223344',
-      dateOfBirth: '1987-02-28',
-      gender: 'Male',
-      nationality: 'Rwandan',
-      qualification: 'Bachelors',
-      specialisation: 'History',
-      department: 'Humanities',
-      hireDate: '2023-01-08',
-    },
-    {
-      id: 'TEACH006',
-      name: 'Ms. Lisa Ojambo',
-      subject: 'Biology',
-      email: 'lisa.ojambo@school.edu',
-      phone: '+254755667788',
-      firstName: 'Lisa',
-      lastName: 'Ojambo',
-      contactDetails: '+254755667788',
-      dateOfBirth: '1991-10-03',
-      gender: 'Female',
-      nationality: 'South Sudanese',
-      qualification: 'Postgraduate Diploma',
-      specialisation: 'Biology',
-      department: 'Science',
-      hireDate: '2021-08-30',
-    },
-  ]);
+  // Fetch data from backend on mount
+  useEffect(() => {
+    fetchTeachers();
+    fetchSubjects();
+    fetchDepartments();
+  }, []);
+
+  // API fetch functions
+  const fetchTeachers = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/teachers`);
+      if (!response.ok) throw new Error('Failed to fetch teachers');
+      const data = await response.json();
+      const teacherList = data.teachers || [];
+      setTeachers(teacherList);
+      setError('');
+    } catch (err) {
+      console.error('Error fetching teachers:', err);
+      setError('Failed to load teachers');
+      setTeachers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSubjects = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/subjects`);
+      if (!response.ok) throw new Error('Failed to fetch subjects');
+      const data = await response.json();
+      const subjectList = Array.isArray(data) ? data : data.subjects || [];
+      setSubjects(subjectList);
+
+      // Extract unique specializations from subjects
+      const specializations = [...new Set(subjectList.map((s) => s.name).filter(Boolean))];
+      setUniqueSpecializations(specializations.sort());
+    } catch (err) {
+      console.error('Error fetching subjects:', err);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/departments`);
+      if (!response.ok) throw new Error('Failed to fetch departments');
+      const data = await response.json();
+      const deptList = data.data || [];
+      setDepartments(
+        deptList.map((d) => (typeof d === 'string' ? d : d.name || d)).filter(Boolean)
+      );
+    } catch (err) {
+      console.error('Error fetching departments:', err);
+      setDepartments(['Science', 'Languages', 'Humanities', 'ICT']);
+    }
+  };
 
   // Filter teachers based on search term
   const filteredTeachers = useMemo(() => {
     return teachers.filter((teacher) => {
+      const fullName = `${teacher.firstName || ''} ${teacher.lastName || ''}`.toLowerCase();
       const matchesSearch =
-        teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        teacher.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        teacher.id.toLowerCase().includes(searchTerm.toLowerCase());
+        fullName.includes(searchTerm.toLowerCase()) ||
+        teacher.specialization?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        teacher.teacherCode?.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesSearch;
     });
   }, [searchTerm, teachers]);
@@ -203,49 +167,49 @@ const TeacherSearch = () => {
     setFormData({
       firstName: '',
       lastName: '',
-      teacherId: '',
+      teacherCode: '',
       email: '',
-      contactDetails: '',
+      contactNumber: '',
       password: '',
       dateOfBirth: '',
       gender: '',
       nationality: '',
       qualification: '',
-      specialisation: '',
+      specialization: '',
       department: '',
       hireDate: '',
     });
   };
 
-  const handleAddTeacher = (e) => {
+  const handleAddTeacher = async (e) => {
     e.preventDefault();
 
     const firstName = formData.firstName.trim();
     const lastName = formData.lastName.trim();
-    const teacherId = formData.teacherId.trim().toUpperCase();
+    const teacherCode = formData.teacherCode.trim().toUpperCase();
     const email = formData.email.trim();
-    const contactDetails = formData.contactDetails.trim();
+    const contactNumber = formData.contactNumber.trim();
     const password = formData.password.trim();
     const dateOfBirth = formData.dateOfBirth;
     const gender = formData.gender;
     const nationality = formData.nationality;
     const qualification = formData.qualification;
-    const specialisation = formData.specialisation;
+    const specialization = formData.specialization;
     const department = formData.department;
     const hireDate = formData.hireDate;
 
     if (
       !firstName ||
       !lastName ||
-      !teacherId ||
+      !teacherCode ||
       !email ||
-      !contactDetails ||
+      !contactNumber ||
       !password ||
       !dateOfBirth ||
       !gender ||
       !nationality ||
       !qualification ||
-      !specialisation ||
+      !specialization ||
       !department ||
       !hireDate
     ) {
@@ -253,35 +217,44 @@ const TeacherSearch = () => {
       return;
     }
 
-    const idExists = teachers.some((teacher) => teacher.id.toLowerCase() === teacherId.toLowerCase());
-    if (idExists) {
-      setFormError('Teacher ID already exists. Use a unique Teacher ID.');
-      return;
+    try {
+      const teacherPayload = {
+        firstName,
+        lastName,
+        teacherCode,
+        email,
+        contactNumber,
+        password,
+        dateOfBirth,
+        gender,
+        nationality,
+        qualification,
+        specialization,
+        department,
+        hireDate,
+      };
+
+      const response = await fetch(`${API_BASE_URL}/teachers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(teacherPayload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create teacher');
+      }
+
+      setNewTeachersCount((prev) => prev + 1);
+      resetForm();
+      closeAddModal();
+      fetchTeachers(); // Refresh the list
+    } catch (err) {
+      setFormError(err.message || 'Failed to create teacher');
+      console.error('Error creating teacher:', err);
     }
-
-    const newTeacher = {
-      id: teacherId,
-      name: `${firstName} ${lastName}`,
-      subject: specialisation,
-      email,
-      phone: contactDetails,
-      firstName,
-      lastName,
-      contactDetails,
-      password,
-      dateOfBirth,
-      gender,
-      nationality,
-      qualification,
-      specialisation,
-      department,
-      hireDate,
-    };
-
-    setTeachers((prev) => [newTeacher, ...prev]);
-    setNewTeachersCount((prev) => prev + 1);
-    resetForm();
-    closeAddModal();
   };
 
   // Handle action buttons
@@ -297,16 +270,16 @@ const TeacherSearch = () => {
     setEditError('');
     setTeacherToEditId(teacher.id);
     setEditFormData({
-      firstName: teacher.firstName || teacher.name || '',
+      firstName: teacher.firstName || '',
       lastName: teacher.lastName || '',
-      teacherId: teacher.id,
+      teacherCode: teacher.teacherCode || '',
       email: teacher.email || '',
-      contactDetails: teacher.contactDetails || teacher.phone || '',
+      contactNumber: teacher.contactNumber || teacher.phone || '',
       dateOfBirth: teacher.dateOfBirth || '',
       gender: teacher.gender || '',
       nationality: teacher.nationality || '',
       qualification: teacher.qualification || '',
-      specialisation: teacher.specialisation || teacher.subject || '',
+      specialization: teacher.specialization || '',
       department: teacher.department || '',
       hireDate: teacher.hireDate || '',
     });
@@ -319,58 +292,81 @@ const TeacherSearch = () => {
     setTeacherToEditId('');
   };
 
-  const handleSaveEditedTeacher = (e) => {
+  const handleSaveEditedTeacher = async (e) => {
     e.preventDefault();
 
     const firstName = editFormData.firstName.trim();
     const lastName = editFormData.lastName.trim();
     const email = editFormData.email.trim();
-    const contactDetails = editFormData.contactDetails.trim();
-    const specialisation = editFormData.specialisation;
+    const contactNumber = editFormData.contactNumber.trim();
+    const specialization = editFormData.specialization;
 
-    if (!firstName || !email || !contactDetails || !specialisation) {
+    if (!firstName || !email || !contactNumber || !specialization) {
       setEditError('Please fill in all required teacher details.');
       return;
     }
 
-    const updatedTeacher = {
-      id: teacherToEditId,
-      name: `${firstName} ${lastName}`.trim(),
-      subject: specialisation,
-      email,
-      phone: contactDetails,
-      firstName,
-      lastName,
-      contactDetails,
-      dateOfBirth: editFormData.dateOfBirth,
-      gender: editFormData.gender,
-      nationality: editFormData.nationality,
-      qualification: editFormData.qualification,
-      specialisation: editFormData.specialisation,
-      department: editFormData.department,
-      hireDate: editFormData.hireDate,
-    };
+    try {
+      const updatePayload = {
+        firstName,
+        lastName,
+        email,
+        contactNumber,
+        dateOfBirth: editFormData.dateOfBirth,
+        gender: editFormData.gender,
+        nationality: editFormData.nationality,
+        qualification: editFormData.qualification,
+        specialization: editFormData.specialization,
+        department: editFormData.department,
+        hireDate: editFormData.hireDate,
+      };
 
-    setTeachers((prev) =>
-      prev.map((teacher) =>
-        teacher.id === teacherToEditId
-          ? {
-              ...teacher,
-              ...updatedTeacher,
-            }
-          : teacher
-      )
-    );
+      const response = await fetch(`${API_BASE_URL}/teachers/${teacherToEditId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatePayload),
+      });
 
-    closeEditTeacher();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update teacher');
+      }
+
+      closeEditTeacher();
+      fetchTeachers(); // Refresh the list
+    } catch (err) {
+      setEditError(err.message || 'Failed to update teacher');
+      console.error('Error updating teacher:', err);
+    }
   };
 
-  const handleDeleteTeacher = (teacher) => {
-    setTeachers((prev) => prev.filter((item) => item.id !== teacher.id));
+  const handleDeleteTeacher = async (teacher) => {
+    if (!window.confirm(`Are you sure you want to delete ${teacher.firstName} ${teacher.lastName}?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/teachers/${teacher.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete teacher');
+      }
+
+      fetchTeachers(); // Refresh the list
+    } catch (err) {
+      console.error('Error deleting teacher:', err);
+      setError('Failed to delete teacher');
+    }
   };
 
   return (
     <div className="teacher-search-container">
+      {error && <div className="error-banner" style={{ color: 'red', padding: '10px', background: '#fee' }}>{error}</div>}
+      
       <section className="teacher-summary-cards" aria-label="Teacher summary cards">
         <article className="teacher-summary-card teacher-summary-total">
           <i className="fa-solid fa-user-tie teacher-summary-icon" aria-hidden="true"></i>
@@ -442,8 +438,8 @@ const TeacherSearch = () => {
                 </div>
 
                 <div className="teacher-form-field">
-                  <label htmlFor="teacherId">Teacher ID</label>
-                  <input id="teacherId" name="teacherId" type="text" value={formData.teacherId} onChange={handleInputChange} placeholder="e.g TEACH007" />
+                  <label htmlFor="teacherCode">Teacher Code</label>
+                  <input id="teacherCode" name="teacherCode" type="text" value={formData.teacherCode} onChange={handleInputChange} placeholder="e.g TEACH007" />
                 </div>
 
                 <div className="teacher-form-field">
@@ -452,8 +448,8 @@ const TeacherSearch = () => {
                 </div>
 
                 <div className="teacher-form-field">
-                  <label htmlFor="contactDetails">Contact Details</label>
-                  <input id="contactDetails" name="contactDetails" type="text" value={formData.contactDetails} onChange={handleInputChange} placeholder="e.g +256700123456" />
+                  <label htmlFor="contactNumber">Contact Number</label>
+                  <input id="contactNumber" name="contactNumber" type="text" value={formData.contactNumber} onChange={handleInputChange} placeholder="e.g +256700123456" />
                 </div>
 
                 <div className="teacher-form-field">
@@ -502,16 +498,14 @@ const TeacherSearch = () => {
                 </div>
 
                 <div className="teacher-form-field">
-                  <label htmlFor="specialisation">Specialisation</label>
-                  <select id="specialisation" name="specialisation" value={formData.specialisation} onChange={handleInputChange}>
-                    <option value="">Select specialisation</option>
-                    <option value="Mathematics">Mathematics</option>
-                    <option value="Physics">Physics</option>
-                    <option value="Chemistry">Chemistry</option>
-                    <option value="Biology">Biology</option>
-                    <option value="English Literature">English Literature</option>
-                    <option value="History">History</option>
-                    <option value="ICT">ICT</option>
+                  <label htmlFor="specialization">Specialization</label>
+                  <select id="specialization" name="specialization" value={formData.specialization} onChange={handleInputChange}>
+                    <option value="">Select specialization</option>
+                    {uniqueSpecializations.map((spec) => (
+                      <option key={spec} value={spec}>
+                        {spec}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -519,10 +513,11 @@ const TeacherSearch = () => {
                   <label htmlFor="department">Department</label>
                   <select id="department" name="department" value={formData.department} onChange={handleInputChange}>
                     <option value="">Select department</option>
-                    <option value="Science">Science</option>
-                    <option value="Languages">Languages</option>
-                    <option value="Humanities">Humanities</option>
-                    <option value="ICT">ICT</option>
+                    {departments.map((dept) => (
+                      <option key={dept} value={dept}>
+                        {dept}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -550,14 +545,14 @@ const TeacherSearch = () => {
             </div>
 
             <div className="teacher-details-grid">
-              <p><strong>Teacher Name:</strong> {viewTeacher.name}</p>
-              <p><strong>Teacher ID:</strong> {viewTeacher.id}</p>
+              <p><strong>Teacher Name:</strong> {viewTeacher.firstName} {viewTeacher.lastName}</p>
+              <p><strong>Teacher Code:</strong> {viewTeacher.teacherCode}</p>
               <p><strong>Email:</strong> {viewTeacher.email || '-'}</p>
-              <p><strong>Contact:</strong> {viewTeacher.contactDetails || viewTeacher.phone || '-'}</p>
+              <p><strong>Contact:</strong> {viewTeacher.contactNumber || viewTeacher.phone || '-'}</p>
               <p><strong>Gender:</strong> {viewTeacher.gender || '-'}</p>
               <p><strong>Nationality:</strong> {viewTeacher.nationality || '-'}</p>
               <p><strong>Qualification:</strong> {viewTeacher.qualification || '-'}</p>
-              <p><strong>Specialisation:</strong> {viewTeacher.specialisation || viewTeacher.subject || '-'}</p>
+              <p><strong>Specialization:</strong> {viewTeacher.specialization || '-'}</p>
               <p><strong>Department:</strong> {viewTeacher.department || '-'}</p>
               <p><strong>Date of Birth:</strong> {viewTeacher.dateOfBirth || '-'}</p>
               <p><strong>Hire Date:</strong> {viewTeacher.hireDate || '-'}</p>
@@ -589,8 +584,8 @@ const TeacherSearch = () => {
                 </div>
 
                 <div className="teacher-form-field">
-                  <label htmlFor="editTeacherId">Teacher ID</label>
-                  <input id="editTeacherId" name="teacherId" type="text" value={editFormData.teacherId} readOnly className="teacher-readonly-input" />
+                  <label htmlFor="editTeacherCode">Teacher Code</label>
+                  <input id="editTeacherCode" name="teacherCode" type="text" value={editFormData.teacherCode} readOnly className="teacher-readonly-input" />
                 </div>
 
                 <div className="teacher-form-field">
@@ -599,8 +594,8 @@ const TeacherSearch = () => {
                 </div>
 
                 <div className="teacher-form-field">
-                  <label htmlFor="editContactDetails">Contact Details</label>
-                  <input id="editContactDetails" name="contactDetails" type="text" value={editFormData.contactDetails} onChange={handleEditInputChange} />
+                  <label htmlFor="editContactNumber">Contact Number</label>
+                  <input id="editContactNumber" name="contactNumber" type="text" value={editFormData.contactNumber} onChange={handleEditInputChange} />
                 </div>
 
                 <div className="teacher-form-field">
@@ -644,16 +639,14 @@ const TeacherSearch = () => {
                 </div>
 
                 <div className="teacher-form-field">
-                  <label htmlFor="editSpecialisation">Specialisation</label>
-                  <select id="editSpecialisation" name="specialisation" value={editFormData.specialisation} onChange={handleEditInputChange}>
-                    <option value="">Select specialisation</option>
-                    <option value="Mathematics">Mathematics</option>
-                    <option value="Physics">Physics</option>
-                    <option value="Chemistry">Chemistry</option>
-                    <option value="Biology">Biology</option>
-                    <option value="English Literature">English Literature</option>
-                    <option value="History">History</option>
-                    <option value="ICT">ICT</option>
+                  <label htmlFor="editSpecialization">Specialization</label>
+                  <select id="editSpecialization" name="specialization" value={editFormData.specialization} onChange={handleEditInputChange}>
+                    <option value="">Select specialization</option>
+                    {uniqueSpecializations.map((spec) => (
+                      <option key={spec} value={spec}>
+                        {spec}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -661,10 +654,11 @@ const TeacherSearch = () => {
                   <label htmlFor="editDepartment">Department</label>
                   <select id="editDepartment" name="department" value={editFormData.department} onChange={handleEditInputChange}>
                     <option value="">Select department</option>
-                    <option value="Science">Science</option>
-                    <option value="Languages">Languages</option>
-                    <option value="Humanities">Humanities</option>
-                    <option value="ICT">ICT</option>
+                    {departments.map((dept) => (
+                      <option key={dept} value={dept}>
+                        {dept}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -684,13 +678,15 @@ const TeacherSearch = () => {
       )}
 
       <div className="table-wrapper">
-        {filteredTeachers.length > 0 ? (
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '20px' }}>Loading teachers...</div>
+        ) : filteredTeachers.length > 0 ? (
           <table className="teachers-table">
             <thead>
               <tr>
                 <th>Teacher Name</th>
-                <th>Teacher ID</th>
-                <th>Subject</th>
+                <th>Teacher Code</th>
+                <th>Specialization</th>
                 <th>Email</th>
                 <th>Phone Number</th>
                 <th>Actions</th>
@@ -699,13 +695,13 @@ const TeacherSearch = () => {
             <tbody>
               {filteredTeachers.map((teacher) => (
                 <tr key={teacher.id}>
-                  <td>{teacher.name}</td>
-                  <td>{teacher.id}</td>
+                  <td>{teacher.firstName} {teacher.lastName}</td>
+                  <td>{teacher.teacherCode}</td>
                   <td>
-                    <span className="subject-badge">{teacher.subject}</span>
+                    <span className="subject-badge">{teacher.specialization}</span>
                   </td>
                   <td className="email">{teacher.email}</td>
-                  <td className="phone">{teacher.phone}</td>
+                  <td className="phone">{teacher.contactNumber || teacher.phone}</td>
                   <td>
                     <div className="action-buttons">
                       <button
