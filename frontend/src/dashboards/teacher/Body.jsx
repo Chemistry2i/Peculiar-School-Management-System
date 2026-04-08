@@ -163,14 +163,14 @@ function Body(){
           </div>
 
           {/* Mark Attendance Modal */}
-          <div className="modal fade" id="markAttendanceModal" tabIndex="-1">
-            <div className="modal-dialog modal-xl modal-dialog-centered">
-              <div className="modal-content border-0 shadow">
+          <div className="modal fade teacher-attendance-modal" id="markAttendanceModal" tabIndex="-1" aria-labelledby="markAttendanceModalLabel" aria-hidden="true">
+            <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable teacher-attendance-dialog">
+              <div className="modal-content border-0 shadow teacher-attendance-content">
                 <div className="modal-header border-bottom-0 pb-0">
-                  <h3 className="modal-title fs-5 fw-bold ps-2">Mark Attendance</h3>
+                  <h3 className="modal-title fs-5 fw-bold ps-2" id="markAttendanceModalLabel">Mark Attendance</h3>
                   <button className="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div className="modal-body">
+                <div className="modal-body teacher-attendance-body">
                   <TeacherStudents/>
                 </div>
                 <div className="modal-footer border-top-0">

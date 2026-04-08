@@ -143,15 +143,20 @@
     padding: 24px;
 }
 
-/* Center modal - no offsets */
-.modal {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: auto;
-    height: auto;
-    margin: 0;
+.teacher-attendance-modal .teacher-attendance-dialog {
+    width: min(850px, calc(100vw - 32px));
+    max-width: min(850px, calc(100vw - 32px));
+}
+
+.teacher-attendance-modal .teacher-attendance-content {
+    max-height: calc(100vh - 32px);
+    border-radius: 12px !important;
+}
+
+.teacher-attendance-modal .teacher-attendance-body {
+    padding: 0;
+    overflow: auto;
+    max-height: calc(100vh - 170px);
 }
 
 .modal-backdrop {

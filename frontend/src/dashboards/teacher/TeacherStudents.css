@@ -1,11 +1,16 @@
 .teacher-students-page {
-	width:80vw;
-	height: 85vh;
-	margin: 20px;
+	width: 100%;
+	max-width: 100%;
+	height: auto;
+	min-height: 0;
+	margin: 0;
 	padding: 20px;
 	background: #ffffff;
 	border-radius: 12px;
 	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
 }
 
 .teacher-students-header h2 {
@@ -44,11 +49,15 @@
 }
 
 .teacher-students-table-wrap {
-	overflow-x: auto;
+	overflow: auto;
+	max-height: min(56vh, 520px);
+	border: 1px solid #e5e7eb;
+	border-radius: 10px;
 }
 
 .teacher-students-table {
 	width: 100%;
+	min-width: 760px;
 	border-collapse: collapse;
 	background: #fff;
 }
@@ -70,6 +79,7 @@
 .attendance-buttons {
 	display: flex;
 	gap: 8px;
+	flex-wrap: wrap;
 }
 
 .attendance-buttons button {
@@ -102,7 +112,6 @@
 
 @media (max-width: 768px) {
 	.teacher-students-page {
-		margin: 10px;
 		padding: 14px;
 	}
 

@@ -520,10 +520,10 @@ function Users() {
 								<td>{user.dateJoined}</td>
 								<td>
 									<div className="action-buttons">
-										<button type="button" className="action-btn view-btn" onClick={() => openViewModal(user)}>View Profile</button>
-										<button type="button" className="action-btn edit-btn" onClick={() => openEditModal(user)}>Edit</button>
-										<button type="button" className="action-btn suspend-btn" onClick={() => handleSuspendUser(user.id)}>Suspend</button>
-										<button type="button" className="action-btn delete-btn" onClick={() => handleDeleteUser(user.id)}>Delete</button>
+										<button type="button" className="action-btn view-btn" onClick={() => openViewModal(user)}><i className="fas fa-eye"></i></button>
+										<button type="button" className="action-btn edit-btn" onClick={() => openEditModal(user)}><i className="fas fa-edit"></i></button>
+										<button type="button" className="action-btn suspend-btn" onClick={() => handleSuspendUser(user.id)}><i className="fas fa-pause"></i></button>
+										<button type="button" className="action-btn delete-btn" onClick={() => handleDeleteUser(user.id)}><i className="fas fa-trash"></i></button>
 									</div>
 								</td>
 							</tr>
