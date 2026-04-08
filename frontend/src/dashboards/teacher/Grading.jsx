@@ -121,11 +121,18 @@ function Grading() {
       .filter((student) => enteredMarks[student.id] !== undefined && enteredMarks[student.id] !== "")
       .map((student) => ({
         studentId: student.id,
-        subject: subject,
-        marks: Number(enteredMarks[student.id]),
+        subjectCode: subject,  // Map 'subject' to 'subjectCode'
+        subjectName: subject,  // Also send subject name for reference
+        marksObtained: Number(enteredMarks[student.id]),  // Map 'marks' to 'marksObtained'
         grade: getAutoGrade(student.id),
+        className: student.className,  // Add required className
         term: 1,
         academicYear: new Date().getFullYear().toString(),
+        gradingScale: "O_LEVEL",  // Add required grading scale
+        examId: 1,  // TODO: Get actual exam ID from context or API
+        maxMarks: 100,  // Add max marks
+        isPrincipal: false,
+        isSubsidiary: false,
       }));
 
     if (entries.length === 0) {
@@ -162,11 +169,18 @@ function Grading() {
       .filter((student) => enteredMarks[student.id] !== undefined && enteredMarks[student.id] !== "")
       .map((student) => ({
         studentId: student.id,
-        subject: subject,
-        marks: Number(enteredMarks[student.id]),
+        subjectCode: subject,  // Map 'subject' to 'subjectCode'
+        subjectName: subject,  // Also send subject name for reference
+        marksObtained: Number(enteredMarks[student.id]),  // Map 'marks' to 'marksObtained'
         grade: getAutoGrade(student.id),
+        className: student.className,  // Add required className
         term: 1,
         academicYear: new Date().getFullYear().toString(),
+        gradingScale: "O_LEVEL",  // Add required grading scale
+        examId: 1,  // TODO: Get actual exam ID from context or API
+        maxMarks: 100,  // Add max marks
+        isPrincipal: false,
+        isSubsidiary: false,
       }));
 
     if (entries.length === 0) {
