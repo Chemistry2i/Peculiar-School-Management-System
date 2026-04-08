@@ -427,6 +427,7 @@ public class TeacherController {
     private Map<String, Object> createTeacherSummary(Teacher teacher) {
         Map<String, Object> summary = new HashMap<>();
         summary.put("id", teacher.getId());
+        summary.put("teacher_id", teacher.getTeacherId());
         summary.put("teacherId", teacher.getTeacherId());
         summary.put("email", teacher.getEmail());
         summary.put("firstName", teacher.getFirstName());
@@ -443,6 +444,9 @@ public class TeacherController {
             summary.put("department", null);
         }
         summary.put("primarySubject", teacher.getPrimarySubject());
+        summary.put("specialization", teacher.getSpecialization());
+        summary.put("phoneNumber", teacher.getPhoneNumber());
+        summary.put("contactNumber", teacher.getPhoneNumber());
         summary.put("employmentType", teacher.getEmploymentType());
         summary.put("employmentStatus", teacher.getEmploymentStatus());
         summary.put("isClassTeacher", teacher.getIsClassTeacher());

@@ -63,6 +63,7 @@ const TeacherSearch = () => {
       const response = await fetch(`${API_BASE_URL}/teachers`);
       if (!response.ok) throw new Error('Failed to fetch teachers');
       const data = await response.json();
+      console.log('Raw API response:', data); // DEBUG: See actual response
       const teacherList = (data.teachers || []).map((teacher) => ({
         ...teacher,
         // Use teacher_id from backend as the primary identifier
@@ -71,6 +72,9 @@ const TeacherSearch = () => {
       setTeachers(teacherList);
       setError('');
       console.log('Teachers loaded:', teacherList); // Debug log
+      if (teacherList.length > 0) {
+        console.log('First teacher data:', teacherList[0]); // DEBUG: Check field names
+      }
     } catch (err) {
       console.error('Error fetching teachers:', err);
       setError('Failed to load teachers');

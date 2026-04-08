@@ -2,22 +2,20 @@ import React, { useEffect, useMemo, useState } from "react";
 import "./Grading.css";
 import AddStudentMarks from "../../auth/AddStudentMarks";
 
-const classOptions = ["All", "S1", "S2", "S3", "S4"];
+const API_BASE_URL = "http://localhost:8080/api";
 
-const students = [
-  { id: 1, name: "Amina N.", className: "S1" },
-  { id: 2, name: "Brian K.", className: "S1" },
-  { id: 3, name: "Carla M.", className: "S2" },
-  { id: 4, name: "Denis O.", className: "S2" },
-  { id: 5, name: "Esther P.", className: "S3" }
-];
-
+// Grade calculation function
 function getGrade(mark) {
-  if (mark >= 80) return "A";
-  if (mark >= 70) return "B";
-  if (mark >= 60) return "C";
-  if (mark >= 50) return "D";
-  return "F";
+  // O-Level grading scale
+  if (mark >= 80) return "D1";
+  if (mark >= 70) return "D2";
+  if (mark >= 65) return "C3";
+  if (mark >= 60) return "C4";
+  if (mark >= 55) return "C5";
+  if (mark >= 50) return "C6";
+  if (mark >= 40) return "P7";
+  if (mark >= 34) return "P8";
+  return "F9";
 }
 
 function Grading() {
@@ -25,6 +23,51 @@ function Grading() {
   const [classFilter, setClassFilter] = useState("All");
   const [enteredMarks, setEnteredMarks] = useState({});
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState(""); // "success" or "error"
+  
+  // Data from backend
+  const [students, setStudents] = useState([]);
+  const [classOptions, setClassOptions] = useState(["All"]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [subject, setSubject] = useState("Mathematics"); // Default subject
+  const [subjects, setSubjects] = useState(["Mathematics", "English", "Chemistry", "Physics", "Biology"]);
+
+  // Fetch students and classes from backend on mount
+  useEffect(() => {
+    fetchStudentsAndClasses();
+  }, []);
+
+  const fetchStudentsAndClasses = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/students`);
+      if (!response.ok) throw new Error("Failed to fetch students");
+      
+      const data = await response.json();
+      const studentList = (data.students || []).map((student) => ({
+        id: student.id,
+        name: `${student.firstName || ""} ${student.lastName || ""}`.trim(),
+        className: student.currentClass || student.className || "Unassigned",
+        studentId: student.student_id || student.studentId || `STU${student.id}`,
+      }));
+
+      setStudents(studentList);
+      setError("");
+
+      // Extract unique classes
+      const uniqueClasses = [...new Set(studentList.map((s) => s.className))].sort();
+      setClassOptions(["All", ...uniqueClasses]);
+      
+      console.log("Students loaded:", studentList);
+    } catch (err) {
+      console.error("Error fetching students:", err);
+      setError("Failed to load students from backend");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredStudents = useMemo(() => {
     const query = searchText.trim().toLowerCase();
@@ -35,7 +78,7 @@ function Grading() {
 
       return matchesName && matchesClass;
     });
-  }, [searchText, classFilter]);
+  }, [searchText, classFilter, students]);
 
   useEffect(() => {
     setMessage("");
@@ -73,60 +116,109 @@ function Grading() {
     setMessage("");
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const entries = filteredStudents
       .filter((student) => enteredMarks[student.id] !== undefined && enteredMarks[student.id] !== "")
       .map((student) => ({
         studentId: student.id,
-        studentName: student.name,
-        className: student.className,
-        subject: "Chemistry",
-        mark: Number(enteredMarks[student.id]),
-        grade: getAutoGrade(student.id)
+        subject: subject,
+        marks: Number(enteredMarks[student.id]),
+        grade: getAutoGrade(student.id),
+        term: 1,
+        academicYear: new Date().getFullYear().toString(),
       }));
 
     if (entries.length === 0) {
       setMessage("Enter at least one student mark before saving.");
+      setMessageType("error");
       return;
     }
 
-    const payload = {
-      subject: "Chemistry",
-      entries,
-      status: "draft",
-      savedAt: new Date().toISOString()
-    };
+    try {
+      setSubmitting(true);
+      
+      // Save as draft to localStorage for quick access
+      const payload = {
+        subject: subject,
+        entries,
+        status: "draft",
+        savedAt: new Date().toISOString()
+      };
 
-    localStorage.setItem("teacher-chemistry-grade-draft", JSON.stringify(payload));
-    setMessage("Chemistry draft saved successfully.");
+      localStorage.setItem(`teacher-${subject}-grade-draft`, JSON.stringify(payload));
+      setMessage(`${entries.length} marks saved as draft for ${subject}`);
+      setMessageType("success");
+    } catch (err) {
+      setMessage("Failed to save marks");
+      setMessageType("error");
+      console.error("Error saving marks:", err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const entries = filteredStudents
       .filter((student) => enteredMarks[student.id] !== undefined && enteredMarks[student.id] !== "")
       .map((student) => ({
         studentId: student.id,
-        studentName: student.name,
-        className: student.className,
-        subject: "Chemistry",
-        mark: Number(enteredMarks[student.id]),
-        grade: getAutoGrade(student.id)
+        subject: subject,
+        marks: Number(enteredMarks[student.id]),
+        grade: getAutoGrade(student.id),
+        term: 1,
+        academicYear: new Date().getFullYear().toString(),
       }));
 
     if (entries.length === 0) {
       setMessage("Enter at least one student mark before submitting.");
+      setMessageType("error");
       return;
     }
 
-    const payload = {
-      subject: "Chemistry",
-      entries,
-      status: "submitted",
-      submittedAt: new Date().toISOString()
-    };
+    try {
+      setSubmitting(true);
+      
+      // Submit to backend
+      const response = await fetch(`${API_BASE_URL}/results/bulk`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(entries),
+      });
 
-    localStorage.setItem("teacher-chemistry-grade-submitted", JSON.stringify(payload));
-    setMessage("Chemistry grades submitted successfully.");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to submit marks");
+      }
+
+      const result = await response.json();
+      
+      // Also save to localStorage for backup
+      const payload = {
+        subject: subject,
+        entries,
+        status: "submitted",
+        submittedAt: new Date().toISOString()
+      };
+      localStorage.setItem(`teacher-${subject}-grade-submitted`, JSON.stringify(payload));
+
+      setMessage(`${entries.length} marks submitted successfully for ${subject}!`);
+      setMessageType("success");
+      
+      console.log("Marks submitted successfully:", result);
+      
+      // Clear entered marks after successful submission
+      setTimeout(() => {
+        setEnteredMarks({});
+      }, 1500);
+    } catch (err) {
+      setMessage(`Failed to submit marks: ${err.message}`);
+      setMessageType("error");
+      console.error("Error submitting marks:", err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -202,6 +294,25 @@ function Grading() {
           </select>
         </div>
 
+        <div className="grading-field">
+          <label htmlFor="subject-select">Subject</label>
+          <select
+            id="subject-select"
+            value={subject}
+            onChange={(event) => {
+              setSubject(event.target.value);
+              setMessage("");
+              setEnteredMarks({});
+            }}
+          >
+            {subjects.map((subj) => (
+              <option key={subj} value={subj}>
+                {subj}
+              </option>
+            ))}
+          </select>
+        </div>
+
       </div>
 
       <div className="student-table-section">
@@ -223,7 +334,7 @@ function Grading() {
                   <tr key={student.id}>
                     <td>{student.name}</td>
                     <td>{student.className}</td>
-                    <td>Chemistry</td>
+                    <td>{subject}</td>
                     <td>
                       <input
                         type="number"
@@ -250,12 +361,30 @@ function Grading() {
         </div>
 
         <div className="grading-actions">
-          <button className="save-btn" onClick={handleSave}>Save</button>
-          <button className="submit-btn" onClick={handleSubmit}>Submit</button>
+          <button 
+            className="save-btn" 
+            onClick={handleSave}
+            disabled={submitting || loading}
+          >
+            {submitting ? "Saving..." : "Save"}
+          </button>
+          <button 
+            className="submit-btn" 
+            onClick={handleSubmit}
+            disabled={submitting || loading}
+          >
+            {submitting ? "Submitting..." : "Submit"}
+          </button>
         </div>
       </div>
 
-      {message && <p className="grading-message">{message}</p>}
+      {loading && <p className="grading-message grading-message-info">Loading students...</p>}
+      {error && <p className="grading-message grading-message-error">{error}</p>}
+      {message && (
+        <p className={`grading-message grading-message-${messageType}`}>
+          {message}
+        </p>
+      )}
     </div>
   );
 }

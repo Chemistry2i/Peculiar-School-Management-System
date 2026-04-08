@@ -54,6 +54,27 @@ const StudentSearch = () => {
       const response = await axios.get(`${API_BASE_URL}/students`);
       const studentList = response.data.students || [];
       setStudents(studentList);
+      
+      // Extract unique classes from students data
+      const uniqueClasses = [...new Set(
+        studentList
+          .map(s => s.currentClass || s.className)
+          .filter(c => c && c !== "Unassigned")
+      )].sort();
+      
+      if (uniqueClasses.length > 0) {
+        setClasses(uniqueClasses.map((name, index) => ({ id: index + 1, name })));
+      } else {
+        setClasses([
+          { id: 1, name: 'S.1' },
+          { id: 2, name: 'S.2' },
+          { id: 3, name: 'S.3' },
+          { id: 4, name: 'S.4' },
+          { id: 5, name: 'S.5' },
+          { id: 6, name: 'S.6' },
+        ]);
+      }
+      
       setError(null);
     } catch (err) {
       console.error('Error fetching students:', err);
@@ -65,44 +86,9 @@ const StudentSearch = () => {
   };
 
   const fetchClasses = async () => {
-    try {
-      console.log('Fetching classes from:', `${API_BASE_URL}/classes`);
-      const response = await axios.get(`${API_BASE_URL}/classes`);
-      console.log('Classes response:', response.data);
-      
-      let classList = [];
-      
-      if (Array.isArray(response.data)) {
-        console.log('Response is direct array');
-        classList = response.data;
-      } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
-        console.log('Response has data property');
-        classList = response.data.data;
-      } else if (response.data && response.data.schools && Array.isArray(response.data.schools)) {
-        console.log('Response has schools property');
-        classList = response.data.schools;
-      }
-      
-      console.log('Final classList:', classList);
-      setClasses(classList.length > 0 ? classList : [
-        { id: 1, name: 'S.1' },
-        { id: 2, name: 'S.2' },
-        { id: 3, name: 'S.3' },
-        { id: 4, name: 'S.4' },
-        { id: 5, name: 'S.5' },
-        { id: 6, name: 'S.6' },
-      ]);
-    } catch (err) {
-      console.error('Error fetching classes:', err);
-      setClasses([
-        { id: 1, name: 'S.1' },
-        { id: 2, name: 'S.2' },
-        { id: 3, name: 'S.3' },
-        { id: 4, name: 'S.4' },
-        { id: 5, name: 'S.5' },
-        { id: 6, name: 'S.6' },
-      ]);
-    }
+    // Classes are now extracted from student data in fetchStudents
+    // This function is kept as a no-op for backwards compatibility
+    console.log('Classes extracted from student data:', classes);
   };
 
   const filteredStudents = useMemo(() => {
@@ -548,7 +534,7 @@ const StudentSearch = () => {
               <p><strong>Name:</strong> {selectedStudent.firstName} {selectedStudent.lastName}</p>
               <p><strong>Student ID:</strong> {selectedStudent.studentId}</p>
               <p><strong>Email:</strong> {selectedStudent.email}</p>
-              <p><strong>Class:</strong> {selectedStudent.schoolClass?.name || 'N/A'}</p>
+              <p><strong>Class:</strong> {selectedStudent.currentClass || selectedStudent.schoolClass?.name || 'N/A'}</p>
               <p><strong>Phone:</strong> {selectedStudent.phoneNumber || 'N/A'}</p>
               <p><strong>Status:</strong> {getStatusBadge(selectedStudent.isActive)}</p>
             </div>
@@ -597,7 +583,7 @@ const StudentSearch = () => {
                 <tr key={student.id}>
                   <td>{student.firstName} {student.lastName}</td>
                   <td>{student.studentId}</td>
-                  <td>{student.schoolClass?.name || 'N/A'}</td>
+                  <td>{student.currentClass || student.schoolClass?.name || 'N/A'}</td>
                   <td>{student.phoneNumber || '-'}</td>
                   <td>{getStatusBadge(student.isActive)}</td>
                   <td>
