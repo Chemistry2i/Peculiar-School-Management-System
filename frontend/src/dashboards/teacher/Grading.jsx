@@ -31,8 +31,8 @@ function Grading() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [subject, setSubject] = useState("Mathematics"); // Default subject
-  const [subjects, setSubjects] = useState(["Mathematics", "English", "Chemistry", "Physics", "Biology"]);
+  const [subject, setSubject] = useState(""); // Will be set after fetching subjects
+  const [subjects, setSubjects] = useState([]);
 
   // Fetch students and classes from backend on mount
   useEffect(() => {
@@ -42,6 +42,8 @@ function Grading() {
   const fetchStudentsAndClasses = async () => {
     try {
       setLoading(true);
+      
+      // Fetch students
       const response = await fetch(`${API_BASE_URL}/students`);
       if (!response.ok) throw new Error("Failed to fetch students");
       
@@ -61,6 +63,34 @@ function Grading() {
       setClassOptions(["All", ...uniqueClasses]);
       
       console.log("Students loaded:", studentList);
+      
+      // Fetch subjects from backend
+      try {
+        const subjectsResponse = await fetch(`${API_BASE_URL}/subjects`);
+        if (subjectsResponse.ok) {
+          const subjectsData = await subjectsResponse.json();
+          const subjectList = Array.isArray(subjectsData) 
+            ? subjectsData 
+            : (subjectsData.subjects || []);
+          
+          // Extract subject names/codes based on backend structure
+          const subjectNames = subjectList.map(subj => 
+            typeof subj === 'string' ? subj : (subj.subjectName || subj.name || subj.subjectCode || subj.code)
+          );
+          
+          setSubjects(subjectNames);
+          
+          // Set first subject as default if available
+          if (subjectNames.length > 0) {
+            setSubject(subjectNames[0]);
+          }
+          
+          console.log("Subjects loaded:", subjectNames);
+        }
+      } catch (subjectErr) {
+        console.warn("Failed to fetch subjects from API:", subjectErr);
+        // API endpoint might not exist yet, fallback handled gracefully
+      }
     } catch (err) {
       console.error("Error fetching students:", err);
       setError("Failed to load students from backend");
