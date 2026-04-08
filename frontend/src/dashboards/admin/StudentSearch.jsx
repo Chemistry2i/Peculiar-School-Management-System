@@ -54,27 +54,6 @@ const StudentSearch = () => {
       const response = await axios.get(`${API_BASE_URL}/students`);
       const studentList = response.data.students || [];
       setStudents(studentList);
-      
-      // Extract unique classes from students data
-      const uniqueClasses = [...new Set(
-        studentList
-          .map(s => s.currentClass || s.className)
-          .filter(c => c && c !== "Unassigned")
-      )].sort();
-      
-      if (uniqueClasses.length > 0) {
-        setClasses(uniqueClasses.map((name, index) => ({ id: index + 1, name })));
-      } else {
-        setClasses([
-          { id: 1, name: 'S.1' },
-          { id: 2, name: 'S.2' },
-          { id: 3, name: 'S.3' },
-          { id: 4, name: 'S.4' },
-          { id: 5, name: 'S.5' },
-          { id: 6, name: 'S.6' },
-        ]);
-      }
-      
       setError(null);
     } catch (err) {
       console.error('Error fetching students:', err);
@@ -86,9 +65,32 @@ const StudentSearch = () => {
   };
 
   const fetchClasses = async () => {
-    // Classes are now extracted from student data in fetchStudents
-    // This function is kept as a no-op for backwards compatibility
-    console.log('Classes extracted from student data:', classes);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/classes`);
+      const classList = response.data.classes || response.data || [];
+      
+      // Map classes properly
+      const formattedClasses = classList.map(cls => ({
+        id: cls.id,
+        name: cls.name,
+        level: cls.levelType,
+        capacity: cls.maxCapacity
+      }));
+      
+      setClasses(formattedClasses);
+      console.log('Classes loaded:', formattedClasses);
+    } catch (err) {
+      console.error('Error fetching classes:', err);
+      // Fallback to default classes if fetch fails
+      setClasses([
+        { id: 1, name: 'S.1', level: 'O_LEVEL' },
+        { id: 2, name: 'S.2', level: 'O_LEVEL' },
+        { id: 3, name: 'S.3', level: 'O_LEVEL' },
+        { id: 4, name: 'S.4', level: 'O_LEVEL' },
+        { id: 5, name: 'S.5', level: 'A_LEVEL' },
+        { id: 6, name: 'S.6', level: 'A_LEVEL' },
+      ]);
+    }
   };
 
   const filteredStudents = useMemo(() => {
@@ -165,7 +167,7 @@ const StudentSearch = () => {
       };
 
       // Only include optional fields if they have values
-      if (formData.phoneNumber.trim()) studentData.phoneNumber = formData.phoneNumber.trim();
+      if (formData.phoneNumber.trim()) studentData.phoneNumber = formatPhoneNumber(formData.phoneNumber);
       if (formData.schoolClassId) studentData.schoolClassId = parseInt(formData.schoolClassId);
       if (formData.stream.trim()) studentData.stream = formData.stream.trim();
       if (formData.residenceStatus) studentData.residenceStatus = formData.residenceStatus;
@@ -199,7 +201,7 @@ const StudentSearch = () => {
       email: student.email || '',
       gender: student.gender || '',
       dateOfBirth: student.dateOfBirth || '',
-      phoneNumber: student.phoneNumber || '',
+      phoneNumber: extractDigits(student.phoneNumber) || '',
       schoolClassId: student.schoolClass?.id || '',
       stream: student.stream || '',
       residenceStatus: student.residenceStatus || 'DAY',
@@ -278,6 +280,25 @@ const StudentSearch = () => {
   const getStatusBadge = (isActive) => {
     const status = isActive !== false ? 'active' : 'inactive';
     return <span className={`status-badge status-${status}`}>{status}</span>;
+  };
+
+  /**
+   * Format phone number to always start with +256
+   * Examples: "701234567" -> "+256701234567", "+256701234567" -> "+256701234567"
+   */
+  const formatPhoneNumber = (phone) => {
+    if (!phone) return '';
+    // Remove any existing +256 or 0 prefix
+    let cleaned = phone.replace(/^(\+256|0)/, '');
+    return '+256' + cleaned;
+  };
+
+  /**
+   * Extract just the digits after +256 for display in input
+   */
+  const extractDigits = (phone) => {
+    if (!phone) return '';
+    return phone.replace(/^\+256/, '');
   };
 
   return (
@@ -472,7 +493,10 @@ const StudentSearch = () => {
                 </div>
                 <div className="form-field">
                   <label>Phone Number</label>
-                  <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} />
+                  <div className="phone-input-wrapper">
+                    <span className="phone-prefix">+256</span>
+                    <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} placeholder="701234567" maxLength="9" />
+                  </div>
                 </div>
                 <div className="form-field">
                   <label>Current Class</label>
@@ -534,8 +558,13 @@ const StudentSearch = () => {
               <p><strong>Name:</strong> {selectedStudent.firstName} {selectedStudent.lastName}</p>
               <p><strong>Student ID:</strong> {selectedStudent.studentId}</p>
               <p><strong>Email:</strong> {selectedStudent.email}</p>
-              <p><strong>Class:</strong> {selectedStudent.currentClass || selectedStudent.schoolClass?.name || 'N/A'}</p>
+              <p><strong>Class:</strong> 
+                <span className="class-badge">{selectedStudent.currentClass || selectedStudent.schoolClass?.name || 'Unassigned'}</span>
+              </p>
               <p><strong>Phone:</strong> {selectedStudent.phoneNumber || 'N/A'}</p>
+              <p><strong>Gender:</strong> {selectedStudent.gender || 'N/A'}</p>
+              <p><strong>Stream:</strong> {selectedStudent.stream || 'N/A'}</p>
+              <p><strong>Residence:</strong> {selectedStudent.residenceStatus || 'N/A'}</p>
               <p><strong>Status:</strong> {getStatusBadge(selectedStudent.isActive)}</p>
             </div>
           </div>
@@ -583,7 +612,12 @@ const StudentSearch = () => {
                 <tr key={student.id}>
                   <td>{student.firstName} {student.lastName}</td>
                   <td>{student.studentId}</td>
-                  <td>{student.currentClass || student.schoolClass?.name || 'N/A'}</td>
+                  <td>
+                    {/* Display current_class (what's stored in DB) */}
+                    <span className="class-badge">
+                      {student.currentClass || student.schoolClass?.name || 'Unassigned'}
+                    </span>
+                  </td>
                   <td>{student.phoneNumber || '-'}</td>
                   <td>{getStatusBadge(student.isActive)}</td>
                   <td>
