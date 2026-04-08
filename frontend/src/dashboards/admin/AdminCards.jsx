@@ -1,14 +1,67 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import './AdminCards.css'
 
 
 function AdminCards (){
+    const [stats, setStats] = useState({
+        totalStudents: 0,
+        totalTeachers: 0,
+        totalClasses: 0,
+        totalRooms: 0,
+        totalDepartments: 0,
+        attendanceRate: 0,
+        loading: true,
+        error: null
+    });
+
     const currentDate = new Date().toLocaleDateString('en-US', {
         weekday: 'long', 
         year: 'numeric', 
         month: 'long', 
         day: 'numeric' 
     });
+
+    // Fetch dashboard statistics from backend
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const response = await fetch("/api/dashboard/stats", {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch stats: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                // Map backend response to state
+                setStats(prev => ({
+                    ...prev,
+                    totalStudents: data.totalStudents || 0,
+                    totalTeachers: data.totalTeachers || 0,
+                    totalClasses: data.totalClasses || 0,
+                    totalRooms: data.totalRooms || 0,
+                    totalDepartments: data.totalDepartments || 0,
+                    attendanceRate: data.attendanceRate || 0,
+                    loading: false
+                }));
+            } catch (err) {
+                console.error("Error fetching stats:", err);
+                setStats(prev => ({
+                    ...prev,
+                    error: err.message,
+                    loading: false
+                }));
+            }
+        };
+
+        fetchStats();
+    }, []);
 
     return (
         <div className="admin-container">
@@ -22,6 +75,24 @@ function AdminCards (){
                 </div>
             </div>
 
+            {/* Error Display */}
+            {stats.error && (
+                <div style={{
+                    padding: "12px 16px",
+                    background: "#fee2e2",
+                    border: "1px solid #fca5a5",
+                    borderRadius: "6px",
+                    color: "#991b1b",
+                    marginBottom: "20px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px"
+                }}>
+                    <i className="fa-solid fa-exclamation-circle"></i>
+                    <span>{stats.error}</span>
+                </div>
+            )}
+
             <div className="stats-grid">
                 <div className="stat-card">
                     <div className="stat-icon student">
@@ -29,7 +100,7 @@ function AdminCards (){
                     </div>
                     <div className="stat-info">
                         <h3>Total Students</h3>
-                        <p>1,234</p>
+                        <p>{stats.loading ? "-" : stats.totalStudents.toLocaleString()}</p>
                     </div>
                 </div>
 
@@ -39,7 +110,7 @@ function AdminCards (){
                     </div>
                     <div className="stat-info">
                         <h3>Total Teachers</h3>
-                        <p>80</p>
+                        <p>{stats.loading ? "-" : stats.totalTeachers}</p>
                     </div>
                 </div>
 
@@ -48,8 +119,8 @@ function AdminCards (){
                         <i className="fa-solid fa-book-open"></i>
                     </div>
                     <div className="stat-info">
-                        <h3>Classes Today</h3>
-                        <p>52</p>
+                        <h3>Total Classes</h3>
+                        <p>{stats.loading ? "-" : stats.totalClasses}</p>
                     </div>
                 </div>
 
@@ -59,7 +130,7 @@ function AdminCards (){
                     </div>
                     <div className="stat-info">
                         <h3>Attendance Rate</h3>
-                        <p>95.4%</p>
+                        <p>{stats.loading ? "-" : `${stats.attendanceRate.toFixed(1)}%`}</p>
                     </div>
                 </div>
 
@@ -69,7 +140,7 @@ function AdminCards (){
                     </div>
                     <div className="stat-info">
                         <h3>Total Rooms</h3>
-                        <p>28</p>
+                        <p>{stats.loading ? "-" : stats.totalRooms}</p>
                     </div>
                 </div>
 
@@ -79,7 +150,7 @@ function AdminCards (){
                     </div>
                     <div className="stat-info">
                         <h3>Departments</h3>
-                        <p>5</p>
+                        <p>{stats.loading ? "-" : stats.totalDepartments}</p>
                     </div>
                 </div>
             </div>
