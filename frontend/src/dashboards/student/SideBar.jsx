@@ -1,6 +1,6 @@
 
 import React from "react";
-import profilePic from '../../assets/team-4.jpg';
+import profilePic from '../../assets/me.jpeg';
 import './SideBar.css';
 import { NavLink, useLocation } from "react-router-dom";
 

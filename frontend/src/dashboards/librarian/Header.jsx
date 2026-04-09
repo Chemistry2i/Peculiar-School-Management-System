@@ -1,5 +1,5 @@
 import React from "react"; 
-import librarianPic from '/src/assets/team-3.jpg'
+import librarianPic from '/src/assets/kj.jpeg'
 
 function Header(){
     return (

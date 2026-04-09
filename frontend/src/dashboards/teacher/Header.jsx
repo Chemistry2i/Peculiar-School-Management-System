@@ -1,5 +1,5 @@
 import React from "react";
-import profilePic from '/src/assets/team-1.jpg'
+import profilePic from '/src/assets/se.jpeg'
 import '../admin/Header.css'
 import { useNavigate } from "react-router-dom";
 

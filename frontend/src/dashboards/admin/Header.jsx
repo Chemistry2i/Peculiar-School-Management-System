@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import profilePic from '/src/assets/team-2.jpg'
+import profilePic from '/src/assets/bd.jpeg'
 import './Header.css'
 
 function Header() {
