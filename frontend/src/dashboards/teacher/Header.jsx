@@ -3,10 +3,12 @@ import profilePic from '/src/assets/se.jpeg'
 import '../admin/Header.css'
 import { useNavigate } from "react-router-dom";
 import { useLogout } from '../../hooks/useLogout';
+import { useAuth } from '../../context/AuthContext';
 
 function Header() {
     const navigate = useNavigate();
     const handleLogout = useLogout();
+    const { user } = useAuth();
     return (
         <header className="navbar navbar-expand bg-white sticky-top shadow-sm p-3">
             <div className="container-fluid">
@@ -56,8 +58,8 @@ function Header() {
                             <a className="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <img src={profilePic} alt="User" className="rounded-circle object-fit-cover shadow-sm" width="40" height="40" />
                                 <div className="d-none d-md-block text-start">
-                                    <p className="m-0 fw-semibold fs-6 lh-1 text-dark">Teacher User</p>
-                                    <small className="text-muted" style={{ fontSize: '12px' }}>Educator</small>
+                                    <p className="m-0 fw-semibold fs-6 lh-1 text-dark">{user?.firstName || user?.fullName || 'Teacher User'}</p>
+                                    <small className="text-muted" style={{ fontSize: '12px' }}>{user?.role || 'Educator'}</small>
                                 </div>
                             </a>
                             <ul className="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="navbarDropdown">

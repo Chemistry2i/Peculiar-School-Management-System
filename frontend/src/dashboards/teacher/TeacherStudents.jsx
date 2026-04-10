@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 import "./TeacherStudents.css";
+
+const API_BASE_URL = 'http://localhost:8080/api';
 
 const sampleStudents = [
 	{
@@ -42,48 +45,120 @@ function normalizeStudent(student, index) {
 	return {
 		id: student.id ?? index + 1,
 		name: student.name ?? student.fullName ?? "Unknown Student",
-		className: student.className ?? student.class ?? student.level ?? "Unassigned",
+		className: student.className ?? student.class ?? student.currentClass ?? student.level ?? "Unassigned",
 		subject: derivedSubject
 	};
 }
 
 function TeacherStudents() {
+	const { user } = useAuth();
 	const [students, setStudents] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 	const [selectedClass, setSelectedClass] = useState("All Classes");
 	const [attendance, setAttendance] = useState({});
+	const [teacherClasses, setTeacherClasses] = useState([]);
 
+	// Fetch teacher's assigned classes
+	useEffect(() => {
+		let mounted = true;
+
+		async function loadTeacherClasses() {
+			if (!user?.id) {
+				setLoading(false);
+				return;
+			}
+
+			try {
+				const token = localStorage.getItem('accessToken');
+				const response = await fetch(`${API_BASE_URL}/teachers/${user.id}/classes`, {
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json',
+					}
+				});
+
+				if (response.ok) {
+					const data = await response.json();
+					const classes = Array.isArray(data) ? data : data.classes || [];
+					if (mounted) {
+						setTeacherClasses(classes);
+						console.log('Teacher classes loaded:', classes);
+					}
+				} else {
+					console.warn('Failed to fetch teacher classes');
+					if (mounted) {
+						setTeacherClasses([]);
+					}
+				}
+			} catch (err) {
+				console.error('Error fetching teacher classes:', err);
+				if (mounted) {
+					setTeacherClasses([]);
+				}
+			}
+		}
+
+		loadTeacherClasses();
+
+		return () => {
+			mounted = false;
+		};
+	}, [user]);
+
+	// Fetch students for the teacher's classes
 	useEffect(() => {
 		let mounted = true;
 
 		async function loadStudents() {
+			if (teacherClasses.length === 0) {
+				setLoading(false);
+				return;
+			}
+
 			setLoading(true);
 			setError("");
 
 			try {
-				const response = await fetch("/api/students");
-				if (!response.ok) {
-					throw new Error("Failed to fetch student records.");
+				const token = localStorage.getItem('accessToken');
+				const allStudents = [];
+
+				// Fetch students for each assigned class
+				for (const className of teacherClasses) {
+					const response = await fetch(`${API_BASE_URL}/students/class/${className}`, {
+						headers: {
+							'Authorization': `Bearer ${token}`,
+							'Content-Type': 'application/json',
+						}
+					});
+
+					if (response.ok) {
+						const data = await response.json();
+						const classStudents = Array.isArray(data) 
+							? data 
+							: (data.students || []);
+						allStudents.push(...classStudents);
+					}
 				}
 
-				const data = await response.json();
-				const normalized = Array.isArray(data)
-					? data.map((student, index) => normalizeStudent(student, index)).slice(0, 5)
-					: [];
+				const normalized = allStudents
+					.map((student, index) => normalizeStudent(student, index));
 
 				if (mounted && normalized.length > 0) {
 					setStudents(normalized);
+					console.log('Students loaded:', normalized);
 					return;
 				}
 
 				if (mounted) {
 					setStudents(sampleStudents);
+					setError("No students found in your assigned classes");
 				}
 			} catch (fetchError) {
+				console.error('Error fetching students:', fetchError);
 				if (mounted) {
 					setStudents(sampleStudents);
-					setError("Using sample students because the API is unavailable.");
+					setError("Using sample students because the API is temporarily unavailable.");
 				}
 			} finally {
 				if (mounted) {
@@ -97,7 +172,7 @@ function TeacherStudents() {
 		return () => {
 			mounted = false;
 		};
-	}, []);
+	}, [teacherClasses]);
 
 	const availableClasses = useMemo(() => {
 		const classes = Array.from(new Set(students.map((student) => student.className)));
