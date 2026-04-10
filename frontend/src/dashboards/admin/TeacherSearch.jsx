@@ -28,6 +28,14 @@ const TeacherSearch = () => {
   const [assigningClasses, setAssigningClasses] = useState(false);
   const [loadingClasses, setLoadingClasses] = useState(false);
 
+  // Subject Assignment States
+  const [isAssignSubjectModalOpen, setIsAssignSubjectModalOpen] = useState(false);
+  const [selectedTeacherForSubjectAssignment, setSelectedTeacherForSubjectAssignment] = useState(null);
+  const [selectedSubjects, setSelectedSubjects] = useState([]);
+  const [assignSubjectError, setAssignSubjectError] = useState('');
+  const [assigningSubjects, setAssigningSubjects] = useState(false);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -473,6 +481,94 @@ const TeacherSearch = () => {
     }
   };
 
+  // Subject Assignment Functions
+  const openAssignSubjectModal = (teacher) => {
+    setSelectedTeacherForSubjectAssignment(teacher);
+    setSelectedSubjects(teacher.subjects || []);
+    setAssignSubjectError('');
+    setIsAssignSubjectModalOpen(true);
+    // Fetch subjects when modal opens to ensure we have fresh data
+    setLoadingSubjects(false); // subjects already fetched on mount
+  };
+
+  const closeAssignSubjectModal = () => {
+    setSelectedTeacherForSubjectAssignment(null);
+    setSelectedSubjects([]);
+    setAssignSubjectError('');
+    setIsAssignSubjectModalOpen(false);
+  };
+
+  const handleSelectSubject = (subjectName) => {
+    setSelectedSubjects((prev) => {
+      if (prev.includes(subjectName)) {
+        return prev.filter((s) => s !== subjectName);
+      } else {
+        return [...prev, subjectName];
+      }
+    });
+  };
+
+  const handleSaveSubjectAssignment = async (e) => {
+    e.preventDefault();
+
+    if (!selectedTeacherForSubjectAssignment) {
+      setAssignSubjectError('No teacher selected');
+      return;
+    }
+
+    try {
+      setAssigningSubjects(true);
+      // Use numeric id for API calls
+      const teacherId = selectedTeacherForSubjectAssignment.id;
+
+      // Get current subjects
+      const currentSubjects = selectedTeacherForSubjectAssignment.subjects || [];
+
+      // Find subjects to add and remove
+      const subjectsToAdd = selectedSubjects.filter((s) => !currentSubjects.includes(s));
+      const subjectsToRemove = currentSubjects.filter((s) => !selectedSubjects.includes(s));
+
+      // Add new subjects
+      for (const subject of subjectsToAdd) {
+        const response = await fetch(`${API_BASE_URL}/teachers/${teacherId}/subjects`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ subject: subject.trim() }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Failed to assign ${subject}: ${errorData.message || 'Unknown error'}`);
+        }
+      }
+
+      // Remove subjects
+      for (const subject of subjectsToRemove) {
+        const response = await fetch(`${API_BASE_URL}/teachers/${teacherId}/subjects/${encodeURIComponent(subject)}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Failed to remove ${subject}: ${errorData.message || 'Unknown error'}`);
+        }
+      }
+
+      closeAssignSubjectModal();
+      fetchTeachers(); // Refresh the list
+    } catch (err) {
+      setAssignSubjectError(err.message || 'Failed to assign subjects');
+      console.error('Error assigning subjects:', err);
+    } finally {
+      setAssigningSubjects(false);
+    }
+  };
+
   return (
     <div className="teacher-search-container">
       {error && <div className="error-banner" style={{ color: 'red', padding: '10px', background: '#fee' }}>{error}</div>}
@@ -821,6 +917,13 @@ const TeacherSearch = () => {
                         Assign Classes
                       </button>
                       <button
+                        className="btn btn-success"
+                        onClick={() => openAssignSubjectModal(teacher)}
+                        title="Assign Subjects"
+                      >
+                        Assign Subjects
+                      </button>
+                      <button
                         className="btn btn-danger"
                         onClick={() => handleDeleteTeacher(teacher)}
                         title="Delete Teacher"
@@ -909,6 +1012,79 @@ const TeacherSearch = () => {
                 <button type="button" className="teacher-cancel-btn" onClick={closeAssignClassModal}>Cancel</button>
                 <button type="submit" className="teacher-save-btn" disabled={assigningClasses}>
                   {assigningClasses ? 'Assigning...' : 'Assign Classes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isAssignSubjectModalOpen && (
+        <div className="teacher-modal-overlay" onClick={closeAssignSubjectModal}>
+          <div className="teacher-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="teacher-modal-header">
+              <h3>Assign Subjects to {selectedTeacherForSubjectAssignment?.firstName} {selectedTeacherForSubjectAssignment?.lastName}</h3>
+              <button type="button" className="teacher-modal-close" onClick={closeAssignSubjectModal}>x</button>
+            </div>
+
+            <form className="teacher-form" onSubmit={handleSaveSubjectAssignment}>
+              {assignSubjectError ? <p className="teacher-form-error">{assignSubjectError}</p> : null}
+
+              <div className="teacher-form-field">
+                <label>Available Subjects</label>
+                <div className="subject-selection-container">
+                  {subjects.length > 0 ? (
+                    <div className="subject-checkboxes">
+                      {subjects.map((subject) => {
+                        // Handle flexible field names from backend
+                        const subjectId = subject.id || subject.subjectId || subject.subject_id || `subject-${Math.random()}`;
+                        const subjectName = subject.name || subject.subjectName || subject.subject_name || 'Unknown';
+                        const subjectCode = subject.code || '';
+                        
+                        return (
+                          <div key={subjectId} className="checkbox-item">
+                            <input
+                              type="checkbox"
+                              id={`subject-${subjectId}`}
+                              checked={selectedSubjects.includes(subjectName)}
+                              onChange={() => handleSelectSubject(subjectName)}
+                            />
+                            <label htmlFor={`subject-${subjectId}`}>
+                              {subjectName} {subjectCode && `(${subjectCode})`}
+                            </label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-muted">No subjects available</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="teacher-form-field">
+                <label>Selected Subjects: {selectedSubjects.length}</label>
+                <div className="selected-subjects-display">
+                  {selectedSubjects.length > 0 ? (
+                    selectedSubjects.map((subj) => (
+                      <span key={subj} className="subject-badge">
+                        {subj}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-muted">No subjects selected</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="teacher-form-field" style={{ fontSize: '0.9em', padding: '10px', background: '#f0f8ff', borderRadius: '4px', marginBottom: '15px' }}>
+                <strong>ℹ️ Note:</strong> This assigns subjects to the teacher's profile. The teacher will be able to teach these subjects in any of their assigned classes.
+              </div>
+
+              <div className="teacher-form-actions">
+                <button type="button" className="teacher-cancel-btn" onClick={closeAssignSubjectModal}>Cancel</button>
+                <button type="submit" className="teacher-save-btn" disabled={assigningSubjects}>
+                  {assigningSubjects ? 'Assigning...' : 'Assign Subjects'}
                 </button>
               </div>
             </form>

@@ -10,16 +10,32 @@ function TeacherCards() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        if (!user?.id) return;
+        if (!user?.id) {
+            setError('No user ID available');
+            setLoading(false);
+            return;
+        }
         
         const fetchTeacherData = async () => {
             try {
                 setLoading(true);
+                setError(null);
                 const response = await teacherService.getTeacherById(user.id);
-                setTeacher(response.data);
+                console.log('Full API response:', response); // Debug: full response
+                console.log('Teacher data fetched:', response.data); // Debug: response data
+                
+                // Handle different response structures
+                const teacherData = response.data?.teacher || response.data;
+                console.log('Processed teacher data:', teacherData); // Debug: processed data
+                console.log('Assigned classes:', teacherData?.assignedClasses); // Debug: classes
+                console.log('Subjects:', teacherData?.subjects); // Debug: subjects
+                console.log('Employment status field:', teacherData?.employmentStatus); // Debug: status field
+                
+                setTeacher(teacherData);
             } catch (err) {
                 console.error('Error fetching teacher data:', err);
-                setError(err.message);
+                const errorMessage = err.response?.data?.message || err.message || 'Failed to load teacher data';
+                setError(errorMessage);
             } finally {
                 setLoading(false);
             }
@@ -29,23 +45,45 @@ function TeacherCards() {
     }, [user]);
 
     if (loading) {
-        return <div className="teacher-container">Loading teacher data...</div>;
+        return <div className="teacher-container"><p style={{ textAlign: 'center', padding: '20px' }}>Loading teacher data...</p></div>;
     }
 
     if (error) {
-        return <div className="teacher-container">Error loading teacher data</div>;
+        return <div className="teacher-container"><p style={{ color: '#d97706', padding: '20px', background: '#fef3c7' }}>Error: {error}</p></div>;
     }
 
-    const totalClasses = teacher?.assignedClasses?.length || 0;
-    const totalSubjects = teacher?.subjects?.length || 0;
+    if (!teacher) {
+        return <div className="teacher-container"><p style={{ color: '#d97706', padding: '20px', background: '#fef3c7' }}>No teacher data available</p></div>;
+    }
+
+    const department = teacher?.department?.name || teacher?.departmentName || teacher?.department || 'Unassigned';
+    const status = teacher?.employmentStatus ? String(teacher.employmentStatus).toUpperCase() : (teacher?.isActive ? 'ACTIVE' : 'INACTIVE');
+    const fullName = teacher?.fullName || `${teacher?.firstName || ''} ${teacher?.lastName || ''}`.trim() || 'Teacher';
+    const totalClasses = Array.isArray(teacher?.assignedClasses) ? teacher.assignedClasses.length : 0;
+    const totalSubjects = Array.isArray(teacher?.subjects) ? teacher.subjects.length : 0;
     const experience = teacher?.yearsOfExperience || 0;
     const specialization = teacher?.specialization || 'Not specified';
+    
+    // Debug logs for all fields
+    console.log('=== TEACHER DATA DEBUG ===');
+    console.log('Full teacher object:', teacher);
+    console.log('Department object:', teacher?.department);
+    console.log('Department name (nested):', teacher?.department?.name);
+    console.log('Department name (direct):', teacher?.departmentName);
+    console.log('Final department value:', department);
+    console.log('Assigned classes:', teacher?.assignedClasses, 'Count:', totalClasses);
+    console.log('Subjects:', teacher?.subjects, 'Count:', totalSubjects);
+    console.log('Employment status:', teacher?.employmentStatus);
+    console.log('Final status:', status);
+    console.log('Specialization:', specialization);
+    console.log('Experience:', experience);
+    console.log('========================');
 
     return(
         <div className="teacher-container">
             <div className="teacher-header-section">
                 <h1 className="teacher-dashboard-title">Dashboard</h1>
-                <h2 className="teacher-dashboard-subtitle">Welcome back, {teacher?.fullName}! Here's your overview.</h2>
+                <h2 className="teacher-dashboard-subtitle">Welcome back, {fullName}! Here's your overview.</h2>
             </div>
 
             <div className="teacher-cards-grid">
@@ -115,7 +153,7 @@ function TeacherCards() {
                         </div>
                         <i className="fa-solid fa-building card-icon"></i>
                     </div>
-                    <p className="card-value-text">{teacher?.department?.name || 'Unassigned'}</p>
+                    <p className="card-value-text">{department}</p>
                 </div>
 
                 {/* Status Card */}
@@ -127,7 +165,7 @@ function TeacherCards() {
                         </div>
                         <i className="fa-solid fa-user-check card-icon"></i>
                     </div>
-                    <p className="card-value-status">{teacher?.employmentStatus || 'ACTIVE'}</p>
+                    <p className="card-value-status">{status}</p>
                 </div>
             </div>
 
