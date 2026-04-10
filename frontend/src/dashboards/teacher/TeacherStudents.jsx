@@ -38,6 +38,15 @@ const sampleStudents = [
 ];
 
 function normalizeStudent(student, index) {
+	// Use className (computed from schoolClass, properly synced)
+	// Falls back to other fields for backward compatibility
+	const className = student.className || 
+	                 student.schoolClass?.name ||
+	                 student.currentClass || 
+	                 student.class || 
+	                 student.level || 
+	                 "Unassigned";
+
 	const derivedSubject =
 		student.subject ??
 		(Array.isArray(student.subjects) && student.subjects.length > 0 ? student.subjects[0] : "No subject");
@@ -45,8 +54,9 @@ function normalizeStudent(student, index) {
 	return {
 		id: student.id ?? index + 1,
 		name: student.name ?? student.fullName ?? "Unknown Student",
-		className: student.className ?? student.class ?? student.currentClass ?? student.level ?? "Unassigned",
-		subject: derivedSubject
+		className: className,  // ← NOW PROPERLY SYNCED
+		subject: derivedSubject,
+		schoolClassId: student.schoolClass?.id,  // For operations via relationship
 	};
 }
 

@@ -168,7 +168,12 @@ const StudentSearch = () => {
 
       // Only include optional fields if they have values
       if (formData.phoneNumber.trim()) studentData.phoneNumber = formatPhoneNumber(formData.phoneNumber);
-      if (formData.schoolClassId) studentData.schoolClassId = parseInt(formData.schoolClassId);
+      if (formData.schoolClassId) {
+        studentData.schoolClass = { id: parseInt(formData.schoolClassId) };
+        // Find the class name and set currentClass for backward compatibility
+        const selectedClass = classes.find(c => c.id === parseInt(formData.schoolClassId));
+        if (selectedClass) studentData.currentClass = selectedClass.name;
+      }
       if (formData.stream.trim()) studentData.stream = formData.stream.trim();
       if (formData.residenceStatus) studentData.residenceStatus = formData.residenceStatus;
       if (formData.otherNames.trim()) studentData.otherNames = formData.otherNames.trim();
@@ -233,7 +238,11 @@ const StudentSearch = () => {
       };
 
       if (formData.phoneNumber.trim()) studentData.phoneNumber = formData.phoneNumber.trim();
-      if (formData.schoolClassId) studentData.schoolClassId = parseInt(formData.schoolClassId);
+      if (formData.schoolClassId) {
+        studentData.schoolClass = { id: parseInt(formData.schoolClassId) };
+        const selectedClass = classes.find(c => c.id === parseInt(formData.schoolClassId));
+        if (selectedClass) studentData.currentClass = selectedClass.name;
+      }
       if (formData.stream.trim()) studentData.stream = formData.stream.trim();
       if (formData.residenceStatus) studentData.residenceStatus = formData.residenceStatus;
       if (formData.otherNames.trim()) studentData.otherNames = formData.otherNames.trim();

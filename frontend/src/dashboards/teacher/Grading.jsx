@@ -50,8 +50,10 @@ function Grading() {
       const studentList = (data.students || []).map((student) => ({
         id: student.id,
         name: `${student.firstName || ""} ${student.lastName || ""}`.trim(),
-        className: student.currentClass || student.className || "Unassigned",
-        studentId: student.student_id || student.studentId || `STU${student.id}`,
+        // ===== USE className (now properly synced) =====
+        className: student.className || student.currentClass || "Unassigned",
+        studentId: student.studentId || `STU${student.id}`,
+        schoolClassId: student.schoolClass?.id,  // For relationship operations
       }));
 
       setStudents(studentList);
