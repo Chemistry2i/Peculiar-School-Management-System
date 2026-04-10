@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import React, { useState } from 'react'
-import kyuLogo from '/src/assets/images-removebg-preview.png'
+import kyuLogo from '../../src/assets/PS.png';
 import './Login.css'
 
 

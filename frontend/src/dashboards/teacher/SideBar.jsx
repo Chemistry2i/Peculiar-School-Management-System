@@ -1,5 +1,5 @@
 import React from "react";
-import profilePic from '../../assets/team-1.jpg';
+import profilePic from '../../assets/se.jpeg';
 import './SideBar.css';
 import { NavLink, useLocation } from "react-router-dom";
 

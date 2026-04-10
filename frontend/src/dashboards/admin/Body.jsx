@@ -1,10 +1,11 @@
 import React from "react";
 import './Body.css';
-import StudentRegistration from "../../auth/StudentRegistration";
-import TeacherRegistration from "../../auth/TeacherRegistration";
+import { useNavigate } from "react-router-dom";
 
 
 function Body (){
+  const navigate = useNavigate();
+
       return(
         <div className="container-fluid py-4">
           <div className="row g-4">
@@ -62,14 +63,20 @@ function Body (){
                 </div>
                 <div className="card-body px-4">
                   <div className="d-grid gap-3">
-                    <button className="btn btn-primary p-3 text-start d-flex align-items-center justify-content-between rounded-3 activity-btn" data-bs-toggle="modal" data-bs-target="#studentModal">
+                    <button
+                      className="btn btn-primary p-3 text-start d-flex align-items-center justify-content-between rounded-3 activity-btn"
+                      onClick={() => navigate('/admin/students')}
+                    >
                       <span className="fw-semibold">
                         <i className="fa-solid fa-user-plus me-2"></i> Add New Student
                       </span>
                       <i className="fa-solid fa-chevron-right small"></i>
                     </button>
 
-                    <button className="btn btn-light border p-3 text-start d-flex align-items-center justify-content-between rounded-3 activity-btn" data-bs-toggle="modal" data-bs-target="#teacherModal">
+                    <button
+                      className="btn btn-light border p-3 text-start d-flex align-items-center justify-content-between rounded-3 activity-btn"
+                      onClick={() => navigate('/admin/teachers')}
+                    >
                       <span className="fw-semibold text-dark-emphasis">
                         <i className="fa-solid fa-chalkboard-user me-2 text-primary"></i> Add New Teacher
                       </span>
@@ -89,43 +96,6 @@ function Body (){
             </div>
 
           </div>
-
-          {/* Student Modal */}
-          <div className="modal fade" id="studentModal" tabIndex="-1">
-            <div className="modal-dialog modal-xl modal-dialog-centered">
-              <div className="modal-content border-0 shadow">
-                <div className="modal-header border-bottom-0 pb-0">
-                  <h3 className="modal-title fs-5 fw-bold ps-2">Student Registration</h3>
-                  <button className="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div className="modal-body">
-                  <StudentRegistration/>
-                </div>
-                {/* <div className="modal-footer border-top-0 pt-0">
-                  <button className="btn btn-light text-muted" data-bs-dismiss="modal">Close</button>
-                </div> */}
-              </div>
-            </div>
-          </div>
-
-          {/* Teacher Modal */}
-          <div className="modal fade" id="teacherModal" tabIndex="-1">
-            <div className="modal-dialog modal-xl modal-dialog-centered">
-              <div className="modal-content border-0 shadow">
-                <div className="modal-header border-bottom-0 pb-0">  
-                    <h3 className="modal-title fs-5 fw-bold ps-2">Teacher Registration</h3>
-                    <button className="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div className="modal-body">
-                  <TeacherRegistration/>
-                </div>
-                {/* <div className="modal-footer border-top-0 pt-0">
-                  <button className="btn btn-light text-muted" data-bs-dismiss="modal">Close</button>
-                </div> */}
-              </div>
-            </div>
-          </div>
-
         </div>
       )
 }
