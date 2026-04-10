@@ -38,6 +38,7 @@ function AdminCards (){
                 }
 
                 const data = await response.json();
+                console.log("📊 Dashboard stats received:", data);
                 
                 // Map backend response to state
                 setStats(prev => ({
@@ -51,7 +52,7 @@ function AdminCards (){
                     loading: false
                 }));
             } catch (err) {
-                console.error("Error fetching stats:", err);
+                console.error("❌ Error fetching stats:", err);
                 setStats(prev => ({
                     ...prev,
                     error: err.message,
