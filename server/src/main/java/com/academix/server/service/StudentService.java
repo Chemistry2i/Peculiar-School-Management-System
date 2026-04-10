@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.academix.server.model.SchoolClass;
 import com.academix.server.model.Student;
+import com.academix.server.model.Result;
+import com.academix.server.repository.ResultRepository;
 import com.academix.server.repository.SchoolClassRepository;
 import com.academix.server.repository.StaffRepository;
 import com.academix.server.repository.StudentRepository;
@@ -45,6 +47,9 @@ public class StudentService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private ResultRepository resultRepository;
 
     /**
      * Create a new student
@@ -379,8 +384,41 @@ public class StudentService {
         results.put("studentId", student.getStudentId());
         results.put("studentName", student.getFullName());
         results.put("currentClass", student.getCurrentClass());
-        results.put("message", "Results module not yet implemented");
-        results.put("results", List.of()); // Placeholder for actual results
+        
+        try {
+            // Fetch all results for this student from the Result entity
+            List<Result> studentResults = resultRepository.findByStudentId(studentId);
+            
+            // Transform Result entities to maps for JSON response
+            List<Map<String, Object>> formattedResults = studentResults.stream()
+                .map(r -> {
+                    Map<String, Object> resultMap = new HashMap<>();
+                    resultMap.put("id", r.getId());
+                    resultMap.put("subjectCode", r.getSubjectCode());
+                    resultMap.put("subjectName", r.getSubjectName());
+                    resultMap.put("marksObtained", r.getMarksObtained());
+                    resultMap.put("maxMarks", r.getMaxMarks());
+                    resultMap.put("percentage", r.getPercentage());
+                    resultMap.put("grade", r.getGrade());
+                    resultMap.put("gradePoints", r.getGradePoints());
+                    resultMap.put("gradingScale", r.getGradingScale());
+                    resultMap.put("term", r.getTerm());
+                    resultMap.put("academicYear", r.getAcademicYear());
+                    resultMap.put("className", r.getClassName());
+                    resultMap.put("remarks", r.getRemarks());
+                    resultMap.put("createdAt", r.getCreatedAt());
+                    return resultMap;
+                })
+                .toList();
+            
+            results.put("results", formattedResults);
+            results.put("totalResults", formattedResults.size());
+            results.put("message", "Student results retrieved successfully");
+        } catch (Exception e) {
+            logger.warn("Error fetching student results: {}", e.getMessage());
+            results.put("results", List.of());
+            results.put("message", "Could not fetch results: " + e.getMessage());
+        }
         
         return results;
     }

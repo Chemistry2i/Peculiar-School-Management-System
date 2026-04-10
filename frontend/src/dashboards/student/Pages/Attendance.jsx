@@ -1,18 +1,95 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useAuth } from "../../../context/AuthContext";
 
 function Attendance() {
-    const attendanceData = [
-        { month: "January", present: 18, absent: 2, percentage: 90 },
-        { month: "February", present: 19, absent: 1, percentage: 95 },
-        { month: "March", present: 20, absent: 0, percentage: 100 },
-        { month: "April", present: 17, absent: 3, percentage: 85 },
+    const { user } = useAuth();
+    const [attendanceData, setAttendanceData] = useState([]);
+    const [overallAttendance, setOverallAttendance] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        if (!user?.id) return;
+
+        const fetchAttendance = async () => {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch(`http://localhost:8080/api/students/${user.id}/attendance`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to fetch attendance');
+
+                const data = await response.json();
+                console.log('📋 Attendance data:', data);
+
+                // Extract attendance records grouped by month or class
+                const records = data.attendanceRecords || data.monthlyAttendance || [];
+                setAttendanceData(records);
+
+                // Get overall attendance rate
+                const overall = data.attendancePercentage || data.attendanceRate || 0;
+                setOverallAttendance(Math.round(overall));
+
+                setLoading(false);
+            } catch (err) {
+                console.error('❌ Error fetching attendance:', err);
+                setError(err.message);
+                setLoading(false);
+            }
+        };
+
+        fetchAttendance();
+    }, [user]);
+
+    // Transform API response to component format if needed
+    const classWiseAttendance = attendanceData
+        .filter(a => a.className)
+        .map(a => ({
+            class: a.className,
+            attendance: a.percentage || a.attendanceRate || 0
+        }))
+        .slice(0, 4);
+
+    const monthWiseAttendance = attendanceData
+        .filter(a => a.month)
+        .map(a => ({
+            month: a.month,
+            present: a.presentDays || a.present || 0,
+            absent: a.absentDays || a.absent || 0,
+            percentage: a.percentage || a.attendanceRate || 0
+        }))
+        .slice(0, 4);
+
+    if (loading) {
+        return (
+            <div className="container-fluid">
+                <div className="page-header">
+                    <h1><i className="fa-solid fa-clipboard-user"></i> Attendance</h1>
+                    <p>Loading your attendance records...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="container-fluid">
+                <div className="page-header">
+                    <h1><i className="fa-solid fa-clipboard-user"></i> Attendance</h1>
+                    <p style={{color: 'red'}}>Error loading attendance: {error}</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Fallback data if API returns empty
+    const displayMonthData = monthWiseAttendance.length > 0 ? monthWiseAttendance : [
+        { month: "Loading...", present: 0, absent: 0, percentage: 0 }
     ];
 
-    const classWiseAttendance = [
-        { class: "Class 10-A", attendance: 92 },
-        { class: "Class 10-B", attendance: 88 },
-        { class: "Class 10-C", attendance: 95 },
-        { class: "Class 10-D", attendance: 90 },
+    const displayClassData = classWiseAttendance.length > 0 ? classWiseAttendance : [
+        { class: "No data", attendance: 0 }
     ];
 
     return (
@@ -23,7 +100,7 @@ function Attendance() {
                     <p>Your attendance records and statistics</p>
                 </div>
                 <div>
-                    <h3 style={{ color: '#2c4ebb', margin: 0 }}>Overall: 92%</h3>
+                    <h3 style={{ color: '#2c4ebb', margin: 0 }}>Overall: {overallAttendance}%</h3>
                 </div>
             </div>
 
@@ -33,11 +110,11 @@ function Attendance() {
                         <h5>Monthly Attendance</h5>
                     </div>
                     <div className="card-body">
-                        {attendanceData.map((month, idx) => (
+                        {displayMonthData.map((month, idx) => (
                             <div key={idx} style={{ marginBottom: '16px' }}>
                                 <div className="d-flex justify-content-between mb-2">
                                     <small className="fw-bold">{month.month}</small>
-                                    <small className="text-muted">{month.percentage}%</small>
+                                    <small className="text-muted">{Math.round(month.percentage)}%</small>
                                 </div>
                                 <div className="progress" style={{ height: '8px' }}>
                                     <div 
@@ -56,7 +133,7 @@ function Attendance() {
                         <h5>Class-wise Attendance</h5>
                     </div>
                     <div className="card-body">
-                        {classWiseAttendance.map((cls, idx) => (
+                        {displayClassData.map((cls, idx) => (
                             <div key={idx} className="attendance-row">
                                 <div className="class-info">
                                     <h5>{cls.class}</h5>
