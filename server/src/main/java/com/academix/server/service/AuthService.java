@@ -20,7 +20,12 @@ import com.academix.server.dto.AuthDto.ResetPasswordRequest;
 import com.academix.server.dto.AuthDto.UserInfo;
 import com.academix.server.dto.AuthDto.VerifyEmailRequest;
 import com.academix.server.model.Student;
+import com.academix.server.model.Teacher;
+import com.academix.server.model.Staff;
 import com.academix.server.model.User;
+import com.academix.server.repository.StudentRepository;
+import com.academix.server.repository.TeacherRepository;
+import com.academix.server.repository.StaffRepository;
 import com.academix.server.service.SecurityEnhancementService.PasswordValidationResult;
 
 @Service
@@ -40,9 +45,14 @@ public class AuthService {
     @Autowired
     private SecurityEnhancementService securityService; // Add security service
 
-    // In-memory storage for testing (replace with repository in production)
-    private final Map<String, User> userStorage = new HashMap<>();
-    private Long userIdCounter = 1L;
+    @Autowired
+    private StudentRepository studentRepository;
+
+    @Autowired
+    private TeacherRepository teacherRepository;
+
+    @Autowired
+    private StaffRepository staffRepository;
 
     /**
      * Register a new user with enhanced security checks
@@ -54,8 +64,10 @@ public class AuthService {
                 throw new RuntimeException("Too many registration attempts. Please try again later.");
             }
 
-            // Check if email already exists
-            if (userStorage.values().stream().anyMatch(u -> u.getEmail().equals(request.getEmail()))) {
+            // Check if email already exists in any repository
+            if (studentRepository.findByEmail(request.getEmail()).isPresent() ||
+                teacherRepository.findByEmail(request.getEmail()).isPresent() ||
+                staffRepository.findByEmail(request.getEmail()).isPresent()) {
                 securityService.recordSecurityEvent(request.getEmail(), "DUPLICATE_REGISTRATION", null);
                 throw new RuntimeException("Email already exists");
             }
@@ -65,7 +77,6 @@ public class AuthService {
 
             // Create new student (or appropriate user type)
             Student student = new Student();
-            student.setId(userIdCounter++);
             student.setFirstName(request.getFirstName());
             student.setOtherNames(request.getOtherNames());
             student.setLastName(request.getLastName());
@@ -86,8 +97,8 @@ public class AuthService {
             // Generate email verification token
             String verificationToken = userService.generateEmailVerificationToken(student);
 
-            // Store user
-            userStorage.put(student.getEmail(), student);
+            // Save user to database
+            student = studentRepository.save(student);
 
             // Send verification email
             emailService.sendEmailVerificationEmail(student.getEmail(), verificationToken, student.getFullName());
@@ -126,8 +137,8 @@ public class AuthService {
                 throw new RuntimeException("Account is temporarily locked due to multiple failed login attempts. Please try again later.");
             }
 
-            // Find user by email
-            User user = userStorage.get(request.getEmail());
+            // Find user by email - check database repositories
+            User user = findUserByEmail(request.getEmail());
             if (user == null) {
                 securityService.recordFailedLoginAttempt(request.getEmail());
                 throw new RuntimeException("Invalid email or password");
@@ -195,7 +206,7 @@ public class AuthService {
             }
 
             // Find user by email
-            User user = userStorage.get(request.getEmail());
+            User user = findUserByEmail(request.getEmail());
             if (user == null) {
                 // Don't reveal if email exists or not for security
                 securityService.recordSecurityEvent(request.getEmail(), "FORGOT_PASSWORD_UNKNOWN_EMAIL", null);
@@ -232,11 +243,37 @@ public class AuthService {
                     String.join(", ", passwordValidation.getErrors()));
             }
 
-            // Find user by reset token
-            User user = userStorage.values().stream()
+            // Find user by reset token - search all repositories
+            User user = null;
+            
+            // Search students
+            java.util.Optional<Student> studentOpt = studentRepository.findAll().stream()
                 .filter(u -> userService.isPasswordResetTokenValid(u, request.getToken()))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Invalid or expired reset token"));
+                .findFirst();
+            if (studentOpt.isPresent()) {
+                user = studentOpt.get();
+            } else {
+                // Search teachers
+                java.util.Optional<Teacher> teacherOpt = teacherRepository.findAll().stream()
+                    .filter(u -> userService.isPasswordResetTokenValid(u, request.getToken()))
+                    .findFirst();
+                if (teacherOpt.isPresent()) {
+                    user = teacherOpt.get();
+                } else {
+                    // Search staff
+                    java.util.Optional<Staff> staffOpt = staffRepository.findAll().stream()
+                        .filter(u -> userService.isPasswordResetTokenValid(u, request.getToken()))
+                        .findFirst();
+                    if (staffOpt.isPresent()) {
+                        user = staffOpt.get();
+                    }
+                }
+            }
+            
+            if (user == null) {
+                throw new RuntimeException("Invalid or expired reset token");
+            }
+
 
             // Update password
             userService.updatePassword(user, request.getNewPassword());
@@ -270,7 +307,7 @@ public class AuthService {
             }
 
             String username = jwtService.extractUsername(request.getRefreshToken());
-            User user = userStorage.get(username);
+            User user = findUserByEmail(username);
 
             if (user != null && jwtService.isTokenValid(request.getRefreshToken(), username)) {
                 // Generate new access token
@@ -332,14 +369,48 @@ public class AuthService {
      */
     public AuthResponse verifyEmail(VerifyEmailRequest request) {
         try {
-            // Find user by verification token
-            User user = userStorage.values().stream()
+            // Find user by verification token - search all repositories
+            User user = null;
+            
+            // Search students
+            java.util.Optional<Student> studentOpt = studentRepository.findAll().stream()
                 .filter(u -> userService.isEmailVerificationTokenValid(u, request.getToken()))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Invalid or expired verification token"));
+                .findFirst();
+            if (studentOpt.isPresent()) {
+                user = studentOpt.get();
+            } else {
+                // Search teachers
+                java.util.Optional<Teacher> teacherOpt = teacherRepository.findAll().stream()
+                    .filter(u -> userService.isEmailVerificationTokenValid(u, request.getToken()))
+                    .findFirst();
+                if (teacherOpt.isPresent()) {
+                    user = teacherOpt.get();
+                } else {
+                    // Search staff
+                    java.util.Optional<Staff> staffOpt = staffRepository.findAll().stream()
+                        .filter(u -> userService.isEmailVerificationTokenValid(u, request.getToken()))
+                        .findFirst();
+                    if (staffOpt.isPresent()) {
+                        user = staffOpt.get();
+                    }
+                }
+            }
+            
+            if (user == null) {
+                throw new RuntimeException("Invalid or expired verification token");
+            }
 
             // Verify email
             userService.verifyEmail(user);
+            
+            // Save updated user to database
+            if (user instanceof Student) {
+                studentRepository.save((Student) user);
+            } else if (user instanceof Teacher) {
+                teacherRepository.save((Teacher) user);
+            } else if (user instanceof Staff) {
+                staffRepository.save((Staff) user);
+            }
 
             // Send welcome email
             emailService.sendWelcomeEmail(user.getEmail(), user.getFullName());
@@ -367,7 +438,7 @@ public class AuthService {
             }
 
             // Find user by email
-            User user = userStorage.get(request.getEmail());
+            User user = findUserByEmail(request.getEmail());
             if (user == null) {
                 securityService.recordSecurityEvent(request.getEmail(), "RESEND_TOKEN_UNKNOWN_EMAIL", request.getTokenType());
                 return new AuthResponse("If the email exists in our system, the token will be resent.");
@@ -380,6 +451,16 @@ public class AuthService {
 
                 String verificationToken = userService.generateEmailVerificationToken(user);
                 emailService.sendEmailVerificationEmail(user.getEmail(), verificationToken, user.getFullName());
+                
+                // Save updated user to database
+                if (user instanceof Student) {
+                    studentRepository.save((Student) user);
+                } else if (user instanceof Teacher) {
+                    teacherRepository.save((Teacher) user);
+                } else if (user instanceof Staff) {
+                    staffRepository.save((Staff) user);
+                }
+                
                 securityService.recordSecurityEvent(user.getEmail(), "VERIFICATION_TOKEN_RESENT", null);
                 
                 return new AuthResponse("Verification email has been resent.");
@@ -387,6 +468,16 @@ public class AuthService {
             } else if ("reset".equals(request.getTokenType())) {
                 String resetToken = userService.generatePasswordResetToken(user);
                 emailService.sendPasswordResetEmail(user.getEmail(), resetToken, user.getFullName());
+                
+                // Save updated user to database
+                if (user instanceof Student) {
+                    studentRepository.save((Student) user);
+                } else if (user instanceof Teacher) {
+                    teacherRepository.save((Teacher) user);
+                } else if (user instanceof Staff) {
+                    staffRepository.save((Staff) user);
+                }
+                
                 securityService.recordSecurityEvent(user.getEmail(), "RESET_TOKEN_RESENT", null);
                 
                 return new AuthResponse("Password reset link has been resent.");
@@ -420,7 +511,7 @@ public class AuthService {
             }
 
             // Find user by email
-            User user = userStorage.get(userEmail);
+            User user = findUserByEmail(userEmail);
             if (user == null) {
                 throw new RuntimeException("User not found");
             }
@@ -433,6 +524,15 @@ public class AuthService {
 
             // Update password
             userService.updatePassword(user, request.getNewPassword());
+            
+            // Save updated user to database
+            if (user instanceof Student) {
+                studentRepository.save((Student) user);
+            } else if (user instanceof Teacher) {
+                teacherRepository.save((Teacher) user);
+            } else if (user instanceof Staff) {
+                staffRepository.save((Staff) user);
+            }
 
             // Blacklist existing tokens (force re-login for security)
             // Note: In production, track and blacklist user's active tokens
@@ -458,7 +558,38 @@ public class AuthService {
         if (user instanceof Student) {
             return "STUDENT";
         }
+        if (user instanceof Teacher) {
+            return "TEACHER";
+        }
+        if (user instanceof Staff) {
+            return "ADMIN";
+        }
         return "USER";
+    }
+
+    /**
+     * Find user by email across all repositories (database only)
+     */
+    private User findUserByEmail(String email) {
+        // Check Student repository first
+        var student = studentRepository.findByEmail(email);
+        if (student.isPresent()) {
+            return student.get();
+        }
+        
+        // Check Teacher repository
+        var teacher = teacherRepository.findByEmail(email);
+        if (teacher.isPresent()) {
+            return teacher.get();
+        }
+        
+        // Check Staff repository
+        var staff = staffRepository.findByEmail(email);
+        if (staff.isPresent()) {
+            return staff.get();
+        }
+        
+        return null;
     }
 
     /**
@@ -476,18 +607,47 @@ public class AuthService {
      */
     public Map<String, Object> getAllUsers() {
         Map<String, Object> response = new HashMap<>();
-        response.put("totalUsers", userStorage.size());
-        response.put("users", userStorage.values().stream()
-            .map(user -> {
-                Map<String, Object> userData = new HashMap<>();
-                userData.put("id", user.getId());
-                userData.put("email", user.getEmail());
-                userData.put("fullName", user.getFullName());
-                userData.put("emailVerified", user.getEmailVerified());
-                userData.put("isActive", user.getIsActive());
-                userData.put("role", getUserRole(user));
-                return userData;
-            }).toList());
+        
+        long totalUsers = studentRepository.count() + teacherRepository.count() + staffRepository.count();
+        response.put("totalUsers", totalUsers);
+        
+        // Combine all users from repositories
+        java.util.List<Map<String, Object>> allUsers = new java.util.ArrayList<>();
+        
+        studentRepository.findAll().forEach(u -> {
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("id", u.getId());
+            userData.put("email", u.getEmail());
+            userData.put("fullName", u.getFullName());
+            userData.put("role", "STUDENT");
+            userData.put("emailVerified", u.getEmailVerified());
+            userData.put("isActive", u.getIsActive());
+            allUsers.add(userData);
+        });
+        
+        teacherRepository.findAll().forEach(u -> {
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("id", u.getId());
+            userData.put("email", u.getEmail());
+            userData.put("fullName", u.getFullName());
+            userData.put("role", "TEACHER");
+            userData.put("emailVerified", u.getEmailVerified());
+            userData.put("isActive", u.getIsActive());
+            allUsers.add(userData);
+        });
+        
+        staffRepository.findAll().forEach(u -> {
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("id", u.getId());
+            userData.put("email", u.getEmail());
+            userData.put("fullName", u.getFullName());
+            userData.put("role", "ADMIN");
+            userData.put("emailVerified", u.getEmailVerified());
+            userData.put("isActive", u.getIsActive());
+            allUsers.add(userData);
+        });
+        
+        response.put("users", allUsers);
         return response;
     }
 
@@ -495,7 +655,7 @@ public class AuthService {
      * Debug method to get user details including tokens - FOR TESTING ONLY
      */
     public Map<String, Object> getDebugUserInfo(String email) {
-        User user = userStorage.get(email);
+        User user = findUserByEmail(email);
         if (user == null) {
             throw new RuntimeException("User not found");
         }
