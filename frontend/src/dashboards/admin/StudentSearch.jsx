@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../../services/axiosInstance';
 import './StudentSearch.css';
 
 const API_BASE_URL = 'http://localhost:8080/api';
@@ -51,7 +51,7 @@ const StudentSearch = () => {
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/students`);
+      const response = await axiosInstance.get('/students');
       const studentList = response.data.students || [];
       setStudents(studentList);
       setError(null);
@@ -66,7 +66,7 @@ const StudentSearch = () => {
 
   const fetchClasses = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/classes`);
+      const response = await axiosInstance.get('/classes');
       const classList = response.data.classes || response.data || [];
       
       // Map classes properly
@@ -181,7 +181,7 @@ const StudentSearch = () => {
       if (formData.linn.trim()) studentData.linn = formData.linn.trim();
       if (formData.nationality) studentData.nationality = formData.nationality;
 
-      await axios.post(`${API_BASE_URL}/students`, studentData);
+      await axiosInstance.post('/students', studentData);
       
       // Close modal immediately
       setIsAddModalOpen(false);
@@ -250,7 +250,7 @@ const StudentSearch = () => {
       if (formData.linn.trim()) studentData.linn = formData.linn.trim();
       if (formData.nationality) studentData.nationality = formData.nationality;
 
-      await axios.put(`${API_BASE_URL}/students/${selectedStudent.id}`, studentData);
+      await axiosInstance.put(`/students/${selectedStudent.id}`, studentData);
       
       // Close modal immediately
       setIsEditModalOpen(false);
@@ -270,7 +270,7 @@ const StudentSearch = () => {
   const handleDeleteStudent = async () => {
     setLoading(true);
     try {
-      await axios.delete(`${API_BASE_URL}/students/${selectedStudent.id}`);
+      await axiosInstance.delete(`/students/${selectedStudent.id}`);
       
       // Close modal immediately
       setIsDeleteModalOpen(false);

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import axiosInstance from '../../services/axiosInstance';
 import './TeacherSearch.css';
 
 const API_BASE_URL = 'http://localhost:8080/api';
@@ -451,6 +452,8 @@ const TeacherSearch = () => {
 
     try {
       setAssigningClasses(true);
+      setAssignClassError('');
+      
       // Use numeric id for API calls, not the string teacher_id
       const teacherId = selectedTeacherForClassAssignment.id;
 
@@ -458,24 +461,20 @@ const TeacherSearch = () => {
         assignedClasses: selectedClasses,
       };
 
-      const response = await fetch(`${API_BASE_URL}/teachers/${teacherId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      // Use centralized axiosInstance (already has auth token via interceptor)
+      await axiosInstance.put(`/teachers/${teacherId}`, payload);
+      console.log('Classes assigned successfully');
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to assign classes');
-      }
-
+      setAssignClassError('');
       closeAssignClassModal();
-      fetchTeachers(); // Refresh the list
+      
+      // Refresh the teachers list
+      await fetchTeachers();
+      
     } catch (err) {
-      setAssignClassError(err.message || 'Failed to assign classes');
-      console.error('Error assigning classes:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to assign classes';
+      setAssignClassError(errorMessage);
+      console.error('Error in handleSaveClassAssignment:', err);
     } finally {
       setAssigningClasses(false);
     }
@@ -518,6 +517,8 @@ const TeacherSearch = () => {
 
     try {
       setAssigningSubjects(true);
+      setAssignSubjectError('');
+      
       // Use numeric id for API calls
       const teacherId = selectedTeacherForSubjectAssignment.id;
 
@@ -528,42 +529,38 @@ const TeacherSearch = () => {
       const subjectsToAdd = selectedSubjects.filter((s) => !currentSubjects.includes(s));
       const subjectsToRemove = currentSubjects.filter((s) => !selectedSubjects.includes(s));
 
-      // Add new subjects
+      // Add new subjects (using centralized axiosInstance with auth)
       for (const subject of subjectsToAdd) {
-        const response = await fetch(`${API_BASE_URL}/teachers/${teacherId}/subjects`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ subject: subject.trim() }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(`Failed to assign ${subject}: ${errorData.message || 'Unknown error'}`);
+        try {
+          await axiosInstance.post(`/teachers/${teacherId}/subjects`, { subject: subject.trim() });
+          console.log(`Successfully assigned subject: ${subject}`);
+        } catch (err) {
+          console.error(`Failed to assign ${subject}:`, err.response?.data || err.message);
+          throw new Error(`Failed to assign ${subject}: ${err.response?.data?.message || err.message}`);
         }
       }
 
-      // Remove subjects
+      // Remove subjects (using centralized axiosInstance with auth)
       for (const subject of subjectsToRemove) {
-        const response = await fetch(`${API_BASE_URL}/teachers/${teacherId}/subjects/${encodeURIComponent(subject)}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(`Failed to remove ${subject}: ${errorData.message || 'Unknown error'}`);
+        try {
+          await axiosInstance.delete(`/teachers/${teacherId}/subjects/${encodeURIComponent(subject)}`);
+          console.log(`Successfully removed subject: ${subject}`);
+        } catch (err) {
+          console.error(`Failed to remove ${subject}:`, err.response?.data || err.message);
+          throw new Error(`Failed to remove ${subject}: ${err.response?.data?.message || err.message}`);
         }
       }
 
+      setAssignSubjectError('');
       closeAssignSubjectModal();
-      fetchTeachers(); // Refresh the list
+      
+      // Refresh the teachers list to show updated subjects
+      await fetchTeachers();
+      
     } catch (err) {
-      setAssignSubjectError(err.message || 'Failed to assign subjects');
-      console.error('Error assigning subjects:', err);
+      const errorMessage = err.message || 'Failed to save subject assignment';
+      setAssignSubjectError(errorMessage);
+      console.error('Error in handleSaveSubjectAssignment:', err);
     } finally {
       setAssigningSubjects(false);
     }

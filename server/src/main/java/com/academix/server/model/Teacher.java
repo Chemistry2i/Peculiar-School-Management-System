@@ -66,7 +66,7 @@ public class Teacher extends User {
     private String departmentName;
 
     // Department relationship (member of department)
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "department_id")
     @JsonIgnore // Prevent circular reference: Teacher -> Department -> departmentHead -> Teacher
     private Department department;
@@ -81,13 +81,13 @@ public class Teacher extends User {
     private String primarySubject;
 
     // List of subjects the teacher can teach
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "teacher_subjects", joinColumns = @JoinColumn(name = "teacher_id"))
     @Column(name = "subject")
     private List<String> subjects = new ArrayList<>();
 
     // List of classes assigned to the teacher
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "teacher_classes", joinColumns = @JoinColumn(name = "teacher_id"))
     @Column(name = "class_name")
     private List<String> assignedClasses = new ArrayList<>();

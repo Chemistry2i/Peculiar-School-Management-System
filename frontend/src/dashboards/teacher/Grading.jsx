@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 import "./Grading.css";
 
 const API_BASE_URL = "http://localhost:8080/api";
@@ -18,94 +19,191 @@ function getGrade(mark) {
 }
 
 function Grading() {
+  const { user } = useAuth();
   const [searchText, setSearchText] = useState("");
-  const [classFilter, setClassFilter] = useState("All");
+  const [classFilter, setClassFilter] = useState("");
   const [enteredMarks, setEnteredMarks] = useState({});
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState(""); // "success" or "error"
   
   // Data from backend
   const [students, setStudents] = useState([]);
-  const [classOptions, setClassOptions] = useState(["All"]);
+  const [teacherClasses, setTeacherClasses] = useState([]);
+  const [teacherSubjects, setTeacherSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [subject, setSubject] = useState(""); // Will be set after fetching subjects
+  const [subject, setSubject] = useState("");
   const [subjects, setSubjects] = useState([]);
 
-  // Fetch students and classes from backend on mount
+  // Fetch teacher's assigned classes and subjects
   useEffect(() => {
-    fetchStudentsAndClasses();
-  }, []);
+    let mounted = true;
 
-  const fetchStudentsAndClasses = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch students
-      const response = await fetch(`${API_BASE_URL}/students`);
-      if (!response.ok) throw new Error("Failed to fetch students");
-      
-      const data = await response.json();
-      const studentList = (data.students || []).map((student) => ({
-        id: student.id,
-        name: `${student.firstName || ""} ${student.lastName || ""}`.trim(),
-        // ===== USE className (now properly synced) =====
-        className: student.className || student.currentClass || "Unassigned",
-        studentId: student.studentId || `STU${student.id}`,
-        schoolClassId: student.schoolClass?.id,  // For relationship operations
-      }));
+    async function loadTeacherData() {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
 
-      setStudents(studentList);
-      setError("");
-
-      // Extract unique classes
-      const uniqueClasses = [...new Set(studentList.map((s) => s.className))].sort();
-      setClassOptions(["All", ...uniqueClasses]);
-      
-      console.log("Students loaded:", studentList);
-      
-      // Fetch subjects from backend
       try {
-        const subjectsResponse = await fetch(`${API_BASE_URL}/subjects`);
-        if (subjectsResponse.ok) {
-          const subjectsData = await subjectsResponse.json();
-          const subjectList = Array.isArray(subjectsData) 
-            ? subjectsData 
-            : (subjectsData.subjects || []);
+        const token = localStorage.getItem('accessToken');
+        
+        // Fetch teacher's classes
+        const classUrl = `${API_BASE_URL}/teachers/${user.id}/classes`;
+        console.log(`📍 Fetching teacher classes from: ${classUrl}`);
+        
+        const classResponse = await fetch(classUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (classResponse.ok) {
+          const classData = await classResponse.json();
+          let classes = classData.assignedClasses || classData.classes || classData.data || [];
+          if (mounted) {
+            setTeacherClasses(classes);
+            console.log('✔️ Teacher classes:', classes);
+          }
+        } else {
+          console.warn('❌ Failed to fetch teacher classes');
+        }
+
+        // Fetch teacher's subjects
+        const subjectUrl = `${API_BASE_URL}/teachers/${user.id}/subjects`;
+        console.log(`📍 Fetching teacher subjects from: ${subjectUrl}`);
+        
+        const subjectResponse = await fetch(subjectUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (subjectResponse.ok) {
+          const subjectData = await subjectResponse.json();
+          let subjectsArray = Array.isArray(subjectData) ? subjectData : (subjectData.assignedSubjects || subjectData.subjects || subjectData.data || []);
           
-          // Extract subject names/codes based on backend structure
-          const subjectNames = subjectList.map(subj => 
+          // Extract subject names/codes - handle both string and object formats
+          const subjectNames = subjectsArray.map(subj => 
             typeof subj === 'string' ? subj : (subj.subjectName || subj.name || subj.subjectCode || subj.code)
           );
           
-          setSubjects(subjectNames);
-          
-          // Set first subject as default if available
-          if (subjectNames.length > 0) {
-            setSubject(subjectNames[0]);
+          if (mounted) {
+            setTeacherSubjects(subjectNames);
+            // Set first subject as default if available
+            if (subjectNames.length > 0) {
+              setSubject(subjectNames[0]);
+            }
+            console.log('✔️ Teacher subjects:', subjectNames);
           }
-          
-          console.log("Subjects loaded:", subjectNames);
+        } else {
+          console.warn('❌ Failed to fetch teacher subjects');
         }
-      } catch (subjectErr) {
-        console.warn("Failed to fetch subjects from API:", subjectErr);
-        // API endpoint might not exist yet, fallback handled gracefully
+      } catch (err) {
+        console.error('❌ Error fetching teacher data:', err);
       }
-    } catch (err) {
-      console.error("Error fetching students:", err);
-      setError("Failed to load students from backend");
-    } finally {
-      setLoading(false);
     }
-  };
+
+    loadTeacherData();
+
+    return () => {
+      mounted = false;
+    };
+  }, [user]);
+
+  // Fetch students for teacher's assigned classes
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadStudents() {
+      if (teacherClasses.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
+      try {
+        const token = localStorage.getItem('accessToken');
+        const allStudents = [];
+
+        // Fetch students for each teacher's assigned class
+        for (const classItem of teacherClasses) {
+          let className = typeof classItem === 'string' ? classItem : classItem.name;
+          // Extract base class name (e.g., "S1A" -> "S1")
+          const baseClassName = className.replace(/[A-Za-z]$/, '');
+          
+          const url = `${API_BASE_URL}/students/class/${baseClassName}`;
+          console.log(`🔵 Fetching students for class: ${className}`);
+          
+          const response = await fetch(url, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const classStudents = Array.isArray(data) ? data : (data.students || data.data || []);
+            
+            const normalizedStudents = classStudents.map((student) => ({
+              id: student.id,
+              name: `${student.firstName || ""} ${student.lastName || ""}`.trim(),
+              className: student.className || student.currentClass || className,
+              studentId: student.studentId || `STU${student.id}`,
+              schoolClassId: student.schoolClass?.id,
+            }));
+            
+            allStudents.push(...normalizedStudents);
+          }
+        }
+
+        if (mounted) {
+          setStudents(allStudents);
+          console.log('✔️ Students loaded:', allStudents);
+          // Set default class filter to first teacher's class
+          if (teacherClasses.length > 0) {
+            const firstClass = typeof teacherClasses[0] === 'string' ? teacherClasses[0] : teacherClasses[0].name;
+            setClassFilter(firstClass);
+          }
+        }
+      } catch (fetchError) {
+        console.error('❌ Error fetching students:', fetchError);
+        if (mounted) {
+          setError("Failed to load students");
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadStudents();
+
+    return () => {
+      mounted = false;
+    };
+  }, [teacherClasses]);
+
+
+
+  const classOptions = useMemo(() => {
+    // Use teacher's assigned classes
+    return teacherClasses.map(c => typeof c === 'string' ? c : c.name);
+  }, [teacherClasses]);
 
   const filteredStudents = useMemo(() => {
     const query = searchText.trim().toLowerCase();
 
     return students.filter((student) => {
       const matchesName = query === "" || student.name.toLowerCase().includes(query);
-      const matchesClass = classFilter === "All" || student.className === classFilter;
+      const matchesClass = !classFilter || student.className === classFilter;
 
       return matchesName && matchesClass;
     });
@@ -291,7 +389,7 @@ function Grading() {
         </div>
 
         <div className="grading-field">
-          <label htmlFor="class-filter">Class Filter</label>
+          <label htmlFor="class-filter">Class Filter *</label>
           <select
             id="class-filter"
             value={classFilter}
@@ -299,7 +397,9 @@ function Grading() {
               setClassFilter(event.target.value);
               setMessage("");
             }}
+            required
           >
+            <option value="">Select Class</option>
             {classOptions.map((option) => (
               <option key={option} value={option}>
                 {option}
@@ -309,7 +409,7 @@ function Grading() {
         </div>
 
         <div className="grading-field">
-          <label htmlFor="subject-select">Subject</label>
+          <label htmlFor="subject-select">Subject *</label>
           <select
             id="subject-select"
             value={subject}
@@ -318,8 +418,10 @@ function Grading() {
               setMessage("");
               setEnteredMarks({});
             }}
+            required
           >
-            {subjects.map((subj) => (
+            <option value="">Select Subject</option>
+            {teacherSubjects.map((subj) => (
               <option key={subj} value={subj}>
                 {subj}
               </option>

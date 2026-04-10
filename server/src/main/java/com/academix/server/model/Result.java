@@ -54,7 +54,7 @@ public class Result {
     private String examCode;
 
     // Subject code
-    @Column(name = "subject_code", nullable = false, length = 10)
+    @Column(name = "subject_code", nullable = false, length = 100)
     private String subjectCode;
 
     // Subject name (for easy reference)

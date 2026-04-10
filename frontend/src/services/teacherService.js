@@ -1,65 +1,48 @@
-import axios from 'axios';
+import axiosInstance from './axiosInstance';
 
 const API_BASE_URL = 'http://localhost:8080/api/teachers';
-
-// Create axios instance with default config
-const teacherAPI = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add token to requests
-teacherAPI.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 const teacherService = {
   /**
    * Get teacher by ID
    */
   getTeacherById: (teacherId) => {
-    return teacherAPI.get(`/${teacherId}`);
+    return axiosInstance.get(`/teachers/${teacherId}`);
   },
 
   /**
    * Get teacher's subjects
    */
   getTeacherSubjects: (teacherId) => {
-    return teacherAPI.get(`/${teacherId}/subjects`);
+    return axiosInstance.get(`/teachers/${teacherId}/subjects`);
   },
 
   /**
    * Get teacher's classes
    */
   getTeacherClasses: (teacherId) => {
-    return teacherAPI.get(`/${teacherId}/classes`);
+    return axiosInstance.get(`/teachers/${teacherId}/classes`);
   },
 
   /**
    * Get teacher's attendance records
    */
   getTeacherAttendance: (teacherId) => {
-    return teacherAPI.get(`/${teacherId}/attendance`);
+    return axiosInstance.get(`/teachers/${teacherId}/attendance`);
   },
 
   /**
    * Get teacher's reports
    */
   getTeacherReports: (teacherId) => {
-    return teacherAPI.get(`/${teacherId}/reports`);
+    return axiosInstance.get(`/teachers/${teacherId}/reports`);
   },
 
   /**
    * Get all active teachers
    */
   getActiveTeachers: () => {
-    return teacherAPI.get('?activeOnly=true');
+    return axiosInstance.get('/teachers?activeOnly=true');
   },
 
   // ==================== DATA ACCESS CONTROL - FILTERED ENDPOINTS ====================
@@ -69,7 +52,7 @@ const teacherService = {
    * Restricted to teacher's assigned classes only (data access control)
    */
   getMyAssignedClasses: (teacherId) => {
-    return teacherAPI.get(`/${teacherId}/my-classes`);
+    return axiosInstance.get(`/teachers/${teacherId}/my-classes`);
   },
 
   /**
@@ -77,7 +60,7 @@ const teacherService = {
    * Restricted to teacher's assigned classes only (data access control)
    */
   getMyClassesAttendance: (teacherId) => {
-    return teacherAPI.get(`/${teacherId}/my-attendance`);
+    return axiosInstance.get(`/teachers/${teacherId}/my-attendance`);
   },
 
   /**
@@ -85,7 +68,7 @@ const teacherService = {
    * Restricted to teacher's assigned classes only (data access control)
    */
   getMyClassesGrades: (teacherId) => {
-    return teacherAPI.get(`/${teacherId}/my-grades`);
+    return axiosInstance.get(`/teachers/${teacherId}/my-grades`);
   },
 };
 
