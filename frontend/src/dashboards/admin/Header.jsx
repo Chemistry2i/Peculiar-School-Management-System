@@ -2,9 +2,11 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import profilePic from '/src/assets/bd.jpeg'
 import './Header.css'
+import { useLogout } from '../../hooks/useLogout';
 
 function Header() {
     const navigate = useNavigate();
+    const handleLogout = useLogout();
     return (
         <header className="navbar navbar-expand bg-white sticky-top shadow-sm p-3">
             <div className="container-fluid">
@@ -62,7 +64,7 @@ function Header() {
                                 <li><a className="dropdown-item d-flex align-items-center gap-2 py-2" href="#"><i className="fa-regular fa-user text-muted"></i> My Profile</a></li>
                                 <li><a className="dropdown-item d-flex align-items-center gap-2 py-2" href="#"><i className="fa-solid fa-gear text-muted"></i> Settings</a></li>
                                 <li><hr className="dropdown-divider" /></li>
-                                <li><a className="dropdown-item d-flex align-items-center gap-2 py-2 text-danger" href="#" onClick={(e) => { e.preventDefault(); navigate('/login'); }}><i className="fa-solid fa-arrow-right-from-bracket"></i> Logout</a></li>
+                                <li><a className="dropdown-item d-flex align-items-center gap-2 py-2 text-danger" href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }}><i className="fa-solid fa-arrow-right-from-bracket"></i> Logout</a></li>
                             </ul>
                         </li>
                     </ul>

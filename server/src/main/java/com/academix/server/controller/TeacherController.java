@@ -313,6 +313,70 @@ public class TeacherController {
         }
     }
 
+    // ==================== DATA ACCESS CONTROL - FILTERED ENDPOINTS ====================
+
+    /**
+     * GET /api/teachers/{userId}/my-classes - Get only classes assigned to current teacher
+     * Used by teachers to see only their assigned classes
+     * Provides data access control at the API level
+     */
+    @GetMapping("/{userId}/my-classes")
+    public ResponseEntity<?> getMyAssignedClasses(@PathVariable Long userId) {
+        try {
+            List<String> assignedClasses = teacherService.getTeacherAssignedClasses(userId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("teacherId", userId);
+            response.put("message", "Assigned classes for current teacher");
+            response.put("totalClasses", assignedClasses.size());
+            response.put("classes", assignedClasses);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            logger.error("Failed to get assigned classes for teacher {}: {}", userId, e.getMessage());
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest().body(createErrorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/teachers/{userId}/my-attendance - Get attendance only for assigned classes
+     * Used by teachers to view attendance for their classes only
+     * Provides data access control at the API level
+     */
+    @GetMapping("/{userId}/my-attendance")
+    public ResponseEntity<?> getMyClassesAttendance(@PathVariable Long userId) {
+        try {
+            Map<String, Object> attendanceData = teacherService.getTeacherAssignedClassesAttendance(userId);
+            return ResponseEntity.ok(attendanceData);
+        } catch (RuntimeException e) {
+            logger.error("Failed to get attendance for teacher {}: {}", userId, e.getMessage());
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest().body(createErrorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/teachers/{userId}/my-grades - Get grades only for assigned classes
+     * Used by teachers to view grades for their classes only
+     * Provides data access control at the API level
+     */
+    @GetMapping("/{userId}/my-grades")
+    public ResponseEntity<?> getMyClassesGrades(@PathVariable Long userId) {
+        try {
+            Map<String, Object> gradesData = teacherService.getTeacherAssignedClassesGrades(userId);
+            return ResponseEntity.ok(gradesData);
+        } catch (RuntimeException e) {
+            logger.error("Failed to get grades for teacher {}: {}", userId, e.getMessage());
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest().body(createErrorResponse(e.getMessage()));
+        }
+    }
+
     // ==================== ASSIGNMENT ENDPOINTS ====================
 
     /**

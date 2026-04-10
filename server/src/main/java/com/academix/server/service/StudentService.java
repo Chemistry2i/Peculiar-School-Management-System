@@ -8,8 +8,8 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,12 +81,8 @@ public class StudentService {
         if (student.getIsDeleted() == null) {
             student.setIsDeleted(false);
         }
-        if (student.getEmailVerified() == null) {
-            student.setEmailVerified(false);
-        }
-
-        // Generate verification token
-        userService.generateEmailVerificationToken(student);
+        // Students are automatically verified during registration
+        student.setEmailVerified(true);
 
         // Save student
         Student savedStudent;

@@ -20,6 +20,13 @@ const TeacherSearch = () => {
   const [subjects, setSubjects] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [uniqueSpecializations, setUniqueSpecializations] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [isAssignClassModalOpen, setIsAssignClassModalOpen] = useState(false);
+  const [selectedTeacherForClassAssignment, setSelectedTeacherForClassAssignment] = useState(null);
+  const [selectedClasses, setSelectedClasses] = useState([]);
+  const [assignClassError, setAssignClassError] = useState('');
+  const [assigningClasses, setAssigningClasses] = useState(false);
+  const [loadingClasses, setLoadingClasses] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -54,6 +61,7 @@ const TeacherSearch = () => {
     fetchTeachers();
     fetchSubjects();
     fetchDepartments();
+    fetchClasses();
   }, []);
 
   // API fetch functions
@@ -66,8 +74,8 @@ const TeacherSearch = () => {
       console.log('Raw API response:', data); // DEBUG: See actual response
       const teacherList = (data.teachers || []).map((teacher) => ({
         ...teacher,
-        // Use teacher_id from backend as the primary identifier
-        displayId: teacher.teacher_id || teacher.teacherId || teacher.id,
+        // Use teacher_id (string code) for display, but keep numeric id for API calls
+        displayId: teacher.teacher_id || teacher.teacherId || 'N/A',
       }));
       setTeachers(teacherList);
       setError('');
@@ -112,6 +120,40 @@ const TeacherSearch = () => {
     } catch (err) {
       console.error('Error fetching departments:', err);
       setDepartments(['Science', 'Languages', 'Humanities', 'ICT']);
+    }
+  };
+
+  const fetchClasses = async () => {
+    try {
+      setLoadingClasses(true);
+      const response = await fetch(`${API_BASE_URL}/classes`);
+      if (!response.ok) throw new Error(`Failed to fetch classes: ${response.status}`);
+      const data = await response.json();
+      console.log('Raw class API response:', data); // DEBUG: See actual response
+      
+      let classList = [];
+      if (Array.isArray(data)) {
+        classList = data;
+      } else if (data.classes && Array.isArray(data.classes)) {
+        classList = data.classes;
+      } else if (data.data && Array.isArray(data.data)) {
+        classList = data.data;
+      } else {
+        console.warn('Unexpected classes response format:', data);
+        classList = [];
+      }
+      
+      // Validate and log class structure
+      if (classList.length > 0) {
+        console.log('First class object:', classList[0]); // DEBUG: Check field names
+      }
+      
+      setClasses(classList);
+    } catch (err) {
+      console.error('Error fetching classes:', err);
+      setClasses([]);
+    } finally {
+      setLoadingClasses(false);
     }
   };
 
@@ -266,8 +308,8 @@ const TeacherSearch = () => {
 
   const handleEditTeacher = (teacher) => {
     setEditError('');
-    // Use teacher_id or teacherId from backend, fallback to id
-    const teacherId = teacher.teacher_id || teacher.teacherId || teacher.id;
+    // Use numeric id for API calls, not the string teacher_id
+    const teacherId = teacher.id;
     setTeacherToEditId(teacherId);
     setEditFormData({
       firstName: teacher.firstName || '',
@@ -347,8 +389,8 @@ const TeacherSearch = () => {
     }
 
     try {
-      // Use teacher_id or teacherId from backend, fallback to id
-      const teacherId = teacher.teacher_id || teacher.teacherId || teacher.id;
+      // Use numeric id for API calls, not the string teacher_id
+      const teacherId = teacher.id;
       const response = await fetch(`${API_BASE_URL}/teachers/${teacherId}`, {
         method: 'DELETE',
       });
@@ -361,6 +403,73 @@ const TeacherSearch = () => {
     } catch (err) {
       console.error('Error deleting teacher:', err);
       setError('Failed to delete teacher');
+    }
+  };
+
+  // Class Assignment Functions
+  const openAssignClassModal = (teacher) => {
+    setSelectedTeacherForClassAssignment(teacher);
+    setSelectedClasses(teacher.assignedClasses || []);
+    setAssignClassError('');
+    setIsAssignClassModalOpen(true);
+    // Fetch classes when modal opens to ensure we have fresh data
+    fetchClasses();
+  };
+
+  const closeAssignClassModal = () => {
+    setSelectedTeacherForClassAssignment(null);
+    setSelectedClasses([]);
+    setAssignClassError('');
+    setIsAssignClassModalOpen(false);
+  };
+
+  const handleSelectClass = (className) => {
+    setSelectedClasses((prev) => {
+      if (prev.includes(className)) {
+        return prev.filter((c) => c !== className);
+      } else {
+        return [...prev, className];
+      }
+    });
+  };
+
+  const handleSaveClassAssignment = async (e) => {
+    e.preventDefault();
+
+    if (!selectedTeacherForClassAssignment) {
+      setAssignClassError('No teacher selected');
+      return;
+    }
+
+    try {
+      setAssigningClasses(true);
+      // Use numeric id for API calls, not the string teacher_id
+      const teacherId = selectedTeacherForClassAssignment.id;
+
+      const payload = {
+        assignedClasses: selectedClasses,
+      };
+
+      const response = await fetch(`${API_BASE_URL}/teachers/${teacherId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to assign classes');
+      }
+
+      closeAssignClassModal();
+      fetchTeachers(); // Refresh the list
+    } catch (err) {
+      setAssignClassError(err.message || 'Failed to assign classes');
+      console.error('Error assigning classes:', err);
+    } finally {
+      setAssigningClasses(false);
     }
   };
 
@@ -705,6 +814,13 @@ const TeacherSearch = () => {
                         Edit
                       </button>
                       <button
+                        className="btn btn-info"
+                        onClick={() => openAssignClassModal(teacher)}
+                        title="Assign Classes"
+                      >
+                        Assign Classes
+                      </button>
+                      <button
                         className="btn btn-danger"
                         onClick={() => handleDeleteTeacher(teacher)}
                         title="Delete Teacher"
@@ -727,6 +843,78 @@ const TeacherSearch = () => {
       <div className="table-footer">
         <p>Showing {filteredTeachers.length} of {teachers.length} teachers</p>
       </div>
+
+      {isAssignClassModalOpen && (
+        <div className="teacher-modal-overlay" onClick={closeAssignClassModal}>
+          <div className="teacher-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="teacher-modal-header">
+              <h3>Assign Classes to {selectedTeacherForClassAssignment?.firstName} {selectedTeacherForClassAssignment?.lastName}</h3>
+              <button type="button" className="teacher-modal-close" onClick={closeAssignClassModal}>x</button>
+            </div>
+
+            <form className="teacher-form" onSubmit={handleSaveClassAssignment}>
+              {assignClassError ? <p className="teacher-form-error">{assignClassError}</p> : null}
+
+              <div className="teacher-form-field">
+                <label>Select Classes</label>
+                <div className="class-selection-container">
+                  {loadingClasses ? (
+                    <p className="text-muted">Loading classes...</p>
+                  ) : classes.length > 0 ? (
+                    <div className="class-checkboxes">
+                      {classes.map((cls) => {
+                        // Handle flexible field names from backend
+                        const classId = cls.id || cls.classId || cls.class_id || `class-${Math.random()}`;
+                        const className = cls.name || cls.className || cls.class_name || 'Unknown';
+                        const classStream = cls.stream || cls.streamName || '';
+                        const formLevel = cls.formLevel || cls.form_level || cls.level || '';
+                        
+                        return (
+                          <div key={classId} className="checkbox-item">
+                            <input
+                              type="checkbox"
+                              id={`class-${classId}`}
+                              checked={selectedClasses.includes(className)}
+                              onChange={() => handleSelectClass(className)}
+                            />
+                            <label htmlFor={`class-${classId}`}>
+                              {className} {classStream && `(${classStream})`} {formLevel && `- Form ${formLevel}`}
+                            </label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-muted">No classes available</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="teacher-form-field">
+                <label>Selected Classes: {selectedClasses.length}</label>
+                <div className="selected-classes-display">
+                  {selectedClasses.length > 0 ? (
+                    selectedClasses.map((cls) => (
+                      <span key={cls} className="class-badge">
+                        {cls}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-muted">No classes selected</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="teacher-form-actions">
+                <button type="button" className="teacher-cancel-btn" onClick={closeAssignClassModal}>Cancel</button>
+                <button type="submit" className="teacher-save-btn" disabled={assigningClasses}>
+                  {assigningClasses ? 'Assigning...' : 'Assign Classes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

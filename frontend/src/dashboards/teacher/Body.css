@@ -195,3 +195,135 @@
     padding: 0 !important;
     box-shadow: none !important;
 }
+
+/* ========== NEW PROFILE STYLES ========== */
+
+/* Card Header Navy Blue */
+.card-header.bg-gradient {
+    background: #2c4ebb !important;
+}
+
+.card-header.bg-gradient h5 {
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Profile Item Styling */
+.profile-item {
+    margin-bottom: 1.5rem;
+}
+
+.profile-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.profile-value {
+    font-size: 15px;
+    color: #1f2937;
+    font-weight: 500;
+    margin: 0;
+    line-height: 1.6;
+    word-wrap: break-word;
+}
+
+/* Subjects Container */
+.subjects-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.subject-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    background: #f0f4ff;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border-left: 4px solid #2c4ebb;
+}
+
+.subject-item:hover {
+    transform: translateX(5px);
+    background: #2c4ebb;
+}
+
+.subject-item:hover .subject-name,
+.subject-item:hover .subject-icon {
+    color: white;
+}
+
+.subject-icon {
+    color: #2c4ebb;
+    font-size: 12px;
+    margin-right: 12px;
+    transition: color 0.2s ease;
+}
+
+.subject-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+    transition: color 0.2s ease;
+}
+
+/* Experience Rate stat icon */
+.stat-icon.experience-rate {
+    background-color: #fef3c7;
+    color: #b45309;
+}
+
+/* Department Badge stat icon */
+.stat-icon.department-badge {
+    background-color: #cffafe;
+    color: #0e7490;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .banner-container {
+        flex-direction: column;
+        text-align: center;
+        padding: 30px 20px;
+    }
+
+    .banner-content h1 {
+        font-size: 24px;
+    }
+
+    .banner-content p {
+        font-size: 14px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+    }
+
+    .stat-card {
+        padding: 16px;
+    }
+
+    .stat-info h3 {
+        font-size: 12px;
+    }
+
+    .stat-info p {
+        font-size: 20px;
+    }
+
+    .subject-item {
+        padding: 10px 12px;
+    }
+
+    .profile-value {
+        font-size: 14px;
+    }
+}

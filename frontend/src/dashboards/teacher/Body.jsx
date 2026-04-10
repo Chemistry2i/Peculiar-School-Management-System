@@ -1,10 +1,36 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import './Body.css';
 import TeacherStudents from "./TeacherStudents";
 import AddStudentMarks from "../../auth/AddStudentMarks";
 import MyClasses from "./MyClasses";
+import { useAuth } from "../../context/AuthContext";
+import teacherService from "../../services/teacherService";
 
 function Body(){
+    const { user } = useAuth();
+    const [teacher, setTeacher] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        if (!user?.id) return;
+        
+        const fetchTeacherData = async () => {
+            try {
+                setLoading(true);
+                const response = await teacherService.getTeacherById(user.id);
+                setTeacher(response.data);
+            } catch (err) {
+                console.error('Error fetching teacher data:', err);
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTeacherData();
+    }, [user]);
+
     const currentDate = new Date().toLocaleDateString('en-US', {
         weekday: 'long', 
         year: 'numeric', 
@@ -12,13 +38,17 @@ function Body(){
         day: 'numeric' 
     });
 
+    if (loading) {
+        return <div className="container-fluid py-4">Loading...</div>;
+    }
+
     return(
         <div className="container-fluid py-4">
           {/* Welcome Banner */}
           <div className="banner-container mb-4">
             <div className="banner-content">
-              <h1>Welcome back, Teacher!</h1>
-              <p>Here's your teaching dashboard. Stay on top of your classes, grades, and attendance.</p>
+              <h1>Welcome back, {teacher?.fullName || 'Teacher'}!</h1>
+              <p>Here's your teaching dashboard. Manage grades, attendance, and student progress all in one place.</p>
             </div>
             <div className="banner-date">
               <span>{currentDate}</span>
@@ -32,94 +62,113 @@ function Body(){
                 <i className="fa-solid fa-book-open"></i>
               </div>
               <div className="stat-info">
-                <h3>Classes Today</h3>
-                <p>5</p>
+                <h3>Classes Assigned</h3>
+                <p>{teacher?.assignedClasses?.length || 0}</p>
               </div>
             </div>
 
             <div className="stat-card">
               <div className="stat-icon students-count">
-                <i className="fa-solid fa-users"></i>
+                <i className="fa-solid fa-graduation-cap"></i>
               </div>
               <div className="stat-info">
-                <h3>Total Students</h3>
-                <p>128</p>
+                <h3>Subjects Teaching</h3>
+                <p>{teacher?.subjects?.length || 0}</p>
               </div>
             </div>
 
             <div className="stat-card">
-              <div className="stat-icon attendance-rate">
-                <i className="fa-solid fa-chart-pie"></i>
+              <div className="stat-icon experience-rate">
+                <i className="fa-solid fa-star"></i>
               </div>
               <div className="stat-info">
-                <h3>Attendance Rate</h3>
-                <p>92.3%</p>
+                <h3>Years Experience</h3>
+                <p>{teacher?.yearsOfExperience || 0}+</p>
               </div>
             </div>
 
             <div className="stat-card">
-              <div className="stat-icon grades-pending">
-                <i className="fa-solid fa-marker"></i>
+              <div className="stat-icon department-badge">
+                <i className="fa-solid fa-building"></i>
               </div>
               <div className="stat-info">
-                <h3>Grades Pending</h3>
-                <p>23</p>
+                <h3>Department</h3>
+                <p>{teacher?.department?.name || 'Unassigned'}</p>
               </div>
             </div>
           </div>
 
           <div className="row g-4">
             
-            {/* Recent Activities Section */}
+            {/* Teacher Profile Section */}
             <div className="col-12 col-xl-6">
               <div className="card shadow-sm h-100 border-0">
-                <div className="card-header bg-white border-bottom-0 pt-4 px-4">
-                  <h5 className="mb-0 fw-bold text-dark-emphasis">Recent Activities</h5>
+                <div className="card-header bg-gradient border-bottom-0 pt-4 px-4">
+                  <h5 className="mb-0 fw-bold text-white">
+                    <i className="fa-solid fa-user-tie me-2"></i> Your Profile
+                  </h5>
                 </div>
                 <div className="card-body px-4">
-                  <div className="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                      <h6 className="mb-1 fw-semibold text-dark">New student enrolled</h6>
-                      <small className="text-muted">Added to your class</small>
-                    </div>
-                    <span className="badge bg-light text-secondary rounded-pill">2 hours ago</span>
-                  </div>
-                  <hr className="text-muted opacity-25" />
-                  
-                  <div className="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                      <h6 className="mb-1 fw-semibold text-dark">Grades submitted for Math 101</h6>
-                      <small className="text-muted">Class S.4</small>
-                    </div>
-                    <span className="badge bg-light text-secondary rounded-pill">5 hours ago</span>
+                  <div className="profile-item mb-3">
+                    <label className="profile-label">Specialization</label>
+                    <p className="profile-value">{teacher?.specialization || 'Not specified'}</p>
                   </div>
                   <hr className="text-muted opacity-25" />
 
-                  <div className="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                      <h6 className="mb-1 fw-semibold text-dark">Attendance Marked for today</h6>
-                      <small className="text-muted">All Classes</small>
-                    </div>
-                    <span className="badge bg-light text-secondary rounded-pill">1 day ago</span>
+                  <div className="profile-item mb-3">
+                    <label className="profile-label">Qualifications</label>
+                    <p className="profile-value">{teacher?.qualifications || 'Not specified'}</p>
                   </div>
                   <hr className="text-muted opacity-25" />
 
-                  <div className="d-flex align-items-center justify-content-between">
-                    <div>
-                      <h6 className="mb-1 fw-semibold text-dark">New announcement posted</h6>
-                      <small className="text-muted">Check exam schedule</small>
-                    </div>
-                    <span className="badge bg-light text-secondary rounded-pill">2 days ago</span>
+                  <div className="profile-item mb-3">
+                    <label className="profile-label">Primary Subject</label>
+                    <p className="profile-value">{teacher?.primarySubject || 'Not assigned'}</p>
+                  </div>
+                  <hr className="text-muted opacity-25" />
+
+                  <div className="profile-item">
+                    <label className="profile-label">Employment Status</label>
+                    <span className="badge bg-success">{teacher?.employmentStatus || 'ACTIVE'}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Quick Actions Section */}
+            {/* Subjects & Specialization Section */}
             <div className="col-12 col-xl-6">
               <div className="card shadow-sm h-100 border-0">
-                <div className="card-header bg-white border-bottom-0 pt-4 px-4">
-                  <h5 className="mb-0 fw-bold text-dark-emphasis">Quick Actions</h5>
+                <div className="card-header bg-gradient border-bottom-0 pt-4 px-4">
+                  <h5 className="mb-0 fw-bold text-white">
+                    <i className="fa-solid fa-book me-2"></i> Teaching Subjects
+                  </h5>
+                </div>
+                <div className="card-body px-4">
+                  {teacher?.subjects && teacher.subjects.length > 0 ? (
+                    <div className="subjects-container">
+                      {teacher.subjects.map((subject, idx) => (
+                        <div key={idx} className="subject-item">
+                          <span className="subject-icon">
+                            <i className="fa-solid fa-circle-dot"></i>
+                          </span>
+                          <span className="subject-name">{subject}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted">No subjects assigned yet</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions Section */}
+            <div className="col-12">
+              <div className="card shadow-sm border-0">
+                <div className="card-header bg-gradient border-bottom-0 pt-4 px-4">
+                  <h5 className="mb-0 fw-bold text-white">
+                    <i className="fa-solid fa-lightning me-2"></i> Quick Actions
+                  </h5>
                 </div>
                 <div className="card-body px-4">
                   <div className="d-grid gap-3">
