@@ -111,6 +111,22 @@ const authService = {
     const user = authService.getUser();
     return user?.role || null;
   },
+
+  // Refresh user profile from backend
+  refreshUserProfile: async () => {
+    try {
+      const response = await authAPI.get('/me');
+      const user = response.data;
+      
+      // Update localStorage with fresh user data
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      return user;
+    } catch (err) {
+      console.error('Failed to refresh user profile:', err);
+      return null;
+    }
+  },
 };
 
 export default authService;

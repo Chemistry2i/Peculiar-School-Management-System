@@ -29,7 +29,7 @@ public class DataInitializer {
                 Iterable<Staff> allStaff = staffRepository.findAll();
                 boolean adminExists = false;
                 for (Staff staff : allStaff) {
-                    if ("admin@sms.com".equals(staff.getEmail())) {
+                    if ("josephkijjambu24@gmail.com".equals(staff.getEmail())) {
                         adminExists = true;
                         break;
                     }
@@ -42,10 +42,10 @@ public class DataInitializer {
                 
                 // Create and save admin user
                 Staff admin = new Staff();
-                admin.setEmail("admin@sms.com");
+                admin.setEmail("josephkijjambu24@gmail.com");
                 admin.setPassword(passwordEncoder.encode("Admin@123"));
-                admin.setFirstName("System");
-                admin.setLastName("Administrator");
+                admin.setFirstName("Joseph");
+                admin.setLastName("Kijjambu");
                 admin.setStaffId("ADM001");
                 admin.setDepartment("Administration");
                 admin.setPosition("System Administrator");
@@ -59,7 +59,7 @@ public class DataInitializer {
                 
                 staffRepository.save(admin);
                 logger.info("✓ Admin user created successfully");
-                logger.info("  Email: admin@sms.com");
+                logger.info("  Email: josephkijjambu24@gmail.com");
                 logger.info("  Password: Admin@123");
                 logger.info("  Email Verified: true");
                 
