@@ -95,7 +95,7 @@ function Grades() {
                     <p>View your academic performance</p>
                 </div>
                 <div>
-                    <h3 style={{ color: '#2c4ebb', margin: 0 }}>GPA: {gpa}</h3>
+                    <h3 style={{ color: '#2c4ebb', margin: 0 }}>AVERAGE: {gpa}</h3>
                 </div>
             </div>
 

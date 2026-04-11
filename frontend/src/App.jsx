@@ -33,7 +33,7 @@ function App() {
             <Route path="/student/Reg" element={<StudentRegistration />} />
             <Route path="/teachers/Reg" element={<TeacherRegistration />} />
             <Route path="/forgotpassword" element={<ForgotPassword />} />
-            <Route path="/resetpassword" element={<ResetPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Protected Routes - Student */}
             <Route 

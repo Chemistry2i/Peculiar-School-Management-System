@@ -19,13 +19,13 @@ import com.academix.server.dto.AuthDto.ResendTokenRequest;
 import com.academix.server.dto.AuthDto.ResetPasswordRequest;
 import com.academix.server.dto.AuthDto.UserInfo;
 import com.academix.server.dto.AuthDto.VerifyEmailRequest;
+import com.academix.server.model.Staff;
 import com.academix.server.model.Student;
 import com.academix.server.model.Teacher;
-import com.academix.server.model.Staff;
 import com.academix.server.model.User;
+import com.academix.server.repository.StaffRepository;
 import com.academix.server.repository.StudentRepository;
 import com.academix.server.repository.TeacherRepository;
-import com.academix.server.repository.StaffRepository;
 import com.academix.server.service.SecurityEnhancementService.PasswordValidationResult;
 
 @Service
@@ -216,6 +216,9 @@ public class AuthService {
             // Generate password reset token
             String resetToken = userService.generatePasswordResetToken(user);
 
+            // CRITICAL FIX: Save user to database with the generated token
+            saveUserToDatabase(user);
+
             // Send password reset email
             emailService.sendPasswordResetEmail(user.getEmail(), resetToken, user.getFullName());
 
@@ -274,12 +277,14 @@ public class AuthService {
                 throw new RuntimeException("Invalid or expired reset token");
             }
 
-
             // Update password
             userService.updatePassword(user, request.getNewPassword());
 
             // Clear reset token
             userService.clearPasswordResetToken(user);
+
+            // CRITICAL FIX: Save user to database with updated password and cleared token
+            saveUserToDatabase(user);
 
             // Blacklist any existing tokens for this user (force re-login)
             // Note: In production, you'd need to track and blacklist user's active tokens
@@ -404,13 +409,7 @@ public class AuthService {
             userService.verifyEmail(user);
             
             // Save updated user to database
-            if (user instanceof Student) {
-                studentRepository.save((Student) user);
-            } else if (user instanceof Teacher) {
-                teacherRepository.save((Teacher) user);
-            } else if (user instanceof Staff) {
-                staffRepository.save((Staff) user);
-            }
+            saveUserToDatabase(user);
 
             // Send welcome email
             emailService.sendWelcomeEmail(user.getEmail(), user.getFullName());
@@ -526,13 +525,7 @@ public class AuthService {
             userService.updatePassword(user, request.getNewPassword());
             
             // Save updated user to database
-            if (user instanceof Student) {
-                studentRepository.save((Student) user);
-            } else if (user instanceof Teacher) {
-                teacherRepository.save((Teacher) user);
-            } else if (user instanceof Staff) {
-                staffRepository.save((Staff) user);
-            }
+            saveUserToDatabase(user);
 
             // Blacklist existing tokens (force re-login for security)
             // Note: In production, track and blacklist user's active tokens
@@ -590,6 +583,22 @@ public class AuthService {
         }
         
         return null;
+    }
+
+    /**
+     * Save user to the appropriate database repository based on user type
+     * @param user The user to save
+     */
+    private void saveUserToDatabase(User user) {
+        if (user instanceof Student) {
+            studentRepository.save((Student) user);
+        } else if (user instanceof Teacher) {
+            teacherRepository.save((Teacher) user);
+        } else if (user instanceof Staff) {
+            staffRepository.save((Staff) user);
+        } else {
+            throw new RuntimeException("Unknown user type: " + user.getClass().getName());
+        }
     }
 
     /**
