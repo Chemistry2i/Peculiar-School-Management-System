@@ -123,7 +123,12 @@ const authService = {
       
       return user;
     } catch (err) {
-      console.error('Failed to refresh user profile:', err);
+      // Silently fail - user can continue with stored profile
+      // If token is invalid, the next API call will trigger token refresh
+      if (err.response?.status === 401) {
+        // Token is invalid, clear it
+        localStorage.removeItem('accessToken');
+      }
       return null;
     }
   },

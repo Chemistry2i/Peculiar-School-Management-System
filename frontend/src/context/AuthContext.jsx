@@ -17,16 +17,11 @@ export const AuthProvider = ({ children }) => {
         
         // Try to refresh user profile from backend if token exists
         if (authService.isAuthenticated()) {
-          try {
-            const freshUser = await authService.refreshUserProfile();
-            if (freshUser) {
-              setUser(freshUser);
-              console.log('✅ User profile refreshed from server');
-            }
-          } catch (err) {
-            console.error('Could not refresh user profile:', err);
-            // Keep using stored user if refresh fails
+          const freshUser = await authService.refreshUserProfile();
+          if (freshUser) {
+            setUser(freshUser);
           }
+          // If refresh fails, continue with stored user - no need for error logging here
         }
       }
       setLoading(false);
