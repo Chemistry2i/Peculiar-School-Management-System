@@ -379,7 +379,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  text-transform: uppercase;
+  /* text-transform: uppercase; */
 }
 
 .btn-primary {

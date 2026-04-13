@@ -808,13 +808,13 @@ const TeacherSearch = () => {
               <i className="fa-solid fa-filter"></i> Filters
             </button>
             <button type="button" className="btn-export" onClick={handleExportCSV} title="Export as CSV" style={{ flex: 1, minWidth: '100px' }}>
-              <i className="fa-solid fa-file-csv"></i> CSV
+              <i className="fa-solid fa-file-csv"></i>Export CSV
             </button>
             <button type="button" className="btn-export" onClick={handleExportExcel} title="Export as Excel" style={{ flex: 1, minWidth: '100px' }}>
-              <i className="fa-solid fa-file-excel"></i> Excel
+              <i className="fa-solid fa-file-excel"></i>Export as Excel
             </button>
             <button type="button" className="btn-export" onClick={handleExportPDF} title="Export as PDF" style={{ flex: 1, minWidth: '100px' }}>
-              <i className="fa-solid fa-file-pdf"></i> PDF
+              <i className="fa-solid fa-file-pdf"></i>Export as PDF
             </button>
             <button 
               type="button" 
@@ -833,7 +833,7 @@ const TeacherSearch = () => {
               title="Import from CSV" 
               style={{ flex: 1, minWidth: '100px' }}
             >
-              <i className="fa-solid fa-upload"></i> Import
+              <i className="fa-solid fa-upload"></i> Import csv file
             </button>
             {!batchMode ? (
               <button type="button" className="btn-batch" onClick={() => setBatchMode(true)} title="Batch Operations" style={{ flex: 1, minWidth: '100px' }}>
@@ -1073,8 +1073,8 @@ const TeacherSearch = () => {
               </div>
 
               <div className="teacher-form-actions">
-                <button type="button" className="teacher-cancel-btn" onClick={closeAddModal}>Cancel</button>
-                <button type="submit" className="teacher-save-btn">Save Teacher</button>
+                <button type="button" className="teacher-cancel-btn" onClick={closeAddModal} disabled={loading}>Cancel</button>
+                <button type="submit" className="teacher-save-btn" disabled={loading}>{loading ? 'Saving...' : 'Save Teacher'}</button>
               </div>
             </form>
           </div>
@@ -1209,8 +1209,8 @@ const TeacherSearch = () => {
               </div>
 
               <div className="teacher-form-actions">
-                <button type="button" className="teacher-cancel-btn" onClick={closeEditTeacher}>Cancel</button>
-                <button type="submit" className="teacher-save-btn">Save Changes</button>
+                <button type="button" className="teacher-cancel-btn" onClick={closeEditTeacher} disabled={loading}>Cancel</button>
+                <button type="submit" className="teacher-save-btn" disabled={loading}>{loading ? 'Saving...' : 'Save Changes'}</button>
               </div>
             </form>
           </div>
@@ -1268,17 +1268,17 @@ const TeacherSearch = () => {
                   <td>
                     <div className="action-buttons">
                       <button
-                        className="btn btn-primary"
+                        className="btn btn-primary btn-sm"
                         onClick={() => handleViewTeacher(teacher)}
                         title="View Details"
-                      >
+                      > <i className="fa-solid fa-eye"></i>
                         View
                       </button>
                       <button
-                        className="btn btn-warning"
+                        className="btn btn-warning btn-sm"
                         onClick={() => handleEditTeacher(teacher)}
                         title="Edit Teacher"
-                      >
+                      > <i className="fa-solid fa-pen-to-square"></i>
                         Edit
                       </button>
                       <button
@@ -1289,17 +1289,17 @@ const TeacherSearch = () => {
                         Assign Classes
                       </button>
                       <button
-                        className="btn btn-success"
+                        className="btn btn-success btn-sm"
                         onClick={() => openAssignSubjectModal(teacher)}
                         title="Assign Subjects"
                       >
                         Assign Subjects
                       </button>
                       <button
-                        className="btn btn-danger"
+                        className="btn btn-danger btn-sm"
                         onClick={() => handleDeleteTeacher(teacher)}
                         title="Delete Teacher"
-                      >
+                      > <i className="fa-solid fa-trash"></i>
                         Delete
                       </button>
                     </div>
@@ -1589,9 +1589,9 @@ const TeacherSearch = () => {
               )}
 
               <div className="teacher-form-actions">
-                <button type="button" className="teacher-cancel-btn" onClick={() => setShowBatchAssignModal(false)}>Cancel</button>
+                <button type="button" className="teacher-cancel-btn" onClick={() => setShowBatchAssignModal(false)} disabled={isBatchOperating}>Cancel</button>
                 <button type="submit" className="teacher-save-btn" disabled={isBatchOperating}>
-                  {isBatchOperating ? 'Processing...' : 'Assign to All Selected'}
+                  {isBatchOperating ? 'Assigning...' : 'Assign to All Selected'}
                 </button>
               </div>
             </form>
